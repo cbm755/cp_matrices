@@ -892,9 +892,9 @@ void FindClosestPointGlobally()
 		gridpt->i = i;
 		gridpt->j = j;
 		gridpt->k = k;
-		gridpt->x = cpx;
-		gridpt->y = cpy;
-		gridpt->z = cpz;
+		gridpt->x = x;
+		gridpt->y = y;
+		gridpt->z = z;
 	      }
 	    }
 	  } // end inside sphere
