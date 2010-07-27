@@ -40,8 +40,9 @@ then run "./cp_tri_hash"
 
 *********************************************************************/
 
-#include <tgmath.h>
-//#include <math.h>
+/* tgmath.h not easily available on cygwin, can use math.h */
+//#include <tgmath.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <search.h>
