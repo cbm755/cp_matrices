@@ -41,8 +41,8 @@ then run "./cp_tri_hash"
 *********************************************************************/
 
 /* tgmath.h not easily available on cygwin, can use math.h */
-//#include <tgmath.h>
-#include <math.h>
+#include <tgmath.h>
+//#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <search.h>
@@ -53,7 +53,7 @@ then run "./cp_tri_hash"
 /************************************************************************
  *  GLOBAL CONSTANTS
  ***********************************************************************/
-#define NPOINTS 161
+#define NPOINTS 81
 /* Use 4/N here for historial reasons (used to use [-2,2]^3) */
 
 /* Use extended precision or not */
@@ -63,14 +63,14 @@ then run "./cp_tri_hash"
 #ifdef EXTENDEDPRECISION
 #define myfloat long double
 //#define DOMAIN_B ( 2.0L)
-#define RELPTX (-0.0L)
+#define RELPTX (-2.0L)
 #define RELPTY RELPTX
 #define RELPTZ RELPTX
 #define DX (4.0L / (NPOINTS-1))
 #else
 #define myfloat double
 //#define DOMAIN_B ( 2.0)
-#define RELPTX (-0.0)
+#define RELPTX (-2.0)
 #define RELPTY RELPTX
 #define RELPTZ RELPTX
 #define DX (4.0 / (NPOINTS-1))
@@ -315,9 +315,7 @@ void initShape(const char* fname)
   }
   for (i=0; i<number_faces; i++) {
     fscanf(fp,"%ld %ld %ld %ld",&dummy, &face[i].v1, &face[i].v2, &face[i].v3);
-    /*
-      printf("%ld %ld %ld %ld \n",  dummy,  face[i].v1,  face[i].v2,  face[i].v3);
-    */
+    //printf("%ld %ld %ld %ld\n",  dummy,  face[i].v1,  face[i].v2,  face[i].v3);
   }
 }
 
@@ -672,13 +670,26 @@ long face_index;
     printf("lambda mu %Lg %Lg\n", lambda, mu);
 #else
     printf("lambda mu %g %g\n", lambda, mu);
+    printf("factor %g\n", factor);
+    printf("a11,a22,a12=%g,%g,%g\n",a11,a22,a12);
+    printf("det?=%g\n",a11*a22-a12*a12);
 #endif
-    myerr("Error in CP to tri, unanticipated case");
+    //if (factor == 0) {
+    //  
+    //}
+    //error("Error in CP to tri, unanticipated case");
+    printf("Error in CP to tri, unanticipated case\n");
   }
 
   /* Calculate distance */
   // TODO: found my bug, no sqrt here, dd is dist squared
-  dd  = (a1-*c1)*(a1-*c1)+(a2-*c2)*(a2-*c2)+(a3-*c3)*(a3-*c3);
+  // HORRIBLE HACK 2010-07-28
+  if (isinf(factor)) {
+    dd = 10000.0;
+    printf("OMG: I cannot believe you just did that!\n");
+  } else {
+    dd  = (a1-*c1)*(a1-*c1)+(a2-*c2)*(a2-*c2)+(a3-*c3)*(a3-*c3);
+  }
 
 /*  DEBUGGING
 printf("lambda mu %g %g\n",lambda,mu);
@@ -1067,7 +1078,9 @@ int main(void)
 
 
   //printf("initShape()...\n");
-  initShape("annies_pig.ply");
+  //initShape("annies_pig.ply");
+  initShape("pig_loop2.ply");
+  //initShape("beacon.ply");
   //initShape("test2.ply");
   //initShape("bunny_input.ply");
 
