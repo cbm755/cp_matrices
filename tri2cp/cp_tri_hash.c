@@ -56,19 +56,23 @@ then run "./cp_tri_hash"
 #define NPOINTS 81
 /* Use 4/N here for historial reasons (used to use [-2,2]^3) */
 
+
+
 /* Use extended precision or not */
 /* TODO: values like 0.5 appear in code but may need L for extended,
    example 0.0, 1.0, 2.0, 4.0 */
 //#define EXTENDEDPRECISION
 #ifdef EXTENDEDPRECISION
-#define myfloat long double
+typedef long double myfloat;
+//#define myfloat long double
 //#define DOMAIN_B ( 2.0L)
 #define RELPTX (-2.0L)
 #define RELPTY RELPTX
 #define RELPTZ RELPTX
 #define DX (4.0L / (NPOINTS-1))
 #else
-#define myfloat double
+typedef double myfloat;
+//#define myfloat double
 //#define DOMAIN_B ( 2.0)
 #define RELPTX (-2.0)
 #define RELPTY RELPTX
@@ -854,6 +858,7 @@ void FindClosestPointGlobally()
 	    }
 #endif
 
+	    // TODO: what is 640?
 	    if ( snprintf(tupstr, TUPSTRSZ, "(%d,%d,%d)", i+640,j+640,k+640) >= TUPSTRSZ )
 	      myerr("Couldn't write tuple string, increase TUPSTRSZ?");
 	    //fprintf(dbout, "DEBUG: tupstr=\"%s\"\n", tupstr);
