@@ -517,7 +517,7 @@ class CPGrid:
                 D[i,j] = diffWeights[s]
         print "  D row " + str(len(Levolve))
         print "elapsed time = " + str(time()-st)
-        return D
+        return D.tocsr()
 
 
     def buildDiffMatrixTempDxDyTest(self, level):
@@ -598,7 +598,7 @@ class CPGrid:
                 E[i,j] = n.interpweights[s]
         print "  E row " + str(len(Lextend))
         print "elapsed time = " + str(time() - st)
-        return E
+        return E.tocsr()
 
 
 
@@ -848,7 +848,10 @@ def buildEPlotMatrix(g, level, Vertices, VertexBpt = None):
 
     print "elapsed time = " + str(time()-st)
 
-    return EPlot
+    # LIL matrices are slow in most use cases, convert to CSR for
+    # faster matrix-vector products (something like 24x faster on
+    # 10000x10000 in my tests)
+    return EPlot.tocsr()
 
 
 

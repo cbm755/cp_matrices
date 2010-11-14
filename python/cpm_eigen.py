@@ -1,3 +1,6 @@
+"""
+Laplacian Eigenvalues and Eigenfunctions of a surface.  Run cpm_load.py first.
+"""
 from enthought.mayavi import mlab
 from time import time
 
@@ -12,9 +15,6 @@ if (1==0):
         evec = Xdense[:,i]
         print eval
 
-# keep a copy of the original extended precision matrix
-#M_f96 = M.copy()
-#M = M.astype(numpy.float64)
 
 
 print "computing eigenvalues..."

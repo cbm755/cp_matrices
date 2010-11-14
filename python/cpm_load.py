@@ -13,6 +13,7 @@ import scipy.sparse
 import scipy.sparse.linalg.eigen.arpack as arpack
 import scipy.linalg
 
+from time import time
 
 #global SURF_SR
 # SURF_SR = 1.0
@@ -86,11 +87,22 @@ D = g.buildDiffMatrix(j)
 E = g.buildExtensionMatrix(j)
 Eplot = cptree.buildEPlotMatrix(g, j, PlotPts)
 dx = g.Levolve[j][0].dx
+#D = D.tocsr()
+#E = E.tocsr()
+#Eplot = Eplot.tocsr()
 
 
 # the implicit closest point method matrix.  Almost a product of D and
 # E (see Macdonald and Ruuth 2009)
+now = time()
 M = cptree.LinearDiagonalSplitting(D, E)
+print "splitting took %.3g s" % (time()-now)
+
+
+# keep a copy of the original extended precision matrix
+#M_f96 = M.copy()
+#M = M.astype(numpy.float64)
+
 
 # minnz = 1e42
 # M = E3
@@ -100,3 +112,11 @@ M = cptree.LinearDiagonalSplitting(D, E)
 #             minnz = min(minnz, abs(M[i,j]))
 # print minnz
 
+
+
+def pause(howlong=None):
+    import time as timemod
+    if howlong == None:
+        raw_input('Paused, press enter to continue')
+    else:
+        timemod.sleep(howlong)

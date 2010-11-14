@@ -1,9 +1,9 @@
 """
 Tools for manipulating closest point representations
 """
+from ClosestPoint import ClosestPoint
 #import numpy
 from numpy import array as a
-
 
 class Shift(ClosestPoint):
     def __init__(self, cpparent, shift):
