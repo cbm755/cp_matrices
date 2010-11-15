@@ -62,7 +62,7 @@ class ClosestPoint():
         """
         from enthought.mayavi import mlab
         import numpy as np
-        f = mlab.figure(1, fgcolor=(0, 0, 0), bgcolor=(1, 1, 1), size=(500,700))
+        f = mlab.figure(1, fgcolor=(0, 0, 0), bgcolor=(1, 1, 1), size=(640,640))
         mlab.clf()
 
         if self._hasParam:

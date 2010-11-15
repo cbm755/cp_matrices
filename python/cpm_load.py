@@ -27,9 +27,12 @@ from time import time
 
 import closestpoint
 
-q = closestpoint.Hemisphere()
-
+q2 = closestpoint.Hemisphere()
+# wrap the object in CPBar, for accurately imposing boundary
+# conditions on shapes with boundaries (like a hemisphere)
+q = closestpoint.CPBar(parent=q2)
 cpfun = q.cp
+
 #cpfun = cpbar
 #cpfun = cpfun_inner
 #cpfun = cp_sphere.cp_sphere
@@ -40,9 +43,13 @@ cpfun = q.cp
 # this up
 def bdyfcn(bdy):
     if bdy==1:
-        return 'dirichlet_0th_order'
+        #return 'dirichlet_0th_order'
+        return 'dirichlet_2nd_order'
+        #return 'neumann_2nd_order'
     elif bdy==2:
-        return 'dirichlet_0th_order'
+        #return 'dirichlet_0th_order'
+        return 'dirichlet_2nd_order'
+        #return 'neumann_2nd_order'
     else:
         return None
 

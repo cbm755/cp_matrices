@@ -119,47 +119,6 @@ class Semicircle(Hemisphere):
         return X,Y
 
 
-def test3d():
-    """ TODO: move elsewhere? """
-    import pylab
-    import numpy
-    import mpl_toolkits.mplot3d.axes3d as p3
-    init(a([0.1,0.1,1]), 1.0)
-    #plot = pylab.plot
-
-    fig = pylab.figure()
-    ax = p3.Axes3D(fig)
-
-    cpfun = cp_hemisphere
-    def cpbar2(x, cpf=cpfun):
-        cpx,dist,bdy = cpf(x)
-        if bdy==1 or bdy==2:
-            y = x + 2*(cpx - x)
-            dist2,cpx2,bdy2 = cpf(y)
-            if (bdy2 != 0):
-                print 'cpbar hit bdy!  dist=',dist
-                print x
-                print dist,cpx,bdy
-                print dist2,cpx2,bdy2
-        else:
-            cpx2 = cpx
-        return (cpx2, dist, bdy)
-    cpfun = cpbar2
-
-    for i in range(0,100):
-        x = 4*numpy.random.random((3)) - 2
-        cp,dist,bdy = cpfun(x)
-        if bdy==1:
-            col = 'r'
-        elif bdy==2:
-            col = 'b'
-        else:
-            col = 'k'
-        ax.plot([x[0],cp[0]], [x[1],cp[1]], [x[2],cp[2]], '-', color=col)
-        ax.plot([cp[0]], [cp[1]], [cp[2]],'o', color=col)
-
-    pylab.show()
-
 
 #if __name__ == "__main__":
 #    print "running as a script, do some tests"
