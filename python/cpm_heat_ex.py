@@ -5,19 +5,22 @@ Solve the diffusion (heat) equation
 
 on a surface.  $\triangle_s$ is the Laplace--Beltrami operator.
 $\kappa$ is a scalar coefficient.
+
+Uses explicit forward Euler timestepping.
 """
 
 from enthought.mayavi import mlab
 from time import time
-import time as timemod
 
+
+usz = M.shape[0]  # system size
 # Tfinal = 1
-Nsteps = 500    # How many time steps
-dt = 0.1*dx*dx  # note O(dx^2) b/c this is explicit
-kappa = 1.0     # diffusion coefficient
+Nsteps = 500      # How many time steps
+dt = 0.1*dx*dx    # note O(dx^2) b/c this is explicit
+kappa = 1.0       # diffusion coefficient
+
 
 # setup initial conditions
-usz = M.shape[0]
 u0 = 1*numpy.random.randn(usz)
 # scale to max abs 1
 u0 = u0 / max(abs(u0.max()), abs(u0.min()))
@@ -52,9 +55,8 @@ for kt in range(0,Nsteps):
     t = 0 + dt*(kt+1)
 
     # Do viz for some timesteps
-    if (kt <= 10) or (mod(kt+1,20) == 0):
+    if (kt < 10) or (mod(kt+1,20) == 0):
         uplot = Eplot*(E*unew)  # brackets necessary for speed here
-
         # update the viz
         src.data.point_data.scalars = Eplot*(E*unew)
         src.data.point_data.scalars.name = 'scalars'
