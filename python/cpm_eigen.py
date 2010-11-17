@@ -3,6 +3,10 @@ Laplacian Eigenvalues and Eigenfunctions of a surface.  Run cpm_load.py first.
 """
 from enthought.mayavi import mlab
 from time import time
+import scipy.linalg
+#import scipy.sparse.linalg.eigen
+import scipy.sparse.linalg.eigen.arpack as arpack
+
 
 if (1==0):
     Ldense,Xdense = scipy.linalg.eig(M.todense())

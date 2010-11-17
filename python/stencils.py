@@ -11,6 +11,7 @@ def Laplacian_2nd(dim):
     """
     if (dim == 2):
         def f(dx):
+            """Weights for second-order approx to Laplacian"""
             dx2 = dx*dx
             return [-4/dx2, 1/dx2, 1/dx2, 1/dx2, 1/dx2]
         # a function of dx for the weights
@@ -95,8 +96,8 @@ def Laplacian_4th(dim):
 def Biharmonic_2nd(dim):
     """
     WARNING: PROBABLY YOU DON'T WANT THIS FOR THE CLOSEST POINT
-    METHOD.  It is inconsistent.  Instead square the Laplacian matrix
-    like in [Macdonald&Ruuth 2009].
+    METHOD.  It will be inconsistent.  Instead square the Laplacian
+    matrix like in [Macdonald&Ruuth 2009].
     """
     if dim==2:
         def f(dx):

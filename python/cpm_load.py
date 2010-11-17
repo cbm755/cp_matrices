@@ -1,17 +1,17 @@
 import numpy
-from numpy import linspace,pi,real,imag,exp
 from numpy import array as a
-import cptree
-#reload(cptree)
+import cpGrid
+reload(cpGrid)
+import cpOps
+reload(cpOps)
+
 import pylab
 from pylab import plot
 
 #from scipy.linalg import norm
-import scipy.sparse
+#import scipy.sparse
 #import scipy.linsolve
-#import scipy.sparse.linalg.eigen
-import scipy.sparse.linalg.eigen.arpack as arpack
-import scipy.linalg
+#import scipy.linalg
 
 from time import time
 
@@ -64,11 +64,11 @@ print 'start'
 #dx = f96(8.0)
 
 x = numpy.array([-2.0, -2.0, -2.0])
-dx = 8.0
+initialdx = 8.0
 
 dim = len(x)
-maxlev = 7
-g = cptree.CPGrid('test', cpfun, dim, x, dx, interp_degree=3, levels=maxlev+1)
+maxlev = 6
+TreeGrid = cpGrid.CPGrid('test', cpfun, dim, x, initialdx, interp_degree=3, levels=maxlev+1)
 
 
 ## a parameterized grid for plotting
@@ -86,23 +86,23 @@ PlotPts = numpy.vstack((x2,y2,z2)).transpose()
 
 
 j = maxlev - 0
-g.findStencilSets(j)
-g.buildListsFromStencilSets(j)
-g.findStencilsOnStencilSets(j, bdyfcn)
-D = g.buildDiffMatrix(j)
+TreeGrid.findStencilSets(j)
+TreeGrid.buildListsFromStencilSets(j)
+TreeGrid.findStencilsOnStencilSets(j, bdyfcn)
+dx = TreeGrid.Levolve[j][0].dx
+Lev = TreeGrid.Levolve[j]
+Lex = TreeGrid.Lextend[j]
+Grid = TreeGrid.Grids[j]
+D = cpOps.buildDiffMatrix(Lev, Lex)
 #D3xb,D3xf,D3yb,D3yf = g.buildDiffMatrixTempDxDyTest(j)
-E = g.buildExtensionMatrix(j)
-Eplot = cptree.buildEPlotMatrix(g, j, PlotPts)
-dx = g.Levolve[j][0].dx
-#D = D.tocsr()
-#E = E.tocsr()
-#Eplot = Eplot.tocsr()
+E = cpOps.buildExtensionMatrix(Lev, Lex)
+Eplot = cpOps.buildEPlotMatrix(Grid, Lev, Lex, PlotPts, interp_degree=3)
 
 
 # the implicit closest point method matrix.  Almost a product of D and
 # E (see Macdonald and Ruuth 2009)
 now = time()
-M = cptree.LinearDiagonalSplitting(D, E)
+M = cpOps.LinearDiagonalSplitting(D, E)
 print "splitting took %.3g s" % (time()-now)
 
 
