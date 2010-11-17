@@ -40,7 +40,7 @@ I = np.argsort(-Evals)
 n = 33
 
 
-f = mlab.figure(1, fgcolor=(0, 0, 0), bgcolor=(1, 1, 1), size=(500,700))
+f = mlab.figure(1, fgcolor=(0, 0, 0), bgcolor=(1, 1, 1), size=(640,640))
 
 #for ii in range(0, howManyEvals):
 for ii in range(n, n+1):

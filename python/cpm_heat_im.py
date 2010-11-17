@@ -56,14 +56,14 @@ pause(0.1)
 
 
 # Build the backward Euler time-stepping matrix
-A_be = scipy.sparse.identity(usz) - (kappa*dt)*M
+A_be = identity(usz) - (kappa*dt)*M
 
 
 # Implicit Backward Euler time stepping
 for kt in range(0,Nsteps):
     now = time()
     if Iterative:  # Use iterative solver
-        (unew,flag) = scipy.sparse.linalg.gmres(A_be, u, \
+        (unew,flag) = gmres(A_be, u, \
                                 x0=u, tol=1e-14, restrt=10)
         #(unew,flag) = scipy.sparse.linalg.lgmres(A_be, u, \
         #                        x0=u, tol=1e-14)
@@ -72,7 +72,7 @@ for kt in range(0,Nsteps):
         if (flag != 0):
             print "  flags = " + str((flag))
     else:  # Use direct solver
-        unew = scipy.sparse.linalg.spsolve(A_fe, u)
+        unew = spsolve(A_fe, u)
 
     print "timestep " + str(kt) + ", took %.3g s" % (time()-now)
 
