@@ -9,6 +9,7 @@ from Circle import *
 from Multi import *
 from CPBar import *
 from Manipulate import *
+from ParamCurve import *
 
 #reload Sphere
 

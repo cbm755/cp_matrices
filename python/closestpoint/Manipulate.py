@@ -1,11 +1,14 @@
 """
-Tools for manipulating closest point representations
+Tools for manipulating closest point representations.
+
+Currently does translation (shift).
+
+TODO: implement rotation, use a matrix internally.
 """
 from ClosestPoint import ClosestPoint
-#import numpy
 from numpy import array as a
 
-class Shift(ClosestPoint):
+class Translate(ClosestPoint):
     def __init__(self, cpparent, shift):
         self._shift = shift
         self._cpparent = cpparent

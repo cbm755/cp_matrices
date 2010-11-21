@@ -24,15 +24,15 @@ class ClosestPoint():
         return self._bb
 
 
-    def viztest(self):
+    def viztest(self, extra_bb=1.3):
         if self._dim == 2:
-            self._viztest2d()
+            self._viztest2d(extra_bb=extra_bb)
         elif self._dim == 3:
-            self._viztest3d()
+            self._viztest3d(extra_bb=extra_bb)
         else:
             raise NameError('Only 2d and 3d viz tests implemented')
 
-    def _viztest2d(self):
+    def _viztest2d(self, extra_bb):
         import pylab
         import numpy
         plot = pylab.plot
@@ -42,12 +42,14 @@ class ClosestPoint():
             plot(X,Y,'k-')
 
         a,b = self.getBB()
+        ll = (b+a)/2 - (extra_bb)*(b-a)/2
+        rr = (b+a)/2 + (extra_bb)*(b-a)/2
         #xx = numpy.random.uniform(bb[0], bb[1], (100,2))
         for i in range(0,100):
             # TODO: here we assume the object lives in [-2,2]^2
             # TODO: maybe each object could record a boundingbox
             #x = 4*numpy.random.random((2)) - 2
-            x = numpy.random.uniform( (b+a)/2 - 1.2*(b-a)/2, (b+a)/2 + 1.2*(b-a)/2 )
+            x = numpy.random.uniform( ll, rr )
             # TODO: how do we deal with other return stuff?
             #dist,cp,others = self.cp(x)
             cp,dist = self.cp(x)
@@ -56,7 +58,7 @@ class ClosestPoint():
             plot([cp[0]], [cp[1]], 'o', color=col)
         pylab.show()
 
-    def _viztest3d(self):
+    def _viztest3d(self, extra_bb):
         """
         3D vizualization of CPRep for obj
         """
@@ -74,9 +76,10 @@ class ClosestPoint():
             s = mlab.mesh(x, y, z, scalars=z, opacity=1.0)
 
         a,b = self.getBB()
-
+        ll = (b+a)/2 - (extra_bb)*(b-a)/2
+        rr = (b+a)/2 + (extra_bb)*(b-a)/2
         for i in range(0,40):
-            x = np.random.uniform( (b+a)/2 - 1.2*(b-a)/2, (b+a)/2 + 1.2*(b-a)/2 )
+            x = np.random.uniform( ll, rr )
             cp,dist = self.cp(x)
             colt = (0.5,0.5,0.5)
             op = 0.3
@@ -88,7 +91,7 @@ class ClosestPoint():
 
 
 class ShapeWithBdy(ClosestPoint):
-    def _viztest2d(self):
+    def _viztest2d(self, extra_bb):
         import pylab
         import numpy
         plot = pylab.plot
@@ -98,8 +101,10 @@ class ShapeWithBdy(ClosestPoint):
             plot(X,Y,'k-')
 
         a,b = self.getBB()
+        ll = (b+a)/2 - (extra_bb)*(b-a)/2
+        rr = (b+a)/2 + (extra_bb)*(b-a)/2
         for i in range(0,100):
-            x = numpy.random.uniform( (b+a)/2 - 1.2*(b-a)/2, (b+a)/2 + 1.2*(b-a)/2 )
+            x = numpy.random.uniform( ll, rr )
             cp,dist,bdy = self.cp(x)
             if bdy==0:
                 col = [0.4, 0.4, 0.4]
@@ -146,9 +151,10 @@ class ShapeWithBdy(ClosestPoint):
             s = mlab.mesh(x, y, z, scalars=z, opacity=1.0)
 
         a,b = self.getBB()
-
+        ll = (b+a)/2 - (extra_bb)*(b-a)/2
+        rr = (b+a)/2 + (extra_bb)*(b-a)/2
         for i in range(0,200):
-            x = np.random.uniform( (b+a)/2 - 1.2*(b-a)/2, (b+a)/2 + 1.2*(b-a)/2 )
+            x = np.random.uniform( ll, rr )
             cp,dist,bdy = self.cp(x)
             drawplot = False
             if bdy==1:
