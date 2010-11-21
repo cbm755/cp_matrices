@@ -67,8 +67,6 @@ class ParamCurve(ShapeWithBdy):
         endpt1 = self._l
         endpt2 = self._r
 
-        print 'hello'
-
         def d2(s, x, y):
             return (s - x)**2 + (f(s) - y)**2
 
@@ -104,7 +102,6 @@ class ParamCurve(ShapeWithBdy):
         cp = a([tmin, self._f(tmin)])
         dist = sqrt( (xx[0]-cp[0])**2 + (xx[1]-cp[1])**2 )
         dist2 = norm(xx - cp, 2)
-        print dist-dist2, bdy, tmin
 
         # TODO: change all the codes to return an optional list
         #return cp, dist, bdy, (tmin)
