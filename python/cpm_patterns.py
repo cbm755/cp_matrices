@@ -59,7 +59,7 @@ dt = 0.5*dx       # note O(dx) b/c this is implicit
 Iterative = True  # using  an iterative solver is faster
 
 
-I = scipy.sparse.identity(usz)
+I = identity(usz)
 
 # Setup initial conditions (random perturbations around the
 # zero-diffusion steady state)

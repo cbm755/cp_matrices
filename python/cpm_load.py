@@ -1,4 +1,10 @@
+"""
+Makes a grid surrounding a closest point representation and builds the
+implicit Closest Point Method matrix operators on it.
+"""
+
 import numpy
+
 from numpy import array as a
 import cpGrid
 reload(cpGrid)
@@ -64,7 +70,7 @@ print 'start'
 #dx = f96(8.0)
 
 x = numpy.array([-2.0, -2.0, -2.0])
-initialdx = 8.0
+initialdx = 4.0
 
 dim = len(x)
 maxlev = 6
@@ -72,7 +78,7 @@ TreeGrid = cpGrid.CPGrid('test', cpfun, dim, x, initialdx, interp_degree=3, leve
 
 
 ## a parameterized grid for plotting
-x,y,z = q.ParamGrid(rez=64)
+x,y,z = q.ParamGrid(rez=128)
 
 # this can be used to view like this:
 #from enthought.mayavi import mlab
