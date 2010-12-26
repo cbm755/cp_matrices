@@ -50,9 +50,21 @@ def Laplacian_4th(dim):
     if (dim == 2):
         def f(dx):
             d2 = dx*dx
-            return [ -5.0/d2, \
-                    (-1.0/12.0)/d2, (4.0/3.0)/d2, (4.0/3.0)/d2, (-1.0/12.0)/d2, \
-                    (-1.0/12.0)/d2, (4.0/3.0)/d2, (4.0/3.0)/d2, (-1.0/12.0)/d2 ]
+            #return [ -5.0/d2, \
+            #        (-1.0/12.0)/d2, (4.0/3.0)/d2, (4.0/3.0)/d2, (-1.0/12.0)/d2, \
+            #        (-1.0/12.0)/d2, (4.0/3.0)/d2, (4.0/3.0)/d2, (-1.0/12.0)/d2 ]
+            print "** WARNING: hardcoded f96 stuff **"
+            # TODO: this won't work if dx is integer
+            #fl = type(dx)
+            from numpy import float96
+            fl = float96
+            # f1o12: float of 1/12
+            f1o12 = fl(1)/fl(12)
+            f4o3 = fl(4)/fl(3)
+
+            return [ -fl(5)/d2, \
+                     -f1o12/d2, f4o3/d2, f4o3/d2, -f1o12/d2, \
+                     -f1o12/d2, f4o3/d2, f4o3/d2, -f1o12/d2 ]
         DiffWeightsFcn = f
         DiffStencil = [ a([ 0,   0]), \
                         a([-2,   0]), \

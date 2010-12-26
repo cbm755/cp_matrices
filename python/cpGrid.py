@@ -23,7 +23,12 @@ class CPNode:
 
 
     def computeCP(self, cpfun):
-        (cpx, dist, bdy) = cpfun(self.gridpt)
+        """
+        Compute the CP for this node
+
+        TODO: deal with "other" and bdy better
+        """
+        (cpx, dist, bdy, other) = cpfun(self.gridpt)
         self.cp = cpx
         self.dist = dist
         self.whichBdy = bdy
@@ -104,7 +109,7 @@ class CPNode:
         self.root.addToFlat(newNode)
 
 
-    def plot(self, level=1):
+    def plot(self, level=1, stop_at_level=None):
         import pylab
 
         styles = ['r-o', 'b-x', 'g-s', 'm-+', 'k-.']*3
@@ -120,8 +125,9 @@ class CPNode:
         pylab.plot([self.gridpt[0]], [self.gridpt[1]], styles[level-1])
         #pylab.plot([self.cp[0]], [self.cp[1]], styles[level-1])
 
-        for n in self.children:
-            n.plot(level+1)
+        if (level < stop_at_level):
+            for n in self.children:
+                n.plot(level+1)
 
 
     def findNeighbours(self):
@@ -272,9 +278,9 @@ class CPGrid:
             raise NameError('dim ' + str(dim) + ' not implemented')
 
 
-    def plot(self):
+    def plot(self, stop_at_level=5):
         for n in self.Tree:
-            n.plot()
+            n.plot(stop_at_level=stop_at_level)
 
 
 

@@ -30,7 +30,7 @@ class Circle(ClosestPoint):
         cp = self._center + a([x,y])
 
         dist = norm(xx - cp, 2)
-        return cp,dist
+        return cp, dist, 0, {}
 
     cp = closestPointToCartesian
 
@@ -38,6 +38,8 @@ class Circle(ClosestPoint):
         """
         Parameritized form (for plotting)
         """
+        from numpy import linspace,pi,real,imag,exp
+
         th = linspace(0, 2*pi, num=rez, endpoint=True)
         circ = self._radius * numpy.exp(1j*th)
         X = real(circ) + self._center[0]

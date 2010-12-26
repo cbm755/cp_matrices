@@ -70,7 +70,7 @@ class Hemisphere(ShapeWithBdy):
             bdy = 0
 
         dist = norm(cpx - x, 2)
-        return (cpx,dist,bdy)
+        return cpx, dist, bdy, {}
 
     cp = closestPointToCartesian
 

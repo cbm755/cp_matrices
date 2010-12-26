@@ -11,12 +11,15 @@ improve the result.
 from ClosestPoint import ShapeWithBdy
 
 from numpy import array as a
-from numpy import sqrt, linspace, cos, pi
+from numpy import sqrt, linspace, pi  #, cos
+from numpy import cos as npcos
+from math import cos
+
 from numpy.linalg import norm
 from scipy.optimize import fminbound
 
 class ParamCurve(ShapeWithBdy):
-    def __init__(self, end1=0, end2=3*pi/2, f=None):
+    def __init__(self, end1=1.0/4, end2=4, f=None):
         l = end1
         r = end2
         self._l = end1
@@ -29,7 +32,7 @@ class ParamCurve(ShapeWithBdy):
             return -f(t)
         self._f = f
 
-        self._tol = 1e-12
+        self._tol = 1e-14
         tol = self._tol
 
         # Use optimization to find the bounding box
@@ -42,6 +45,7 @@ class ParamCurve(ShapeWithBdy):
 
 
     def closestPointToCartesianOld(self, xx):
+        """ this version doesn't detect endpts """
         x,y = xx
         f = self._f
 
@@ -51,14 +55,15 @@ class ParamCurve(ShapeWithBdy):
         endpt1 = self._l
         endpt2 = self._r
         (sopt, fval, ierr, numfunc) = fminbound(d22, endpt1, endpt2, args=(x,y), \
-                                                    xtol=1e-12,full_output=True,disp=3)
+                                                    xtol=self._tol,full_output=True,disp=3)
         cp = a([sopt,cos(sopt)])
 
         dist = sqrt(fval)
         dist2 = norm(xx-cp, 2)
         print dist-dist2
 
-        return cp, dist2, 0
+        others = dict(param=sopt)
+        return cp, dist2, 0, others
 
 
     def closestPointToCartesian(self, xx):
@@ -69,14 +74,17 @@ class ParamCurve(ShapeWithBdy):
 
         def d2(s, x, y):
             return (s - x)**2 + (f(s) - y)**2
+        #def d2(s, yy):
+        #    return (s - yy[0])**2 + (f(s) - yy[1])**2
 
         tmin = None
         ddmin = 1e42
 
-        t,dd,ierr,numfunc = fminbound(d2, endpt1, endpt2, args=(xx), \
+        t,dd,ierr,numfunc = fminbound(d2, endpt1, endpt2, args=(xx[0],xx[1]), \
                                           full_output=True, \
-                                          xtol=1e-12, maxfun=5000, disp=1)
-        # TODO: some error checking?
+                                          xtol=self._tol, maxfun=5000, disp=1)
+        if ierr == 1:
+            raise nameError('max iter exceeded')
         tmin = t[0]  # for same reason t is a length 1 array
         ddmin = dd
 
@@ -84,13 +92,13 @@ class ParamCurve(ShapeWithBdy):
 
         dd = d2(endpt1, xx[0], xx[1])
         # TODO: add some small multiple of macheps?
-        if dd <= ddmin:
+        if dd <= (ddmin + 1e-10):
             bdy = 1
             ddmin = dd
             tmin = endpt1
 
         dd = d2(endpt2, xx[0], xx[1])
-        if dd <= ddmin:
+        if dd <= (ddmin + 1e-10):
             bdy = 2
             ddmin = dd
             tmin = endpt2
@@ -100,12 +108,11 @@ class ParamCurve(ShapeWithBdy):
         # TODO: hardcoded for 2D
 
         cp = a([tmin, self._f(tmin)])
-        dist = sqrt( (xx[0]-cp[0])**2 + (xx[1]-cp[1])**2 )
-        dist2 = norm(xx - cp, 2)
+        #dist2 = sqrt( (xx[0]-cp[0])**2 + (xx[1]-cp[1])**2 )
+        dist = norm(xx - cp, 2)
 
-        # TODO: change all the codes to return an optional list
-        #return cp, dist, bdy, (tmin)
-        return cp, dist, bdy
+        others = dict(param=tmin)
+        return cp, dist, bdy, others
 
     cp = closestPointToCartesian
 
@@ -117,6 +124,6 @@ class ParamCurve(ShapeWithBdy):
         """
         th = linspace(self._l, self._r, num=rez, endpoint=True)
         X = th
-        Y = cos(th)
+        Y = npcos(th)
         return X,Y
 

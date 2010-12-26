@@ -40,9 +40,7 @@ class Sphere(ClosestPoint):
         c = SURF_SR / r
         cpx = c*(xm-SURF_CEN) + SURF_CEN
         dist = norm(cpx - x, 2)
-        #bdy = 0
-        #return (cpx,dist,bdy)
-        return (cpx,dist)
+        return cpx, dist, 0, {}
 
     cp = closestPointToCartesian
 

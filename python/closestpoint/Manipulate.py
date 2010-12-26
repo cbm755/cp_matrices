@@ -4,6 +4,8 @@ Tools for manipulating closest point representations.
 Currently does translation (shift).
 
 TODO: implement rotation, use a matrix internally.
+
+TODO: should deal with bdy, others in a reasonable way...
 """
 from ClosestPoint import ClosestPoint
 from numpy import array as a
@@ -15,9 +17,12 @@ class Translate(ClosestPoint):
 
     def closestPointToCartesian(self, x):
         #cp,dist = super(x - self._shift)
-        cp,dist = self._cpparent.closestPointToCartesian(x - self._shift)
+        # TODO: need to think about how to deal with bdy in this case,
+        # for now just pass it onwards.
+        cp,dist,bdy,others = self._cpparent.closestPointToCartesian(x - self._shift)
         cp = cp + self._shift
-        return cp,dist
+        return cp, dist, bdy, others
+    cp = closestPointToCartesian
 
     # TODO: vararg here
     def ParamGrid(self):

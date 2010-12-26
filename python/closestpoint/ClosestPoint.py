@@ -9,7 +9,7 @@ class ClosestPoint():
         raise NameError('should be implemented in subclass')
         #cp = numpy.zeros(x.shape)
         #dist = numpy.linalg.norm(x-cp,2)
-        #return cp,dist
+        #return cp,dist,bdy,{}
 
     def cpwrap(self, x):
         return self.closestPointToCartesian(self, x)
@@ -50,9 +50,7 @@ class ClosestPoint():
             # TODO: maybe each object could record a boundingbox
             #x = 4*numpy.random.random((2)) - 2
             x = numpy.random.uniform( ll, rr )
-            # TODO: how do we deal with other return stuff?
-            #dist,cp,others = self.cp(x)
-            cp,dist = self.cp(x)
+            cp,dist,bdy,other = self.cp(x)
             col = [0.4, 0.4, 0.4]
             plot([x[0], cp[0]], [x[1],cp[1]], '-', color=col)
             plot([cp[0]], [cp[1]], 'o', color=col)
@@ -80,7 +78,7 @@ class ClosestPoint():
         rr = (b+a)/2 + (extra_bb)*(b-a)/2
         for i in range(0,40):
             x = np.random.uniform( ll, rr )
-            cp,dist = self.cp(x)
+            cp,dist,bdy,other = self.cp(x)
             colt = (0.5,0.5,0.5)
             op = 0.3
             l = mlab.plot3d([x[0],cp[0]], [x[1],cp[1]], [x[2], cp[2]], color=colt, opacity=op, tube_radius=0.1)
@@ -105,7 +103,7 @@ class ShapeWithBdy(ClosestPoint):
         rr = (b+a)/2 + (extra_bb)*(b-a)/2
         for i in range(0,100):
             x = numpy.random.uniform( ll, rr )
-            cp,dist,bdy = self.cp(x)
+            cp,dist,bdy,other = self.cp(x)
             if bdy==0:
                 col = [0.4, 0.4, 0.4]
             elif bdy==1:
@@ -155,7 +153,7 @@ class ShapeWithBdy(ClosestPoint):
         rr = (b+a)/2 + (extra_bb)*(b-a)/2
         for i in range(0,200):
             x = np.random.uniform( ll, rr )
-            cp,dist,bdy = self.cp(x)
+            cp,dist,bdy,other = self.cp(x)
             drawplot = False
             if bdy==1:
                 if (np.random.random(1) < 1.0):
@@ -179,18 +177,4 @@ class ShapeWithBdy(ClosestPoint):
                 l = mlab.plot3d([x[0],cp[0]], [x[1],cp[1]], [x[2], cp[2]], color=colt, opacity=op)#, tube_radius=0.1)
         #mlab.title('3d viz test')
         mlab.show()
-
-
-
-class Shift(ClosestPoint):
-    def __init__(self, cpparent, shift):
-        self._shift = shift
-        self._cpparent = cpparent
-
-    def closestPointToCartesian(self, x):
-        #cp,dist = super(x - self._shift)
-        cp,dist = self._cpparent.closestPointToCartesian(x - self._shift)
-        cp = cp + self._shift
-        return cp,dist
-
 
