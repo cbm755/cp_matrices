@@ -1,9 +1,17 @@
-function L = laplacian3_matrix(x, y, z, order, band1, band2)
-%LAPLACIAN3_MATRIX  Build a 3D discrete Laplacian
+function L = laplacian_3d_matrix(x,y,z, order, band1, band2, varargin)
+%LAPLACIAN_3D_MATRIX  Build a 3D discrete Laplacian
 %   ORDER: 2 or 4 for 2nd or 4th-order
 %   Does no error checking up the equispaced nature of x,y,z
-% 
+%
 %   TODO: explain the roles of band1 and band2
+%
+%   To use ndgrid ordering pass "true" as the final argument
+
+  if (nargin <= 6)
+    use_ndgrid = false;
+  else
+    use_ndgrid = varargin{1};
+  end
 
   % input checking
   [temp1, temp2] = size(x);
@@ -64,45 +72,5 @@ function L = laplacian3_matrix(x, y, z, order, band1, band2)
   else
     error(['order ' num2str(order) ' not implemented']);
   end
-  StencilSize = length(weights);
 
-  tic
-  % Like a finite element code, find all the entries in 3 lists, then
-  % insert them all at once while creating the sparse matrix
-  Li = zeros((length(band1))*StencilSize, 1);
-  Lj = zeros(size(Li));
-  Ls = zeros(size(Li));
-  Lc = 0;
-
-  % good candidate for parfor?
-  for c = 1:length(band1)
-    I = band1(c);
-
-    % meshgrid ordering
-    [j,i,k] = ind2sub([Ny,Nx,Nz], I);
-
-    %X = [x(i)  y(j)  z(k)];
-
-    ii = i + PTS(:,1);
-    jj = j + PTS(:,2);
-    kk = k + PTS(:,3);
-
-    % funny ordering of y and x is b/c of meshgrid
-    ind = round(sub2ind([Ny,Nx,Nz],jj,ii,kk));
-
-    Lj( (Lc+1):(Lc+StencilSize) ) = ind;
-    Li( (Lc+1):(Lc+StencilSize) ) = c*ones(size(ind));
-    Ls( (Lc+1):(Lc+StencilSize) ) = weights;
-    Lc = Lc + StencilSize;
-  end
-
-  if ( Lc ~= (length(band1)*StencilSize) )
-    error('wrong number of elements');
-  end
-
-  L = sparse(Li, Lj, Ls, length(band1), Nx*Ny*Nz);
-  L = L(:,band2);
-
-  Ltime = toc
-end
-
+  L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, use_ndgrid);

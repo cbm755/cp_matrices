@@ -1,5 +1,5 @@
-function L = laplacian2_matrix(x, y, order, band1, band2)
-%LAPLACIAN2_MATRIX  Build a 2D discrete Laplacian
+function L = laplacian_2d_matrix(x,y, order, band1, band2, varargin)
+%LAPLACIAN_2D_MATRIX  Build a 2D discrete Laplacian
 %   ORDER: 2 or 4 for 2nd or 4th-order
 %   Does no error checking up the equispaced nature of x,y,z
 %
@@ -9,6 +9,14 @@ function L = laplacian2_matrix(x, y, order, band1, band2)
 %
 %   TODO: issue with two bands: currently need extra padding in
 %   wherever we call this from: should fix this
+%
+%   To use ndgrid ordering pass "true" as the final argument
+
+  if (nargin <= 5)
+    use_ndgrid = false;
+  else
+    use_ndgrid = varargin{1};
+  end
 
   % input checking
   [temp1, temp2] = size(x);
@@ -26,8 +34,8 @@ function L = laplacian2_matrix(x, y, order, band1, band2)
   Nx = round( (x(end)-x(1)) / dx ) + 1;
   Ny = round( (y(end)-y(1)) / dy ) + 1;
 
-  ptL = [x(1) y(1)];
-  ptH = [x(end) y(end)];
+  %ptL = [x(1) y(1)];
+  %ptH = [x(end) y(end)];
 
   dim = length(ddx);
 
@@ -56,44 +64,5 @@ function L = laplacian2_matrix(x, y, order, band1, band2)
   else
     error(['order ' num2str(order) ' not implemented']);
   end
-  StencilSize = length(weights);
 
-  tic
-  % Like a finite element code, find all the entries in 3 lists, then
-  % insert them all at once while creating the sparse matrix
-  Li = zeros((length(band1))*StencilSize, 1);
-  Lj = zeros(size(Li));
-  Ls = zeros(size(Li));
-  Lc = 0;
-
-  % good candidate for parfor?
-  for c = 1:length(band1)
-    I = band1(c);
-
-    % meshgrid ordering
-    [j,i] = ind2sub([Ny,Nx], I);
-
-    %X = [x(i)  y(j)];
-
-    ii = i + PTS(:,1);
-    jj = j + PTS(:,2);
-
-    % funny ordering of y and x is b/c of meshgrid
-    ind = round(sub2ind([Ny,Nx],jj,ii));
-
-    Lj( (Lc+1):(Lc+StencilSize) ) = ind;
-    Li( (Lc+1):(Lc+StencilSize) ) = c*ones(size(ind));
-    Ls( (Lc+1):(Lc+StencilSize) ) = weights;
-    Lc = Lc + StencilSize;
-  end
-
-  if ( Lc ~= (length(band1)*StencilSize) )
-    error('wrong number of elements');
-  end
-
-  L = sparse(Li, Lj, Ls, length(band1), Nx*Ny);
-  L = L(:,band2);
-
-  Ltime = toc
-end
-
+  L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);

@@ -8,4 +8,4 @@ grid...
 
 TODO: add documentation or clean up an example on how to use these.
 
-TODO: should also make a ndgrid
+TODO: should also make a ndgrid: started this a bit, not tested yet
