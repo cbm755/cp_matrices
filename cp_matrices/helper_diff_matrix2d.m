@@ -48,7 +48,7 @@ function L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, ndgrid)
 
     if ndgrid
       % TODO: ndgrid ordering: not tested!
-      ind = round(sub2ind([Nx,Ny],jj,ii));
+      ind = round(sub2ind([Nx,Ny],ii,jj));
     else
       % funny ordering of y and x is b/c of meshgrid
       ind = round(sub2ind([Ny,Nx],jj,ii));
