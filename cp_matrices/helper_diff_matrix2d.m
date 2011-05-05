@@ -67,6 +67,6 @@ function L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, ndgrid)
   L = sparse(Li, Lj, Ls, length(band1), Nx*Ny);
   L = L(:,band2);
 
-  Ltime = toc
+  Ltime = toc;
 
 
