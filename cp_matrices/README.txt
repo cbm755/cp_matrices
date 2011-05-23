@@ -8,4 +8,5 @@ grid...
 
 TODO: add documentation or clean up an example on how to use these.
 
-TODO: should also make a ndgrid: started this a bit, not tested yet
+Also works with ndgrid (mainly to make Tom and Ingrid happy).  Needs some testing
+because haven't been used much.
