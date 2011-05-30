@@ -45,6 +45,6 @@ uyy = Dyy2c*u;
 
 lapu = L*u;
 
-err = max(abs(uxx+uyy-lapu))
+err = max(abs(uxx+uyy-lapu));
 
-pass = (err < 1000*eps);
+pass = assertAlmostEqual(err, 0, 1000*eps);

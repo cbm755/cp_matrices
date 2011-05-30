@@ -1,33 +1,50 @@
-function [cpx,cpy,cpz, dist, bdy] = cpHemisphere(x,y,z, R)
+function [cpx,cpy,cpz, dist, bdy] = cpHemisphere(x,y,z, R, xc,yc,zc)
 %CPHEMISPHERE  Closest point function for a hemisphere.
-%   The semicircle consists of those points with y >= 0.
-%   "bdy" is non-zero for points on the boundary.
-%   TODO: could use varargin and default to R=1 and also handle
-%   other centers.
+%   The hemisphere consists of those points with z >= 0.
+%   [cpx,cpy,cpz, dist, bdy] = cpHemisphere(x,y,z)
+%      A unit hemisphere with "center" (sphere center) at the origin.
+%      "bdy" is non-zero for points on the boundary.
+%   [cpx,cpy,cpz, dist, bdy] = cpHemisphere(x,y,z, R)
+%      A radius R hemisphere centered at the origin.
+%   [cpx,cpy,cpz, dist, bdy] = cpHemisphere(x,y,z, R, xc,yc,zc)
+%      A radius R hemisphere centered at (xc,yc,zc).
 
-% shift to origin (if centered elsewhere)
-%x = x - 2;
-%y = y - 1;
-%z = z - 0.5;
+  % default radius of 1
+  if (nargin < 4)
+    R = 1;
+  end
+  if (nargin == 5) | (nargin == 6)
+    error('must specify all of (xc,yc,zc)');
+  end
+  % default center is the origin
+  if (nargin < 7)
+    xc = 0; yc = 0; zc = 0;
+  end
 
-[cpx, cpy, cpz] = cpSphere(x, y, z, R);
+  % shift to the origin
+  x = x - xc;
+  y = y - yc;
+  z = z - zc;
 
-% should not include the bdy itself (hence not z <= 0)
-bdy = (z < 0);
+  [cpx, cpy, cpz] = cpSphere(x, y, z, R);
 
-[th, r, zp] = cart2pol(x, y, z);
-cpth = th;
-cpr = R*ones(size(th));
-cpzp = zeros(size(th));
-[cpx2, cpy2, cpz2] = pol2cart(cpth, cpr, cpzp);
+  % should not include the bdy itself (hence not z <= 0)
+  bdy = (z < 0);
 
-cpx(bdy) = cpx2(bdy);
-cpy(bdy) = cpy2(bdy);
-cpz(bdy) = cpz2(bdy);
+  % points with z < 0 map to the z=0 plane circle of radius R
+  [th, r, zp] = cart2pol(x, y, z);
+  cpth = th;
+  cpr = R*ones(size(th));
+  cpzp = zeros(size(th));
+  [cpx2, cpy2, cpz2] = pol2cart(cpth, cpr, cpzp);
 
-dist = sqrt( (x-cpx).^2 + (y-cpy).^2 + (z-cpz).^2 );
+  cpx(bdy) = cpx2(bdy);
+  cpy(bdy) = cpy2(bdy);
+  cpz(bdy) = cpz2(bdy);
 
-% shift back to center (if not origin)
-%cpx = cpx + 2;
-%cpy = cpy + 1;
-%cpz = cpz + 0.5;
+  dist = sqrt( (x-cpx).^2 + (y-cpy).^2 + (z-cpz).^2 );
+
+  % shift back to center
+  cpx = cpx + xc;
+  cpy = cpy + yc;
+  cpz = cpz + zc;
