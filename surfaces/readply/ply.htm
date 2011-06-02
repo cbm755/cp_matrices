@@ -1,0 +1,104 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>The PLY Format</title>
+</head>
+<p><font size="5"><b>The PLY Format</b></font></p><br>
+<p>The version 1.0 PLY format, also known as the Stanford Triangle Format, defines a flexible and systematic scheme for storing 3D data.  The ASCII header specifies what data is in the file by defining "elements" each with a set of "properties." Many PLY files only have vertex and face data, however, it is possible to also include other data such as color information, vertex normals, or application-specific properties.  </p>
+<p><b>File Header</b></p>
+<p>An example header (italicized text is comment):
+<table border="0"><tr><td width="10"></td><td width="250" valign="top">
+<font color="blue">ply<br>format binary_big_endian 1.0<br>element vertex 9200<br>property float x<br>property float y<br>property float z<br>element face 18000<br>property list uchar int vertex_indices<br>
+end_header</font></td><td valign="top"><i>file ID<br>specify data format and version<br>define "vertex" element<br><br><br><br>define "face" element<br><br>data starts after this line</i></td></tr></table></p>
+<p>The file begins with "ply," identifying that it is a PLY file.  The
+header must also include a format line with the syntax
+<table border="0"><tr><td width="10"></td><td><font color="blue">
+format &LT;data format&GT; &LT;PLY version&GT;
+</font></td></tr></table>
+Supported data formats are "ascii" for data stored as text and
+"binary_little_endian" and "binary_big_endian" for binary data (where 
+<a href="http://www.webopedia.com/TERM/B/big_endian.html">
+little/big endian</a>
+refers to the byte ordering of multi-byte data).  Element 
+definitions begin with an "element" line followed by element property definitions
+<table border="0"><tr><td width="10"></td><td><font color="blue">
+element &LT;element name&GT; &LT;number in file&GT;<br>
+property &LT;data type&GT; &LT;property name 1&GT;<br>property &LT;data type&GT; &LT;property name 2&GT;<br>property &LT;data type&GT; &LT;property name 3&GT;<br>...</font></td></tr></table> 
+For example, "<font color="blue">element vertex 9200</font>" defines an element "vertex" and specifies that 9200 vertices are stored in the file.  Each element definition is followed by a list of properties of that element. There are two kinds of properties, scalar and list.  A scalar property definition has the syntax
+<table border="0"><tr><td width="10"></td><td><font color="blue">property &LT;data type&GT; &LT;property name&GT;</font></td></tr></table>
+where &LT;data type&GT; is
+<table border="0"><tr><td width="10"><td><table border="0"><tr><td width="90"><strong>Name</strong><br><font size="1"><br></font>char<br> uchar<br> short<br> ushort<br>
+int<br> uint<br> float<br> double</td></tr></table></td><td><table border="0"><tr><td><strong>Type</strong><br><font size="1"><br></font>(8-bit) character<br>(8-bit) unsigned character<br>(16-bit) short integer<br>(16-bit) unsigned short integer<br>(32-bit) integer<br>(32-bit) unsigned integer<br>(32-bit) single-precision float<br>(64-bit) double-precision float</td></tr></table></td></tr></table></p>
+<p>For compatibility between systems, note that the number of bits in each data type must be consistent.  A list type is stored with a count followed by a list of scalars.  The definition syntax for a list property is
+<table border="0"><tr><td width="10"></td><td><font color="blue">property list &LT;count data type&GT; &LT;data type&GT; &LT;property name&GT;</font></td></tr></table> 
+For example, "<font color="blue">property list uchar int vertex_index</font>" defines vertex_index properties are stored starting with a byte count followed by integer values. This is useful for storing polygon connectivity as it has the flexibility to specify a variable number of vertex indices in each face.</p>
+<p> The header can also include comments.  The syntax for a comment is simply a line beginning with "comment" followed by a one-line comment:
+<table border="0"><tr><td width="10"></td><td><font color="blue">comment &LT;comment text&GT;</font></td></tr></table> 
+Comments can provide information about the data like the file's author, data description, data source, and other textual data.</p>
+<p><b>Data</b></p>
+<p>Following the header, the element data is stored as either ASCII or binary data
+(as specified by the format line in the header).  After the header, the data is stored
+in the order the elements and properties were defined.  First, all the data for the 
+first element type is stored.  In the example header, the first element type is "<font color="blue">vertex</font>" with 9200 vertices in the file, and
+with float properties "<font color="blue">x</font>," "<font color="blue">y</font>," and 
+"<font color="blue">z</font>."
+<table border="0"><tr><td width="10">
+</td><td><font color="blue">float</font> vertex[1].x<br><font color="blue">float</font> vertex[1].y<br><font color="blue">float</font> vertex[1].z<br><font color="blue">float</font> vertex[2].x<br><font color="blue">float</font> vertex[2].y<br><font color="blue">float</font> vertex[2].z<br>...<br>
+<font color="blue">float</font> vertex[9200].x<br><font color="blue">float</font> vertex[9200].y<br>
+<font color="blue">float</font> vertex[9200].z</td></tr></table>
+In general, the properties data for each element is stored one element at a time.
+<table border="0"><tr><td width="10"></td><td><font color="blue">&LT;property 1&GT; &LT;property 2&GT; ... &LT;property N&GT;</font> element[1]<br><font color="blue">&LT;property 1&GT; &LT;property 2&GT; ... &LT;property N&GT;</font> element[2]<br>...</td></tr></table>
+The list type properties are stored beginning with a count and followed by a
+list of scalars.  For example, the "<font color="blue">face</font>" element type has
+the list property "<font color="blue">vertex_indices</font>" with uchar count and
+int scalar type.<table border="0"><tr><td width="10"></td><td><font color="blue">uchar</font> count<br>
+<font color="blue">int</font> face[1].vertex_indices[1]<br><font color="blue">int</font> face[1].vertex_indices[2]<br><font color="blue">int</font> face[1].vertex_indices[3]<br>
+...<br><font color="blue">int</font> face[1].vertex_indices[count]<br><br><font color="blue">uchar</font> count<br><font color="blue">int</font> face[2].vertex_indices[1]<br><font color="blue">int</font> face[2].vertex_indices[2]<br><font color="blue">int</font> face[2].vertex_indices[3]<br>...<br><font color="blue">int</font> face[2].vertex_indices[count]<br><br>...</td></tr></table>
+<p><b> Example Files </b></p>
+<p> Greg Turk uses these example in his article to explain the PLY format; find his article at 
+<a href="http://www.cs.virginia.edu/~gfx/Courses/2001/Advanced.spring.01/plylib/Ply.txt">
+University of Virginia</a> or
+<a href="http://www.ics.uci.edu/~graphics/teaching/ply.html">University of California, Irvine</a>.
+The first simple example file below describes a unit cube with vertex and face data.
+<table border="0"><tr><td width="10"></td><td width="250" valign="top"><font color="blue">ply<br>format ascii 1.0<br>comment made by Greg Turk<br>comment this file is a cube<br>element vertex 8<br>property float x<br>property float y<br>property float z<br>element face 6<br>property list uchar vertex_indices<br>end_header<br>0 0 0<br>0 0 1<br>0 1 1<br>0 1 0<br>1 0 0<br>1 0 1<br>1 1 1<br>1 1 0<br>4 0 1 2 3<br>4 7 6 5 4<br>4 0 4 5 1<br>4 1 5 6 2<br>4 2 6 7 3<br>4 3 7 4 0<br></font></td><td valign="top"><i>
+file header<br>data is in ASCII format<br><br><br>define vertex elements, 8 vertices in file<br><br><br><br>define face elements, 6 faces in file<br><br><br>vertex data<br><br><br><br><br><br><br><br>face data</i></td></tr></table></p>
+<p> A second example file extends the cube description, including 
+vertex color data and edge elements.<table border="0"><tr><td width="10"></td><td width="250" valign="top"><font color="blue">ply<br>format ascii 1.0<br>comment author: Greg Turk<br>comment object: another cube<br>element vertex 8<br>
+property float x<br>property float y<br>property float z<br>property red uchar<br>property green uchar<br>
+property blue uchar<br>element face 7<br>property list uchar int vertex_indices<br>element edge 5<br>
+property int vertex1<br>property int vertex2<br>property uchar red<br>property uchar green<br>property uchar blue<br>end_header<br>0 0 0 255 0 0<br>0 0 1 255 0 0<br>0 1 1 255 0 0<br>0 1 0 255 0 0<br>1 0 0 0 0 255<br>1 0 1 0 0 255<br>1 1 1 0 0 255<br>1 1 0 0 0 255<br>3 0 1 2<br>3 0 2 3<br>4 7 6 5 4<br>4 0 4 5 1<br>4 1 5 6 2<br>4 2 6 7 3<br>4 3 7 4 0<br>0 1 255 255 255<br>1 2 255 255 255<br>2 3 255 255 255<br>3 0 255 255 255<br>2 0 0 0 0<br></font></td><td valign="top"><i><br><br><br><br>define vertex elements<br><br><br><br>vertex color components<br><br><br>
+define face elements<br><br>define edge elements<br>index of first vertex in edge<br>
+index of second vertex<br>edge color components<br><br><br><br>vertex data<br><br><br><br><br><br><br><br>
+face data<br><br><br><br><br><br><br>edge data</i></td></tr></table></p>
+<p><b> Common Elements and Properties</b></p>
+<p>While the PLY format has the flexibility to define many types of elements and properities, a common set of elements are understood between programs to communicate common 3D data types.  Turk suggests elements and property names that programs should try to make standard.</p>
+<table>
+<tr><td width="10"></td><td><table>
+<td width="75"><b>Element</b></td><td width="110"><b>Property</b></td>
+<td width="95"><b>Data Type</b></td><td><b>Property Description<b></td></tr>
+<tr><td valign="top"><font color="red">vertex</font></td><td><font color="red">x<br>y<br>z</font></td>
+<td>float<br>float<br>float</td><td valign="top">x,y,z coordinates</td></tr>
+<tr><td></td><td>nx<br>ny<br>nz</td><td>float<br>float<br>float</td>
+<td valign="top">x,y,z components of normal</td></tr>
+<tr><td></td><td>red<br>green<br>blue<br>alpha</td><td>uchar<br>uchar<br>uchar<br>uchar
+</td><td>vertex color<br><br><br>amount of transparency</td></tr>
+<tr><td></td><td>material_index</td><td>int</td><td>index to list of materials</td></tr>
+<tr><td valign="top"><font color="red">face</font>
+</td><td><font color="red">vertex_indices</font></td><td>list of int</td><td>indices to vertices</td></tr>
+<tr><td></td><td>back_red<br>back_green<br>back_blue</td><td>uchar<br>uchar<br>uchar</td><td valign="top">backside color</td></tr>
+<tr><td valign="top">edge</td><td>vertex1<br>vertex2</td>
+<td>int<br>int</td><td>index to vertex<br>index to other vertex</td></tr>
+<tr><td></td><td>crease_tag</td><td>uchar</td><td>crease in subdivision surface</td></tr>
+<tr><td valign="top">material</td><td>red<br>green<br>blue<br>alpha</td><td>uchar<br>
+uchar<br>uchar<br>uchar</td><td>material color<br><br><br>amount of transparency</td></tr>
+<tr><td></td><td>reflect_coeff<br>refract_coeff<br>refract_index<br>extinct_coeff</td><td>
+float<br>float<br>float<br>float</td><td valign="top">
+amount of light reflected<br>amount of light transmitted<br>index of refraction<br>extinction coefficient</td></tr></table></td></tr><tr><td></td><td rowspan="5"><br><font color="red">*</font> - required "core" properties in red</td></tr></table>
+<p>For most applications, the minimum necessary information
+is vertex and face data.  To make it easier for programs to interpret PLY files, the element properties listed in red should always be included.  If there is no face data (as in the case of point-cloud data) the face element could be defined with an element count of zero.  The other elements and properties are suggested names for often used information like material parameters and edge information.</p><br>
+<p><b> More about PLY </b></p>
+<p>Greg Turk's article on the PLY format<br>
+<a href="http://www.cs.virginia.edu/~gfx/Courses/2001/Advanced.spring.01/plylib/Ply.txt">University of Virginia</a><br><a href="http://www.ics.uci.edu/~graphics/teaching/ply.html">University of California, Irvine</a></p><p>Source code for working with PLY files<br><a href="http://www.cc.gatech.edu/projects/large_models/ply.html">Georgia Institute of Technology</a><br><a href="http://astronomy.swin.edu.au/~pbourke/geomformats/ply/">Astrophysics Supercomputing Virtual Reality</a><br><a href="http://www.cs.princeton.edu/~diego/professional/rply/">RPly C library for the PLY file format</a></p><p>Viewers and Utilities for PLY files<br><a href="http://web.axelero.hu/karpo/">3D Object Converter</a><br><a href="http://www.cyberware.com/samples/plyview/index.html">Cyberware Plyview</a><br><a href="http://www.quick3d.org/index.html">Quick3D Viewer</a><br><p>Sample PLY files<br>
+<a href="http://graphics.stanford.edu/data/3Dscanrep/">The Stanford 3D Scanning Repository</a><br><a href="http://www.cyberware.com/samples/">Cyberware 3D Scan Samples</a><br><a href="http://www.csse.uwa.edu.au/~jamess/ply/">Simple PLY files</a><br><a href="http://www.cc.gatech.edu/projects/large_models/">Large Geometric Models Archive</a></p><br><br><br>
+<p><font size="2"><i>Written by Pascal Getreuer July 10, 2004</i></font></p>
+</html>

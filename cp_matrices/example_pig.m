@@ -1,6 +1,8 @@
 % adjust as appropriate
 addpath('../cp_matrices');
 addpath('../surfaces');
+addpath('../surfaces/tri_pig');
+addpath('../surfaces/readply');
 
 % NOTE: griddata needs to be generated for each choice of dx (by the
 % tri2cp C code).  its loaded below.  dim, p, order, x1d, y1d, z1d
