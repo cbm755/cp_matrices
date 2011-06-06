@@ -13,10 +13,11 @@
 %% Using cp_matrices
 
 % Include the cp_matrices folder (edit as appropriate)
-addpath('../cp_matrices');
+%addpath('../cp_matrices');
+addpath('/home/wen/closestpoint/cp_matrices');
 
 % add function for finding the closest points
-addpath('../surfaces');
+addpath('/home/wen/closestpoint/surfaces');
 
 
 %%
