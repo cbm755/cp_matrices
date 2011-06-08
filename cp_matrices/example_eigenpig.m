@@ -1,3 +1,13 @@
+%% Eigenvalue problem on a triangulated pig.
+% cp_matrices is a folder of useful functions to make implementing the
+% closest point method easier. These include closest point extension
+% matrices, and differentiation matrices.
+
+% This example computes eigenvalues and eigenfunctions of the
+% Laplace--Beltrami operator on a pig.  Demonstates how to load cp
+% banded grid data from an external file
+
+
 % adjust as appropriate
 addpath('../cp_matrices');
 addpath('../surfaces');

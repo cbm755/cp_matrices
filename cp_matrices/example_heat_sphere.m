@@ -1,13 +1,10 @@
 %% Heat equation on a sphere
-% using cp_matrices
-
-%%
-% cp_matrices is a folder of useful functions to make implementing the closest point
-% method easier. These include closest point extension matrices, and
-% differentiation matrices. 
-
-% This example solves the heat equation on the surface of a sphere, with initial
-% conditions u = cos(theta)
+% cp_matrices is a folder of useful functions to make implementing the
+% closest point method easier. These include closest point extension
+% matrices, and differentiation matrices.
+%
+% This example solves the heat equation on the surface of a sphere,
+% with initial conditions u = cos(4*theta)
 
 
 %% Using cp_matrices
@@ -15,7 +12,7 @@
 % Include the cp_matrices folder (edit as appropriate)
 addpath('../cp_matrices');
 
-% add function for finding the closest points
+% add functions for finding the closest points
 addpath('../surfaces');
 
 
@@ -47,10 +44,16 @@ nz = length(z1d);
 % make into vectors
 cpxg = cpx(:); cpyg = cpy(:); cpzg = cpz(:);
 
-% do calculation only in a band around the sphere
-% band is a vector of the indices of the points in the computation band
-band = find(dist <= 4.3*dx);
-              
+
+%% Banding: do calculation in a narrow band around the sphere
+dim = 3;  % dimension
+p = 3;    % interpolation order
+% "band" is a vector of the indices of the points in the computation
+% band.  The formula for bw is found in [Ruuth & Merriman 2008] and
+% the 1.0001 is a safety factor.
+bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
+band = find(dist <= bw*dx);
+
 % store closest points in the band;
 cpxg = cpxg(band); cpyg = cpyg(band); cpzg = cpzg(band);
 
@@ -65,7 +68,7 @@ cpxg = cpxg(band); cpyg = cpyg(band); cpzg = cpzg(band);
 u = cos(4*th);
 
 % this makes u into a vector, containing only points in the band
-u = u(band);  
+u = u(band);
 
 initialu = u;       % store initial value
 
@@ -77,24 +80,23 @@ initialu = u;       % store initial value
 
 disp('Constructing interpolation and laplacian matrices');
 
-p = 3;              % interpolation order
 E = interp3_matrix_band(x1d, y1d, z1d, cpxg, cpyg, cpzg, p, band);
 
-% closest point extension
-u = E*u;
+% e.g., closest point extension:
+%u = E*u;
 
 %% Create Laplacian matrix for heat equation
 
-order = 2;         % Laplacian order
+order = 2;  % Laplacian order: bw will need to increase if changed
 L = laplacian_3d_matrix(x1d,y1d,z1d, order, band, band);
 
 
 %% Construct an interpolation matrix for plotting on sphere
 
-% plotting grid on sphere
+% plotting grid on sphere, based on parameterization
 [xp,yp,zp] = sphere(64);
 xp1 = xp(:); yp1 = yp(:); zp1 = zp(:);
-
+% Eplot is a matrix which interpolations data onto the plotting grid
 Eplot = interp3_matrix_band(x1d, y1d, z1d, xp1, yp1, zp1, p, band);
 
 figure(2); set(gcf,'Position', [410 700 800 800]);
@@ -102,26 +104,29 @@ figure(2); set(gcf,'Position', [410 700 800 800]);
 
 %% Time-stepping for the heat equation
 
-dt = 0.25*dx^2;
-timesteps = 20;
+Tf = 0.1;
+dt = 0.2*dx^2;
+numtimesteps = ceil(Tf/dt)
+% adjust for integer number of steps
+dt = Tf / numtimesteps
 
-for t = 1:timesteps
-
+for kt = 1:numtimesteps
     % explicit Euler timestepping
     unew = u + dt*L*u;
-    
+
     % closest point extension
     u = E*unew;
 
+    t = kt*dt;
     % plot value on sphere
     figure(2);
     sphplot = Eplot*u;
     sphplot = reshape(sphplot, size(xp));
     surf(xp, yp, zp, sphplot);
-    title('updated value on sphere');
+    title( ['soln at time ' num2str(t)] );
     xlabel('x'); ylabel('y'); zlabel('z');
-    caxis([-1.1 1.1]);
+    caxis([-1.05 1.05]);   % lock color axis
     axis equal; shading interp;
     camlight left; colorbar;
-    
+    pause(0);
 end;

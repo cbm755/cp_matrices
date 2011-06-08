@@ -1,5 +1,17 @@
+%% Eigenvalue problem on hemisphere
+% cp_matrices is a folder of useful functions to make implementing the
+% closest point method easier. These include closest point extension
+% matrices, and differentiation matrices.
+
+% This example computes eigenvalues and eigenfunctions of the
+% Laplace--Beltrami operator on a hemisphere.  It also demonstates how
+% to impose 2nd-order accurate Neumann and Dirichlet BCs [Macdonald,
+% Brandman, Ruuth 2011].
+
+
 % adjust as appropriate
 addpath('../cp_matrices');
+addpath('../surfaces');
 
 dx = 0.2/2^1;  % grid spacing
 R=1; %Radius of the circle
@@ -13,9 +25,13 @@ ny=length(y1d);
 nz=length(z1d);
 [x3d,y3d,z3d]=meshgrid(x1d,y1d,z1d);
 
-%[cpx,cpy,cpz,dist,bdy] = cpHemisphere(x3d,y3d,z3d,cpf,R);
+% using the standard CP function, we get a homogeneous Neuamann BC
+% [Ruuth & Merriman 2008]
+%[cpx,cpy,cpz, dist, bdy] = cpHemisphere(x3d,y3d,z3d R);
+
+% Using "cpbar" [Macdonald, Brandman, Ruuth 2011]:
 cpf = @cpHemisphere;
-[cpx,cpy,cpz,dist,bdy] = cpbar_3d(x3d,y3d,z3d,cpf,R);
+[cpx,cpy,cpz, dist, bdy] = cpbar_3d(x3d,y3d,z3d, cpf, R);
 
 dim = 3;
 p = 3;  % degree interp
