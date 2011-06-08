@@ -6,6 +6,9 @@ function [cpx,cpy,cpz, dist] = cpSphere(x,y,z, R, xc,yc,zc)
 %
 %   [cpx,cpy,cpz, dist] = cpSphere(x,y,z, R, xc,yc,zc) is a sphere
 %   of radius R, centered at (xc,yc,zc)
+%
+%   Code is vectorized: any size/shape for x should work.
+
 
   % default radius of 1
   if (nargin < 4)

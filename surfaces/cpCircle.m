@@ -1,11 +1,14 @@
 function [cpx, cpy, dist] = cpCircle(x, y, R, xc, yc)
 %CPCIRCLE  Closest Point function for a circle.
 %   [cpx, cpy, dist] = cpCircle(x, y)
-%      A unit circle centered at the origin
+%      A unit circle centered at the origin.
 %   [cpx, cpy, dist] = cpCircle(x, y, R)
-%      A circle of radius R centered at the origin
+%      A circle of radius R centered at the origin.
 %   [cpx, cpy, dist] = cpCircle(x, y, R, xc, yc)
-%      A circle of radius R centered at (xc,yc)
+%      A circle of radius R centered at (xc,yc).
+%
+%   Code is vectorized: any size/shape for x should work.
+
 
   % radius defaults to 1
   if (nargin < 3)

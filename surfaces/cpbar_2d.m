@@ -14,6 +14,10 @@ function [cpx,cpy, dist, bdy] = cpbar_2d(x,y, f, varargin)
 %       banding
 %     * bdy is non-zero for points where the original closest point
 %       hit a boundary
+%
+%   Code is vectorized: any size/shape for x should work, provided
+%   function handle f is vectorized as well.
+
 
 [cpx,cpy, dist, bdy] = f(x, y, varargin{:});
 

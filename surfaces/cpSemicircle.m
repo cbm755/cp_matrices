@@ -4,6 +4,9 @@ function [cpx, cpy, dist, bdy] = cpSemicircle(x, y, R, xc, yc)
 %   [cpx, cpy, dist, bdy] = cpSemicircle(x, y, R, xc, yc)
 %      "bdy" is non-zero for points on the boundary.
 %      Inputs R, xc, yc can be omitted and default to (1,0,0)
+%
+%   Code is vectorized: any size/shape for x should work.
+
 
   % radius defaults to 1
   if (nargin < 3)

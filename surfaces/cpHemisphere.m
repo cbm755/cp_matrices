@@ -8,6 +8,9 @@ function [cpx,cpy,cpz, dist, bdy] = cpHemisphere(x,y,z, R, xc,yc,zc)
 %      A radius R hemisphere centered at the origin.
 %   [cpx,cpy,cpz, dist, bdy] = cpHemisphere(x,y,z, R, xc,yc,zc)
 %      A radius R hemisphere centered at (xc,yc,zc).
+%
+%   Code is vectorized: any size/shape for x should work.
+
 
   % default radius of 1
   if (nargin < 4)
