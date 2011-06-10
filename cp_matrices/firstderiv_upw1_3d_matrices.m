@@ -1,5 +1,5 @@
 function [Dxb,Dxf, Dyb,Dyf, Dzb,Dzf] = ...
-  firstderiv_upw1_3d_matrices(x,y,z, band1, band2, varargin)
+  firstderiv_upw1_3d_matrices(x,y,z, band1, band2, use_ndgrid)
 %FIRSTDERIV_UPW1_3D_MATRICES  Build discrete first derivatives
 % Matrices for 1st-derivatives which are 1st-order upwinded
 % differences in 3D.  Dxb is backward differences in x direction,
@@ -11,8 +11,9 @@ function [Dxb,Dxf, Dyb,Dyf, Dzb,Dzf] = ...
 
   if (nargin <= 5)
     use_ndgrid = false;
-  else
-    use_ndgrid = varargin{1};
+  end
+  if (nargin <= 4)
+    band2 = band1;
   end
 
   % input checking

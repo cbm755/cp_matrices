@@ -1,4 +1,4 @@
-function [Dxc, Dyc] = firstderiv_cen2_2d_matrices(x,y, band1, band2, varargin)
+function [Dxc, Dyc] = firstderiv_cen2_2d_matrices(x,y, band1, band2, use_ndgrid)
 %FIRSTDERIV_CEN2_2D_MATRICES  Build discrete first derivatives
 %   Matrices for 2nd-order centred differences in 2D
 %
@@ -6,8 +6,9 @@ function [Dxc, Dyc] = firstderiv_cen2_2d_matrices(x,y, band1, band2, varargin)
 
   if (nargin <= 4)
     use_ndgrid = false;
-  else
-    use_ndgrid = varargin{1};
+  end
+  if (nargin <= 3)
+    band2 = band1;
   end
 
   % input checking

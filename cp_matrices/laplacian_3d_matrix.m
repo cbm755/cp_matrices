@@ -1,4 +1,4 @@
-function L = laplacian_3d_matrix(x,y,z, order, band1, band2, varargin)
+function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid)
 %LAPLACIAN_3D_MATRIX  Build a 3D discrete Laplacian
 %   ORDER: 2 or 4 for 2nd or 4th-order
 %   Does no error checking up the equispaced nature of x,y,z
@@ -9,8 +9,9 @@ function L = laplacian_3d_matrix(x,y,z, order, band1, band2, varargin)
 
   if (nargin <= 6)
     use_ndgrid = false;
-  else
-    use_ndgrid = varargin{1};
+  end
+  if (nargin <= 5)
+    band2 = band1;
   end
 
   % input checking

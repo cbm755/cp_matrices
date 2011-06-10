@@ -1,14 +1,16 @@
-function [Dxc, Dyc, Dzc] = firstderiv_cen2_3d_matrices(x,y,z, band1, band2, varargin)
-%FIRSTDERIV_CENTERED2_MATRICES3D  Build discrete first derivatives
+function [Dxc, Dyc, Dzc] = firstderiv_cen2_3d_matrices(x,y,z, band1, band2, use_ndgrid)
+%FIRSTDERIV_CEN2_MATRICES3D  Build discrete first derivatives
 %   Matrices for 2nd-order centred differences in 3D
 %
 %   To use ndgrid ordering pass "true" as the final argument
 
   if (nargin <= 5)
     use_ndgrid = false;
-  else
-    use_ndgrid = varargin{1};
   end
+  if (nargin <= 4)
+    band2 = band1;
+  end
+
 
   % input checking
   [temp1, temp2] = size(x);
