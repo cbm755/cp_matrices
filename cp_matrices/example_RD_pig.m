@@ -11,6 +11,7 @@ addpath('../surfaces/tri_pig');
 addpath('../surfaces/readply');
 
 loaddata = 1;
+
 if (loaddata == 1)
 % NOTE: griddata needs to be generated for each choice of dx (by the
 % tri2cp C code).  its loaded below.  dim, p, order, x1d, y1d, z1d
@@ -93,7 +94,7 @@ end
 
 % parameters and functions for Gray--Scott
 % 120 works with 0.025
-F = 0.054;  k = 0.063;  nuu = 1/120^2;  nuv = nuu/2;
+F = 0.054;  k = 0.063;  nuu = 1/150^2;  nuv = nuu/2;
 f = @(u,v) (-u.*v.*v  +  F*(1-u));
 g = @(u,v) ( u.*v.*v  -  (F+k)*v);
 
@@ -110,7 +111,7 @@ v0 = 0 + 0.5*pert;
 u = u0;
 v = v0;
 
-Tf = 3000;
+Tf = 15000;
 %dt = 0.2*dx^2;
 dt = 1;
 numtimesteps = ceil(Tf/dt)
@@ -119,13 +120,17 @@ dt = Tf / numtimesteps
 
 for kt = 1:numtimesteps
     % explicit Euler timestepping
+    tic
     unew = u + dt*f(u,v) + dt*nuu*(L*u);
     vnew = v + dt*g(u,v) + dt*nuv*(L*v);
-
+    toc
+    
     % closest point extension
+    tic
     u = E*unew;
     v = E*vnew;
-
+    toc
+    
     t = kt*dt;
     
     if ( (mod(kt,25)==0) | (kt<=10) | (kt==numtimesteps) )
