@@ -2,27 +2,26 @@ function [pass, str] = test_difforder_2d()
   str = 'Order tests of 2D derivatives Dx2c, Dx1b, Dx1f, Dxx2c, etc';
 
 ds = 0.05;
-[maxerrx1,maxerry1] = helper1(ds);
+[maxerrx1,maxerry1,maxerrmix1] = helper1(ds);
 
 ds = ds / 2;
-[maxerrx2,maxerry2] = helper1(ds);
+[maxerrx2,maxerry2,maxerrmix2] = helper1(ds);
 
 ordersx = maxerrx1 ./ maxerrx2
 ordersy = maxerry1 ./ maxerry2
+ordersmix = maxerrmix1 ./ maxerrmix2
 
 fuzz = 0.95;
 
 % design orders at 2 1 1 2.
 passx = ordersx > (fuzz * 2.^[2 1 1 2]);
 passy = ordersy > (fuzz * 2.^[2 1 1 2]);
+passm = ordersmix > (fuzz * 2.^2);
 
-passvec = [passx passy];
-
-pass = all(passvec);
-
+pass = [passx passy passm];
 
 
-function [maxerrx,maxerry] = helper1(ds)
+function [maxerrx,maxerry,maxerrmix] = helper1(ds)
 pad = 4;
 
 R=1; %Radius of the circle
@@ -59,12 +58,14 @@ cpyg = cpy(band);
 [Dx1f,Dx1b, Dy1f,Dy1b] = firstderiv_upw1_2d_matrices(x1d,y1d, band,band);
 [Dx2c, Dy2c] = firstderiv_cen2_2d_matrices(x1d,y1d, band,band);
 [Dxx2c, Dyy2c] = secondderiv_cen2_2d_matrices(x1d,y1d, band,band);
+Dxy2c = secondderiv_mixcen2_2d_matrix(x1d,y1d, band,band);
 
 u = sin(2*xg) .* cos(3*yg);
 ux_ex = 2*cos(2*xg) .* cos(3*yg);
 uy_ex = sin(2*xg) .* (-3*sin(3*yg));
 uxx_ex = -4*sin(2*xg) .* cos(3*yg);
 uyy_ex = sin(2*xg) .* (-9*cos(3*yg));
+uxy_ex = 2*cos(2*xg) .* (-3*sin(3*yg));
 
 ux1 = Dx2c*u;
 ux2 = Dx1f*u;
@@ -74,6 +75,7 @@ uy1 = Dy2c*u;
 uy2 = Dy1f*u;
 uy3 = Dy1b*u;
 uyy = Dyy2c*u;
+uxy = Dxy2c*u;
 
 
 errx = ux1(inband)-ux_ex(inband);
@@ -87,7 +89,7 @@ maxerry(1) = max(abs( uy1(inband)-uy_ex(inband) ));
 maxerry(2) = max(abs( uy2(inband)-uy_ex(inband) ));
 maxerry(3) = max(abs( uy3(inband)-uy_ex(inband) ));
 maxerry(4) = max(abs( uyy(inband)-uyy_ex(inband) ));
-
+maxerrmix  = max(abs( uxy(inband)-uxy_ex(inband) ));
 if (1==0)
   figure(1); clf; hold on;
   plot(errx, 'r--.')

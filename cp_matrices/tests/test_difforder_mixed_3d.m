@@ -54,7 +54,7 @@ cpzg = cpz(band);
 
 %E = interp2_matrix_band(x1d,y1d, cpxg,cpyg, p, band);
 
-[Dxy2c, Dxz2c, Dyz2c] = firstderiv_mixcen2_3d_matrices(x1d,y1d,z1d, band,band);
+[Dxy2c, Dxz2c, Dyz2c] = secondderiv_mixcen2_3d_matrices(x1d,y1d,z1d, band,band);
 
 u = sin(2*xg) .* cos(3*yg) .* sin(zg);
 uxy_ex = 2*cos(2*xg) .* (-3*sin(3*yg)) .* sin(zg);

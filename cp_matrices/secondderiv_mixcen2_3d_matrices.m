@@ -1,5 +1,5 @@
-function [Dxyc, Dxzc, Dyzc] = firstderiv_mixcen2_3d_matrices(x,y,z, band1, band2, use_ndgrid)
-%FIRSTDERIV_MIXCEN2_MATRICES3D  Build discrete first derivatives
+function [Dxyc, Dxzc, Dyzc] = secondderiv_mixcen2_3d_matrices(x,y,z, band1, band2, use_ndgrid)
+%SECONDDERIV_MIXCEN2_3D_MATRICES  Build discrete second mixed partials
 %   Matrices for 2nd-order centred differences in 3D (mixed partials)
 %
 %   To use ndgrid ordering pass "true" as the final argument
@@ -44,7 +44,7 @@ function [Dxyc, Dxzc, Dyzc] = firstderiv_mixcen2_3d_matrices(x,y,z, band1, band2
           1   0  -1];
   Dxzc = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, use_ndgrid);
 
-  weights = [1  -1   1  -1] / (4*dx*dy);
+  weights = [1  -1   1  -1] / (4*dy*dz);
   PTS = [0   1   1; ...
          0  -1   1; ...
          0  -1  -1; ...
