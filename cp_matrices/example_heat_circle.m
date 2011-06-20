@@ -12,11 +12,10 @@
 
 % Include the cp_matrices folder (edit as appropriate)
 addpath('../cp_matrices');
-%addpath('/home/wen/closestpoint/cp_matrices');
 
 % add functions for finding the closest points
-addpath('../cp_matrices');
-%addpath('/home/wen/closestpoint/surfaces');
+addpath('../surfaces');
+
 
 
 %%
