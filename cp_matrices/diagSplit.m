@@ -9,6 +9,10 @@ function M = diagSplit(L, E)
 %   TODO: Is this the most general implementation?  Does it work for
 %   nonsquare L and E?
 
+  warning('only works for square case')
+  warning('TODO: logical diagonal is not on diag of L in general!')
+  % TODO: logical diagonals are the indices of band1 in band2?
   % extract the diagonal
   Ldiag = diag(diag(L));
-  M = Ldiag + (L-Ldiag)*E;
+  Ldiagpad = diag(diag(L),size(L,1),size(L,2));
+  M = Ldiag + (L-Ldiagpad)*E;

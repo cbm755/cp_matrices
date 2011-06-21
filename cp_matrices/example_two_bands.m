@@ -3,9 +3,11 @@
 % closest point method easier. These include closest point extension
 % matrices, and differentiation matrices.
 
-% This example solves the heat equation on a 2D circle, with initial
-% conditions u = cos(theta), and exact solution u(t) =
-% exp(-t)*cos(theta)
+% This example demonstrates two bands as in implicit CP paper
+% [Macdonald, Ruuth 2009]
+%%%%%%%%%%%%%
+% Work in progress!  use at your own risk
+%%%%%%%%%%%%%
 
 
 %% Using cp_matrices
@@ -22,10 +24,10 @@ addpath('../surfaces');
 % 2D example on a circle
 % Construct a grid in the embedding space
 
-dx = 0.1;                   % grid size
+dx = 0.2;   % grid size
 
 % make vectors of x, y, positions of the grid
-x1d = (-2.0:dx:2.0)';
+x1d = (-2.4:dx:2.4)';
 y1d = x1d;
 
 nx = length(x1d);
@@ -42,23 +44,35 @@ ny = length(y1d);
 % function cpCircle for finding the closest points on a circle
 [cpx, cpy, dist] = cpCircle(xx,yy);
 % make into vectors
-cpxg = cpx(:); cpyg = cpy(:);
+%cpxg = cpx(:); cpyg = cpy(:);
 
 
 %% Banding: do calculation in a narrow band around the sphere
 dim = 2;  % dimension
 p = 3;    % interpolation order
+order = 4;  % Laplacian order: bw will need to increase if changed
+fd_stenrad = order/2;  % Finite difference stencil radius
 % "band" is a vector of the indices of the points in the computation
 % band.  The formula for bw is found in [Ruuth & Merriman 2008] and
 % the 1.0001 is a safety factor.
-bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
-band = find(dist <= bw*dx);
+%bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
+
+bw1 = 1.0001*sqrt((dim)*((p+1)/2)^2);
+bw2 = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((fd_stenrad+(p+1)/2)^2));
+band1 = find(dist <= bw1*dx);
+band2 = find(dist <= bw2*dx);
+% todo: had some slick way to find bw1 indices in bw2
+%band1in2 = 
+
+nband1 = length(band1)
+nband2 = length(band2)
 
 % store points not in band, for plotting
-notband = setdiff(1:nx*ny, band);
+notband = setdiff(1:nx*ny, band1);
 
 % store closest points in the band;
-cpxg = cpxg(band); cpyg = cpyg(band);
+cpxg1 = cpx(band1); cpyg1 = cpy(band1);
+cpxg2 = cpx(band2); cpyg2 = cpy(band2);
 
 
 
@@ -72,7 +86,8 @@ u = zeros(nx,ny);
 u = cos(th);
 
 % this makes u into a vector, containing only points in the band
-u = u(band);
+u = u(band1);
+
 
 initialu = u;       % store initial value
 
@@ -82,14 +97,14 @@ initialu = u;       % store initial value
 figure(1);
 % make a full matrix for plotting
 uplot = zeros(nx,ny);
-uplot(band) = u;
-uplot(notband) = NaN;
+uplot(band1) = u;
+uplot(notband) = -1;
 
 % plot
 pcolor(x1d,y1d,uplot);
 
 % make plot look pretty
-caxis([-1.1 1.1]);
+%caxis([-1.1 1.1]);
 axis equal; colorbar;
 title('initial value on embedding space');
 xlabel('x'); ylabel('y');
@@ -101,17 +116,18 @@ xlabel('x'); ylabel('y');
 % onto the points cpx cpy.
 
 disp('Constructing interpolation and laplacian matrices');
+% TODO: should just make one: have some sort of restriction operator
+E1 = interp2_matrix_band(x1d, y1d, cpxg1, cpyg1, p, band1);
+E = interp2_matrix_band(x1d, y1d, cpxg2, cpyg2, p, band1);
 
-E = interp2_matrix_band(x1d, y1d, cpxg, cpyg, p, band);
-
-% e.g., closest point extension:
-%u = E*u;
 
 %% Create Laplacian matrix for heat equation
 
-order = 2;  % Laplacian order: bw will need to increase if changed
-L = laplacian_2d_matrix(x1d,y1d, order, band);
 
+L = laplacian_2d_matrix(x1d,y1d, order, band1, band2);
+Ls = laplacian_2d_matrix(x1d,y1d, order, band2, band2);
+
+M = diagSplit(L, E);
 
 %% Construct an interpolation matrix for plotting on circle
 
@@ -121,9 +137,11 @@ r = ones(size(thetas));
 % plotting grid in Cartesian coords
 [xp,yp] = pol2cart(thetas,r);
 xp = xp(:); yp = yp(:);
-Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, band);
+Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, band1);
 
 figure(2); set(gcf,'Position', [410 700 800 800]);
+
+
 
 
 %% Time-stepping for the heat equation
@@ -135,18 +153,21 @@ numtimesteps = ceil(Tf/dt)
 dt = Tf / numtimesteps
 
 for kt = 1:numtimesteps
+    %u2 = E*u;
+    %u2short = 
     % explicit Euler timestepping
-    unew = u + dt*L*u;
+    unew = E1*u + dt*L*(E*u);
 
     % closest point extension
-    u = E*unew;
+    %u = E*unew;
+    u = unew;
 
     t = kt*dt;
     % plot over computation band
-    if ( (kt < 10) | (mod(kt,10) == 0) | (kt == numtimesteps) )
+    if ( (kt < 5) | (mod(kt,20) == 0) | (kt == numtimesteps) )
         figure(2);
         subplot(2,1,1); hold off;
-        uplot(band) = u;
+        uplot(band1) = u;
         pcolor(x1d,y1d,uplot);
         caxis([-1.05 1.05]);
         hold on
