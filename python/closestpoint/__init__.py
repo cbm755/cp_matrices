@@ -10,6 +10,10 @@ from Multi import *
 from CPBar import *
 from Manipulate import *
 from ParamCurve import *
+from SplineCurve import *
+from CircularArc import *
+from Cylinder import *
+from TriangulationSlow import *
 
 #reload Sphere
 

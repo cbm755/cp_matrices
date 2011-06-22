@@ -24,7 +24,8 @@ class CPBar(ShapeWithBdy):
 
     def closestPointToCartesian(self, x):
         """ note: returns distance to the original cp """
-        cpf = self._obj.closestPointToCartesian
+        #cpf = self._obj.closestPointToCartesian
+        cpf = self._obj.cp
         cpx,dist,bdy,others = cpf(x)
         if bdy==1 or bdy==2:
             y = x + 2*(cpx - x)

@@ -116,6 +116,7 @@ class ShapeWithBdy(ClosestPoint):
                 raise NameError('should do something for other bdy values')
             plot([x[0], cp[0]], [x[1],cp[1]], '-', color=col)
             plot([cp[0]], [cp[1]], 'o', color=col)
+        axis('scaled')
         pylab.show()
 
 
