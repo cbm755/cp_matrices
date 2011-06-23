@@ -45,7 +45,7 @@ ny = length(y1d);
 cpxg = cpx(:); cpyg = cpy(:);
 
 
-%% Banding: do calculation in a narrow band around the sphere
+%% Banding: do calculation in a narrow band around the circle
 dim = 2;  % dimension
 p = 3;    % interpolation order
 % "band" is a vector of the indices of the points in the computation
