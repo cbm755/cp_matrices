@@ -57,8 +57,11 @@ bdyg = bdy(band);
 disp('building laplacian and interp matrices');
 L = laplacian_3d_matrix(x1d,y1d,z1d, order, band,band);
 E = interp3_matrix_band(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
-% dirichlet BCs
-%E(bdyb,:) = -E(bdyb,:);
+
+% Dirichlet BCs: mirror for ghost points outside of surface edges.
+% Comment this out for Neumann BCs.
+E(bdyg,:) = -E(bdyg,:);
+
 % iCPM matrix
 M = diagSplit(L,E);
 
