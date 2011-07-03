@@ -77,7 +77,7 @@ if (build_matrices)
   L = laplacian_3d_matrix(x1d,y1d,z1d, order, band,band);
   E = interp3_matrix_band(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
   % iCPM matrix
-  M = diagSplit(L,E);
+  M = lapsharp(L,E);
 
   %% plotting grid
   [Faces, Vertices] = plyread(PlyFile, 'tri');
@@ -94,7 +94,7 @@ end
 
 % parameters and functions for Gray--Scott
 % 120 works with 0.025
-F = 0.054;  k = 0.063;  nuu = 1/150^2;  nuv = nuu/2;
+F = 0.054;  k = 0.063;  nuu = 1/120^2;  nuv = nuu/2;
 f = @(u,v) (-u.*v.*v  +  F*(1-u));
 g = @(u,v) ( u.*v.*v  -  (F+k)*v);
 

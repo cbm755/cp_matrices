@@ -17,7 +17,7 @@ addpath('../surfaces/readply');
 % NOTE: griddata needs to be generated for each choice of dx (by the
 % tri2cp C code).  its loaded below.  dim, p, order, x1d, y1d, z1d
 % must match this code too.
-dx = 0.1;
+dx = 0.1/4;
 
 x1d=(-2.0):dx:(2.0)';
 y1d=x1d;
@@ -78,7 +78,7 @@ if (build_matrices)
   L = laplacian_3d_matrix(x1d,y1d,z1d, order, band,band);
   E = interp3_matrix_band(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
   % iCPM matrix
-  M = diagSplit(L,E);
+  M = lapsharp(L,E);
 
   %% plotting grid
   [Faces, Vertices] = plyread(PlyFile, 'tri');
@@ -99,7 +99,7 @@ end
 
 tic
 %[V,D] = eigs(-M, 20, 'sm', opts);
-[V,D] = eigs(-M, 10, 0.5);
+[V,D] = eigs(-M, 6, 0.5);
 evtime = toc
 D = diag(D);
 [Lambda,I] = sort(abs(D));
@@ -119,3 +119,4 @@ for i=1:4
   shading interp
   camlight left
 end
+

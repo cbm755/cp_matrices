@@ -63,7 +63,7 @@ E = interp3_matrix_band(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
 E(bdyg,:) = -E(bdyg,:);
 
 % iCPM matrix
-M = diagSplit(L,E);
+M = lapsharp(L,E);
 
 
 %% plotting grid

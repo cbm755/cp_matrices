@@ -3,11 +3,8 @@
 % closest point method easier. These include closest point extension
 % matrices, and differentiation matrices.
 
-% This example demonstrates two bands as in implicit CP paper
+% This example demonstrates two bands as in the implicit CP paper
 % [Macdonald, Ruuth 2009]
-%%%%%%%%%%%%%
-% Work in progress!  use at your own risk
-%%%%%%%%%%%%%
 
 
 %% Using cp_matrices
@@ -19,16 +16,22 @@ addpath('../cp_matrices');
 addpath('../surfaces');
 
 
+global ICPM2009BANDINGCHECKS
+
+% this is a bit dangerous: will break other less tightly banded
+% codes, turn it off later
+ICPM2009BANDINGCHECKS = 1;
 
 %%
 % 2D example on a circle
 % Construct a grid in the embedding space
 
-dx = 0.2;   % grid size
+dx = 0.25/2;   % grid size
 
 % make vectors of x, y, positions of the grid
-x1d = (-2.4:dx:2.4)';
-y1d = x1d;
+x1d = (-2:dx:2)';
+y1d = (-1.4:dx:1.4)';
+dy = dx;
 
 nx = length(x1d);
 ny = length(y1d);
@@ -47,148 +50,201 @@ ny = length(y1d);
 %cpxg = cpx(:); cpyg = cpy(:);
 
 
-%% Banding: do calculation in a narrow band around the sphere
+%% Banding: do calculation in narrow bands
+% We start by defining an "initial band" which we'll refine later.
+% Typically, in practice, we have some scattered input which we'll
+% assume satisfies the bandwidth formula below (e.g., output from
+% tri2cp)
 dim = 2;  % dimension
 p = 3;    % interpolation order
-order = 4;  % Laplacian order: bw will need to increase if changed
+order = 2;  % Laplacian order: bw will need to increase if changed
 fd_stenrad = order/2;  % Finite difference stencil radius
-% "band" is a vector of the indices of the points in the computation
-% band.  The formula for bw is found in [Ruuth & Merriman 2008] and
-% the 1.0001 is a safety factor.
-%bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
-
-bw1 = 1.0001*sqrt((dim)*((p+1)/2)^2);
-bw2 = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((fd_stenrad+(p+1)/2)^2));
-band1 = find(dist <= bw1*dx);
-band2 = find(dist <= bw2*dx);
-% todo: had some slick way to find bw1 indices in bw2
-%band1in2 = 
-
-nband1 = length(band1)
-nband2 = length(band2)
-
-% store points not in band, for plotting
-notband = setdiff(1:nx*ny, band1);
-
-% store closest points in the band;
-cpxg1 = cpx(band1); cpyg1 = cpy(band1);
-cpxg2 = cpx(band2); cpyg2 = cpy(band2);
-
-
-
-%% Function u in the embedding space
-% u is a function defined on the grid (eg heat if solving the heat
-% equation)
-
-u = zeros(nx,ny);
-% assign some initial value (using initial value of cos theta)
-[th, r] = cart2pol(xx,yy);
-u = cos(th);
-
-% this makes u into a vector, containing only points in the band
-u = u(band1);
-
-
-initialu = u;       % store initial value
-
-
-%% Plot
-
-figure(1);
-% make a full matrix for plotting
-uplot = zeros(nx,ny);
-uplot(band1) = u;
-uplot(notband) = -1;
-
-% plot
-pcolor(x1d,y1d,uplot);
-
-% make plot look pretty
-%caxis([-1.1 1.1]);
-axis equal; colorbar;
-title('initial value on embedding space');
-xlabel('x'); ylabel('y');
+% The formula for bw is found in [Ruuth & Merriman 2008] and the
+% 1.0002 is a safety factor.
+bw = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((fd_stenrad+(p+1)/2)^2));
+% start with a rough band and refine later, here just find the
+% indicies of all points within bandwidth of the surface.
+band_init = find(dist <= bw*dx);
+% the corresponding closest points
+cpxg_init = cpx(band_init); cpyg_init = cpy(band_init);
+xg_init = xx(band_init); yg_init = yy(band_init);
 
 
 %% Construct an interpolation matrix for closest point
-
 % This creates a matrix which interpolates data from the grid x1d y1d,
 % onto the points cpx cpy.
-
-disp('Constructing interpolation and laplacian matrices');
-% TODO: should just make one: have some sort of restriction operator
-E1 = interp2_matrix_band(x1d, y1d, cpxg1, cpyg1, p, band1);
-E = interp2_matrix_band(x1d, y1d, cpxg2, cpyg2, p, band1);
+disp('Constructing interpolation matrix');
+% various alternatives, here we use the "full" E matrix...
+Etemp = interp2_matrix(x1d, y1d, cpxg_init, cpyg_init, p);
+tic; [i,j,S] = find(Etemp); toc;
+tic; innerband = unique(j); toc;
 
 
 %% Create Laplacian matrix for heat equation
+% in general, want the biggest stencil here so the others fit too
+Ltemp = laplacian_2d_matrix(x1d,y1d, order, innerband, band_init);
 
 
-L = laplacian_2d_matrix(x1d,y1d, order, band1, band2);
-Ls = laplacian_2d_matrix(x1d,y1d, order, band2, band2);
+%% The outerband
+% We find a narrow outerband by using the column-space of L.
+tic; [i,j,S] = find(Ltemp); toc;
+tic; outerbandtemp = unique(j); toc;
+% indices are into band_init (the original columns of L),
+% look them up to get the outerband in terms of the
+% meshgrid(x1d,y1d) indices.
+outerband = band_init(outerbandtemp);
 
-M = diagSplit(L, E);
+cpxgout = cpxg_init(outerbandtemp); cpygout = cpyg_init(outerbandtemp);
+xgout = xg_init(outerbandtemp); ygout = yg_init(outerbandtemp);
+
+L = Ltemp(:, outerbandtemp);
+E = Etemp(outerbandtemp, innerband);
+clear Ltemp Etemp outerbandtemp  % optional, erase the originals
+
+
+%% Could instead regenerate everything, now that we have the two bands
+%cpxgin3 = cpx(innerband); cpygin3 = cpy(innerband);
+%cpxgout3 = cpx(outerband); cpygout3 = cpy(outerband);
+%E3 = interp2_matrix_band(x1d, y1d, cpxgout3, cpygout3, p, innerband);
+%L3 = laplacian_2d_matrix(x1d,y1d, order, innerband, outerband);
+
+
+%% Other operators
+% Note: stencils need to be a subset of the one used to generate
+% the outerband above
+[Dxb,Dxf,Dyb,Dyf] = firstderiv_upw1_2d_matrices(x1d,y1d, innerband, outerband);
+[Dxc,Dyc] = firstderiv_cen2_2d_matrices(x1d,y1d, innerband, outerband);
+[Dxx,Dyy] = secondderiv_cen2_2d_matrices(x1d,y1d, innerband, outerband);
+% e.g., this one needs diagonals and might not work
+%Dxy = secondderiv_mixcen2_2d_matrix(x1d,y1d, innerband, outerband);
+
+%% Restriction operator
+% used to extract inner values from an outer band vector.  There
+% is probably a slick loop-free way to do this.
+innerInOuter = zeros(size(innerband));
+R = sparse([],[],[],length(innerband),length(outerband),length(innerband));
+for i=1:length(innerband)
+  I = find(outerband == innerband(i));
+  innerInOuter(i) = I;
+  R(i,I) = 1;
+end
+% closest points of the inner band
+cpxgin = R*cpxgout;  cpygin = R*cpygout;
+xgin = R*xgout;  ygin = R*ygout;
+
+
+%% Diagonal splitting for iCPM
+M = lapsharp_unordered(L, E, R);
+
+
 
 %% Construct an interpolation matrix for plotting on circle
-
 % plotting grid on circle, using theta as a parameterization
-thetas = linspace(0,2*pi,100);
+thetas = linspace(0,2*pi,1000);
 r = ones(size(thetas));
 % plotting grid in Cartesian coords
 [xp,yp] = pol2cart(thetas,r);
 xp = xp(:); yp = yp(:);
-Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, band1);
-
-figure(2); set(gcf,'Position', [410 700 800 800]);
+Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, innerband);
 
 
+% after building matrices, don't need this set
+ICPM2009BANDINGCHECKS = 0;
+
+
+%% Function u in the embedding space, initial conditions
+% u is a function defined on the grid (e.g. heat)
+[thg, rg] = cart2pol(cpxgin,cpygin);
+u0 = cos(thg);
+uexactfn = @(t,th) exp(-t)*cos(th);
+u = u0;
+
+% for making full dense plots
+%ufull = zeros(ny,nx);
+%[th, r] = cart2pol(xx,yy);
+%ufull = cos(th);
 
 
 %% Time-stepping for the heat equation
 
-Tf = 1;
-dt = 0.2*dx^2;
+implicit = 1
+Tf = 0.25;
+if implicit
+  dt = dx/10;
+else
+  dt = 0.2*dx^2;
+end
 numtimesteps = ceil(Tf/dt)
 % adjust for integer number of steps
 dt = Tf / numtimesteps
+if implicit
+  % make time-stepping matrix
+  I = speye(size(M));
+  A = I - dt*M;
+end
 
 for kt = 1:numtimesteps
-    %u2 = E*u;
-    %u2short = 
-    % explicit Euler timestepping
-    unew = E1*u + dt*L*(E*u);
-
+  if (implicit)
+    %% implicit backward euler
+    %unew - uold = dt*M*unew
+    unew = A \ u;
+  else
+    %% explicit forward euler
     % closest point extension
-    %u = E*unew;
-    u = unew;
+    uext = E*u;
+    % timestep
+    unew = R*uext + dt*(L*uext);
+    %unew = R*uext + dt*M*(R*uext);
+  end
+  
 
-    t = kt*dt;
-    % plot over computation band
-    if ( (kt < 5) | (mod(kt,20) == 0) | (kt == numtimesteps) )
-        figure(2);
-        subplot(2,1,1); hold off;
-        uplot(band1) = u;
-        pcolor(x1d,y1d,uplot);
-        caxis([-1.05 1.05]);
-        hold on
-        plot(xp,yp,'k-', 'linewidth', 2);
-        axis equal;  axis tight;
-        colorbar;
-        title( ['embedded domain: soln at time ' num2str(t) ...
-                ', timestep #' num2str(kt)] );
-        xlabel('x'); ylabel('y');
+  
+  
+  u = unew;
 
-        % plot value on circle
-        figure(2); subplot(2,1,2); hold off;
-        circplot = Eplot*u;
-        plot(thetas, circplot);
-        title( ['soln at time ' num2str(t) ', on circle'] );
-        xlabel('theta'); ylabel('u');
-        hold on;
-        % plot analytic result
-        plot(thetas, exp(-t)*cos(thetas), 'r--');
-        legend('explicit Euler', 'exact answer', 'Location', 'SouthEast');
-        error_circ_inf = max(abs( exp(-t)*cos(thetas) - circplot' ))
-        pause(0);
-    end
+  t = kt*dt;
+
+  % plotting
+  if ( (kt < 5) | (mod(kt,200) == 0) | (kt == numtimesteps) )
+    % plot in the embedded domain: shows the computational band
+    figure(2); clf;
+    subplot(2,1,1);
+    % plot a patch for each grid point
+    xpat = dx/2*[-1; 1; 1; -1];
+    ypat = dy/2*[1; 1; -1; -1];
+    X = repmat(xgin',4,1) + repmat(xpat,1,length(u));
+    Y = repmat(ygin',4,1) + repmat(ypat,1,length(u));
+    patch(X,Y,u');
+    % TODO: could add the outerband as well
+    %ufull = 0/0 * zeros(ny,nx);
+    %ufull(innerband) = u;
+    %pcolor(x1d,y1d,ufull);
+    shading flat
+    %caxis([-1.05 1.05]);
+    hold on
+    plot(xp,yp,'k-', 'linewidth', 2);
+    axis equal;  axis tight;
+    colorbar;
+    title( ['embedded domain: soln at time ' num2str(t) ...
+            ', timestep #' num2str(kt)] );
+    xlabel('x'); ylabel('y');
+
+    % plot value on circle
+    subplot(2,1,2);
+    circplot = Eplot*u;
+    plot(thetas, circplot);
+    title( ['soln at time ' num2str(t) ', on circle'] );
+    xlabel('theta'); ylabel('u');
+    hold on;
+    % plot analytic result
+    plot(thetas, exp(-t)*cos(thetas), 'r--');
+    plot(thetas, Eplot*u0, 'g-.');
+    legend('explicit Euler', 'exact answer', 'initial condition ', ...
+           'Location', 'SouthEast');
+    %error_circ_inf = max(abs( exp(-t)*cos(thetas) - circplot' ));
+    error_circ_inf = max(abs( uexactfn(t,thetas) - circplot' ));
+    [dx dt t error_circ_inf]
+
+    pause(0);
+  end
 end
