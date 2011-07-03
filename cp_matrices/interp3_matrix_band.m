@@ -1,4 +1,4 @@
-function E = interp3_matrix_band(x, y, z, xi, yi, zi, p, band)
+function E = interp3_matrix_band(x, y, z, xi, yi, zi, p, band, use_ndgrid)
 %INTERP3_MATRIX_BAND  Return a interpolation matrix over a band
 %   E = INTERP3_MATRIX(X,Y,Z,XI,YI,ZI,P,BAND)
 %   Build a matrix which interpolates grid data on a grid defined
@@ -14,5 +14,20 @@ function E = interp3_matrix_band(x, y, z, xi, yi, zi, p, band)
 %
 %   Does no error checking up the equispaced nature of x,y,z
 
-  E = interp3_matrix(x, y, z, xi, yi, zi, p);
+  if (nargin < 9)
+    use_ndgrid = false;
+  end
+
+  E = interp3_matrix(x, y, z, xi, yi, zi, p, use_ndgrid);
+
+  % sanity check: the columns outside of band should all be zero
+  Nx = length(x);
+  Ny = length(y);
+  Nz = length(z);
+  Eout = E(:,setdiff(1:(Nx*Ny*Nz),band));
+  if (nnz(Eout) > 0)
+    nnz(Eout)
+    warning('Lost some non-zero coefficients (from outside the innerband)');
+  end
+
   E = E(:,band);

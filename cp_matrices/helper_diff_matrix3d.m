@@ -10,16 +10,9 @@ function L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, ndgrid)
 %   TODO: issue with two bands: currently need extra padding in
 %   wherever we call this from: should fix this
 
+  % TODO: a global variable is probably not a good way to do this.
+  global ICPM2009BANDINGCHECKS
 
-  % TODO why not just Nx = length(x)???
-  %dx = x(2)-x(1);
-  %dy = y(2)-y(1);
-  %dz = z(2)-z(1);
-  %ddx = [dx  dy  dz];
-  %Nx = round( (x(end)-x(1)) / dx ) + 1;
-  %Ny = round( (y(end)-y(1)) / dy ) + 1;
-  %Nz = round( (z(end)-z(1)) / dz ) + 1;
-  %dim = length(ddx);
   Nx = length(x);
   Ny = length(y);
   Nz = length(z);
@@ -34,7 +27,7 @@ function L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, ndgrid)
   Ls = zeros(size(Li));
   Lc = 0;
 
-  % good candidate for parfor?
+  % main loop, good candidate for parfor?
   for c = 1:length(band1)
     I = band1(c);
 
@@ -52,11 +45,11 @@ function L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, ndgrid)
 
     if ndgrid
       % TODO: ndgrid ordering: not tested!
-      ind = round(sub2ind([Nx,Ny,Nz],ii,jj,kk));
+      ind = sub2ind([Nx,Ny,Nz],ii,jj,kk);
     else
-      % TODO: think about "round": should just use some integer type?
-      % funny ordering of y and x is b/c of meshgrid
-      ind = round(sub2ind([Ny,Nx,Nz],jj,ii,kk));
+      % meshgrid ordering
+      % used to round() here, could also think about using some integer type
+      ind = sub2ind([Ny,Nx,Nz],jj,ii,kk);
     end
 
     Lj( (Lc+1):(Lc+StencilSize) ) = ind;
@@ -70,8 +63,19 @@ function L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, ndgrid)
   end
 
   L = sparse(Li, Lj, Ls, length(band1), Nx*Ny*Nz);
-  L = L(:,band2);
+
+  % If we're using careful banding a la iCPM2009 then as a sanity
+  % check all of the columns outside of band2 should be zero.
+  if (~isempty(ICPM2009BANDINGCHECKS)) & (ICPM2009BANDINGCHECKS)
+    Lout = L(:, setdiff(1:(Nx*Ny*Nz),band2));
+    if (nnz(Lout) > 0)
+      nnz(Lout)
+      error('Lost some non-zero coefficients (from outside the outerband)');
+    end
+  end
+
+  % remove columns not in band2 (the outerband)
+  L = L(:, band2);
 
   Ltime = toc;
 end
-

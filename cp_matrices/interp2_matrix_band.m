@@ -1,4 +1,4 @@
-function E = interp2_matrix_band(x, y, xi, yi, p, band)
+function E = interp2_matrix_band(x, y, xi, yi, p, band, use_ndgrid)
 %INTERP2_MATRIX_BAND  Return a interpolation matrix over a band
 %   E = INTERP2_MATRIX(X,Y,XI,YI,P,BAND)
 %   Build a matrix which interpolates grid data on a grid defined
@@ -17,5 +17,20 @@ function E = interp2_matrix_band(x, y, xi, yi, p, band)
 %
 %   Does no error checking up the equispaced nature of x,y,z
 
-  E = interp2_matrix(x, y, xi, yi, p);
+  if (nargin < 7)
+    use_ndgrid = false;
+  end
+
+  E = interp2_matrix(x, y, xi, yi, p, use_ndgrid);
+
+  % sanity check: the columns outside of band should all be zero
+  Nx = length(x);
+  Ny = length(y);
+  Eout = E(:,setdiff(1:(Nx*Ny),band));
+  if (nnz(Eout) > 0)
+    nnz(Eout)
+    warning('Lost some non-zero coefficients (from outside the innerband)');
+  end
+
+  % remove columns that are outside of band
   E = E(:,band);

@@ -1,15 +1,21 @@
-function E = interp3_matrix(x, y, z, xi, yi, zi, p)
+function E = interp3_matrix(x, y, z, xi, yi, zi, p, use_ndgrid)
 %INTERP3_MATRIX  Return a interpolation matrix
 %   E = INTERP3_MATRIX(X,Y,Z,XI,YI,ZI,P)
 %   Build a matrix which interpolates the grid data u onto the
 %   points x and y using degree P barycentric Lagrange
 %   interpolation.
 %
-%   Does very little error checking up the equispaced nature of x,y,z
+%   E = INTERP2_MATRIX(X,Y,XI,YI,DEGREEP,true)
+%   Same as above but assumes ndgrid rather than meshgrid ordering
 %
-% todo: assumes xi is a vector, could relax this to return a
-% matrix sized based on the linear index (numels??).  TODO: think
-% more about this
+%   Does very little error checking up the equispaced nature of x,y,z
+
+  % todo: assumes xi is a vector, could relax this to return a
+  % matrix sized based on the linear index (numels??).
+
+  if (nargin < 8)
+    use_ndgrid = false;
+  end
 
   % input checking
   [temp1, temp2] = size(x);
@@ -45,10 +51,9 @@ function E = interp3_matrix(x, y, z, xi, yi, zi, p)
   Ny = round( (y(end)-y(1)) / dy ) + 1;
   Nz = round( (z(end)-z(1)) / dz ) + 1;
 
-  if (Nx * Ny > 1e15)
+  if (Nx * Ny * Nz > 1e15)
     error('too big to use doubles as indicies: implement int64 indexing')
   end
-
 
   ptL = [x(1) y(1) z(1)];
   ptH = [x(end) y(end) z(end)];
@@ -74,9 +79,17 @@ function E = interp3_matrix(x, y, z, xi, yi, zi, p)
     X = [xi(i)  yi(i)  zi(i)];
     [weights,gii,gjj,gkk] = buildInterpWeights(X,ptL,ddx,p);
 
-    % funny ordering of y and x is b/c of meshgrid
-    %ind = round((gkk-1)*(Nx*Ny) + (gii-1)*(Ny) + gjj-1 + 1);
-    ind = round(sub2ind([Ny,Nx,Nz],gjj,gii,gkk));
+    if use_ndgrid
+      % ndgrid ordering
+      % TODO: warning: maybe needs changes to buildInterpWeights?
+      warning('not tested with ndgrid');
+      ind = sub2ind([Nx,Ny,Nz], gii, gjj, gkk);
+    else
+      % meshgrid ordering
+      % (funny ordering of y and x)
+      ind = sub2ind([Ny,Nx,Nz], gjj, gii, gkk);
+      %ind = round((gkk-1)*(Nx*Ny) + (gii-1)*(Ny) + gjj-1 + 1);
+    end
 
     %Eold(i,jj) = extWeights;
     % its faster to track all entries and put them all in at once

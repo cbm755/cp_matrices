@@ -1,15 +1,22 @@
-function E = interp2_matrix(x, y, xi, yi, p)
+function E = interp2_matrix(x, y, xi, yi, p, use_ndgrid)
 %INTERP2_MATRIX  Return a interpolation matrix
 %   E = INTERP2_MATRIX(X,Y,XI,YI,DEGREEP)
 %   Build a matrix which interpolates the grid data u onto the
 %   points x and y using degree P barycentric Lagrange
 %   interpolation.
 %
+%   E = INTERP2_MATRIX(X,Y,XI,YI,DEGREEP,true)
+%   Same as above but assumes ndgrid rather than meshgrid ordering
+%
 %   Must be equispaced in each x,y (dx, dy can differ)
-%   Does very little error checking of inputs
+%   Currently does very little error checking of inputs
 
-  % todo: here assumes xi is a vector
+  % todo: in various places we assume xi is a vector
   %E = sparse(length(xi), length(u));
+
+  if (nargin < 6)
+    use_ndgrid = false;
+  end
 
   % input checking
   [temp1,temp2] = size(x);
@@ -61,13 +68,16 @@ function E = interp2_matrix(x, y, xi, yi, p)
     X = [xi(i), yi(i)];
     [weights,gii,gjj] = buildInterpWeights(X,ptL,ddx,p);
 
-    % can use sub2ind??
-    % todo: Nx,Ny? order?
-    % TODO: I hate this sort of thing, compare to CY's code
-    ind1 = round( (gii-1)*(Ny) + gjj-1 + 1 );
-    ind = round( sub2ind([Ny,Nx], gjj, gii) );
-    if (ind1 ~= ind)
-      error('fail')
+    if use_ndgrid
+      % ndgrid ordering
+      % TODO: warning: maybe needs changes to buildInterpWeights?
+      warning('not tested with ndgrid');
+      ind = sub2ind([Nx,Ny], gii, gjj);
+    else
+      % meshgrid ordering
+      ind = sub2ind([Ny,Nx], gjj, gii);
+      %ind1 = round( (gii-1)*(Ny) + gjj-1 + 1 );
+      %if (ind1 ~= ind)  error('fail')  end
     end
 
     %Eold(i,jj) = extWeights;
