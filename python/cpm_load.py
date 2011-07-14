@@ -11,8 +11,8 @@ reload(cpGrid)
 import cpOps
 reload(cpOps)
 
-import pylab
-from pylab import plot
+#import pylab
+#from pylab import plot
 
 #from scipy.linalg import norm
 #import scipy.sparse
@@ -46,15 +46,12 @@ cpfun = q.cp
 # This function that helps with boundary conditions when the surface
 # has a boundary.  TODO: ties into "CPBar" boundary conditions as in
 # Macdonald, Brandman, Ruuth preprint.  TODO: think about cleaning
-# this up
+# this up.
 def bdyfcn(bdy):
-    if bdy==1:
-        #return 'dirichlet_0th_order'
+    if bdy==1 or bdy==2:
+        #return 'dirichlet_1st_order'
         return 'dirichlet_2nd_order'
-        #return 'neumann_2nd_order'
-    elif bdy==2:
-        #return 'dirichlet_0th_order'
-        return 'dirichlet_2nd_order'
+        #return 'neumann_1st_order'
         #return 'neumann_2nd_order'
     else:
         return None
@@ -73,12 +70,12 @@ x = numpy.array([-2.0, -2.0, -2.0])
 initialdx = 4.0
 
 dim = len(x)
-maxlev = 6
+maxlev = 4
 TreeGrid = cpGrid.CPGrid('test', cpfun, dim, x, initialdx, interp_degree=3, levels=maxlev+1)
 
 
 ## a parameterized grid for plotting
-x,y,z = q.ParamGrid(rez=128)
+x,y,z = q.ParamGrid(rez=64)
 
 # this can be used to view like this:
 #from enthought.mayavi import mlab

@@ -481,12 +481,12 @@ class CPGrid:
             res = bdyfcn(n.whichBdy)
             if res == 'dirichlet_2nd_order':
                 n.interpweights = -buildInterpWeights(Xgrid, n.cp, n.dx, PAR_EXTSTENWIDTH)
-            elif res == 'dirichlet_0th_order':
+            elif res == 'dirichlet_1st_order':
                 # TODO: why bother with temp?  Just numpy.zeros?
                 temp = buildInterpWeights(Xgrid, n.cp, n.dx, PAR_EXTSTENWIDTH)
                 n.interpweights = [0]*len(temp)
             else:
-                # includes "neumann_0th_order" and "neumann_2nd_order"
+                # includes "neumann_1st_order" and "neumann_2nd_order"
                 n.interpweights = buildInterpWeights(Xgrid, n.cp, n.dx, PAR_EXTSTENWIDTH)
             #gi = n.gridIndex
             for offsets in self.InterpStencil:
@@ -504,6 +504,134 @@ class CPGrid:
 
 
 
+class CPFlatGrid(CPGrid):
+    """
+    A Closest Point grid
+
+    todo: is inheritance best?
+    """
+
+    def __init__(self, name, cpfun, dim, lsc, dx, interp_degree=3, diffInfo=None):
+        #import numpy
+        #a = numpy.array
+        from numpy import array as a
+        from time import time
+        import stencils
+        global PAR_DIM, PAR_EXTSTENP, PAR_EXTSTENWIDTH, PAR_EXTSTENSZ, \
+            PAR_DiffLongestArm
+
+        print "init grid"
+        st = time()
+        #findGridInterpBasePt = findGridInterpBasePt
+        self.Name = name
+        self.basicPt = lsc
+        self.CPfun = cpfun
+        self._dx = dx
+        #self.Levels = levels
+        levels = 1
+        self.Dim = dim
+        # this will be float64 or float96: make sure code accesses it
+        # as neceesary
+        self.floatType = type(dx)
+        # TODO: do somthing special if dx is an int??
+
+        PAR_DIM = dim
+        PAR_EXTSTENP = interp_degree
+        PAR_EXTSTENWIDTH = PAR_EXTSTENP+1
+        PAR_EXTSTENSZ = PAR_EXTSTENWIDTH**dim
+
+        if (dim == 2):
+            self.Dirs = [a([0,0]), a([1,0]), a([1,1]), a([0,1])]
+        elif (dim == 3):
+            self.Dirs = [a([0,0,0]), a([1,0,0]), a([1,1,0]), a([0,1,0]), \
+                         a([0,1,1]), a([1,1,1]), a([1,0,1]), a([0,0,1])]
+        else:
+            raise NameError('dim ' + str(dim) + ' not implemented')
+
+        # TODO: better way to default to Laplacian?  import stencils
+        # outside the function?
+        # TODO: want this more abstract, should just need to know the
+        # maximum stencil here, might want to construct multiple operators
+        # over a single grid.
+        if diffInfo == None:
+            diffInfo = stencils.Laplacian_2nd
+        (self.DiffWeights, self.DiffStencil, PAR_DiffLongestArm) = diffInfo(dim)
+
+        self.makeInterpStencil()
+
+        self.Tree = [];
+        #self.Lists = [[]]*self.Levels   # no, same list many times
+        self.Lists = []
+        for i in range(0, 1):
+            self.Lists.append([])
+        self.Grids = []
+        for i in range(0, 1):
+            self.Grids.append(dict())
+
+        self.Lextend = []
+        self.Levolve = []
+        self.Lghost = []
+        self.Lnone = []
+        for i in range(0, 1):
+            self.Lextend.append(None)
+            self.Levolve.append(None)
+            self.Lghost.append(None)
+            self.Lnone.append(None)
+
+        #self.populate()
+        print "time = " + str(time() - st)
+
+
+    def loadFromFile(self, fname):
+        """
+        Load the output from the fast C implementation of Ruuth's
+        algorithm.
+        """
+        from numpy import array as a
+        from numpy import float96
+        fp = float96
+        f = open(fname, 'r')
+        dx = self.dx
+        relpt = self.center
+
+        self.Grids = dict()
+
+        class Node():
+            pass
+
+        #self.CPdd = dict()
+        #self.CP = dict()
+        #self.X = dict()
+
+        for line in f:
+            #print line,
+            t = line.split()
+            i = int(t[0])
+            j = int(t[1])
+            k = int(t[2])
+            dd = fp(t[3])
+            #cp = a([ fp(t[4]), fp(t[5]), fp(t[6]) ]);
+            cp = fp(a([ t[4], t[5], t[6] ]));
+            # TODO: issues here about loading float96's from file, see
+            # my post to numpy maillist
+            #x = fp(a([ t[7], t[8], t[9]]));
+            x = a([ fp(t[7]), fp(t[8]), fp(t[9]) ]);
+            x2 = a([i*dx+relpt[0], j*dx+relpt[1], k*dx+relpt[2]])
+            #print "***", i, j, k, dd, cp, x-x2
+            #self.CPdd[(i,j,k)] = dd
+            #self.CP[(i,j,k)] = cp
+            #self.X[(i,j,k)] = x2
+            n = Node()
+            n.dist = dd
+            n.cp = cp
+            n.gridpt = x2
+            # TODO: better way to deal with this?
+            n.whichBdy = 0
+            self.Grids[(i,j,k)] = n
+        # TODO: remove later, just for debuggin
+        self.x = x
+        self.x2 = x2
+        f.close
 
 
 
