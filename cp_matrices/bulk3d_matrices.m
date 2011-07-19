@@ -1,6 +1,6 @@
-function [Dxx,Dyy,Dzz, Dxc,Dyc,Dzc, Dxb,Dyb,Dzb, Dxf,Dyf,Dzf] ...
-      = bulk3d_matrices(x, y, z, use_ndgrid)
-%BULK2D_MATRICES  Build discrete derivative matrices
+function [Dxx,Dyy,Dzz, Dxc,Dyc,Dzc, Dxb,Dyb,Dzb, Dxf,Dyf,Dzf, ...
+          Dxyc,Dxzc,Dyzc] = bulk3d_matrices(x, y, z, use_ndgrid)
+%BULK£D_MATRICES  Build discrete derivative matrices
 %
 %   To use ndgrid ordering pass "true" as the final argument
 
@@ -30,21 +30,26 @@ function [Dxx,Dyy,Dzz, Dxc,Dyc,Dzc, Dxb,Dyb,Dzb, Dxf,Dyf,Dzf] ...
   % Use kronecker products to build 3D operators
   Dxx = kron(Iz, kron(D1xx, Iy));
   Dyy = kron(Iz, kron(Ix, D1yy));
-  Dzz = kron(kron(D1zz, Ix), Iy);
+  Dzz = kron(D1zz, kron(Ix, Iy));
+  % ok too:
+  %Dzz = kron(D1zz, kron(Ix, Iy));
 
   % laplacian
   %L = Dxx + Dyy + Dzz;
 
   Dxc = kron(Iz, kron(D1xc, Iy));
   Dyc = kron(Iz, kron(Ix, D1yc));
-  Dzc = kron((kron(D1zc), Ix), Iy);
+  Dzc = kron(D1zc, kron(Ix, Iy));
 
-  warning('not tested/implemented yet');
+  Dxb = kron(Iz, kron(D1xb, Iy));
+  Dyb = kron(Iz, kron(Ix, D1yb));
+  Dzb = kron(D1zb, kron(Ix, Iy));
 
-  Dxb = 1;
-  Dyb = 1;
-  Dzb = 1;
+  Dxf = kron(Iz, kron(D1xf, Iy));
+  Dyf = kron(Iz, kron(Ix, D1yf));
+  Dzf = kron(D1zf, kron(Ix, Iy));
 
-  Dxf = 1;
-  Dyf = 1;
-  Dzf = 1;
+  Dxyc = kron(Iz, kron(D1xc, D1yc));
+  Dxzc = kron(D1zc, kron(D1xc, Iy));
+  Dyzc = kron(D1zc, kron(Ix, D1yc));
+

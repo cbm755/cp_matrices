@@ -1,4 +1,4 @@
-function [Dxx,Dyy,Dxc,Dyc,Dxb,Dyb,Dxf,Dyf] = bulk2d_matrices(x, y, use_ndgrid)
+function [Dxx,Dyy,Dxc,Dyc,Dxb,Dyb,Dxf,Dyf,Dxyc] = bulk2d_matrices(x, y, use_ndgrid)
 %BULK2D_MATRICES  Build discrete derivative matrices
 %
 %   To use ndgrid ordering pass "true" as the final argument
@@ -28,6 +28,8 @@ function [Dxx,Dyy,Dxc,Dyc,Dxb,Dyb,Dxf,Dyf] = bulk2d_matrices(x, y, use_ndgrid)
   % laplacian
   %L = Dxx + Dyy;
 
+  Dxyc = kron(D1xc, D1yc);
+
   Dxc = kron(D1xc, Iy);
   Dyc = kron(Ix, D1yc);
 
@@ -36,3 +38,4 @@ function [Dxx,Dyy,Dxc,Dyc,Dxb,Dyb,Dxf,Dyf] = bulk2d_matrices(x, y, use_ndgrid)
 
   Dxf = kron(D1xf, Iy);
   Dyf = kron(Ix, D1yf);
+

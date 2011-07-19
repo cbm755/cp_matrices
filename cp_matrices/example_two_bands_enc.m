@@ -3,8 +3,8 @@
 % closest point method easier. These include closest point extension
 % matrices, and differentiation matrices.
 
-% This example demonstrates two bands as in the implicit CP paper
-% [Macdonald, Ruuth 2009]
+% This example demonstrates two bands as in the implicit CP paper,
+% [Macdonald, Ruuth 2009] using "ops_and_bands2d" helper.
 
 
 %% Using cp_matrices
@@ -16,14 +16,7 @@ addpath('../cp_matrices');
 addpath('../surfaces');
 
 
-global ICPM2009BANDINGCHECKS
-
-% this is a bit dangerous: will break other less tightly banded
-% codes, turn it off later
-ICPM2009BANDINGCHECKS = 1;
-
-%%
-% 2D example on a circle
+%% 2D example on a circle
 % Construct a grid in the embedding space
 
 dx = 0.25/2;   % grid size
@@ -37,7 +30,6 @@ nx = length(x1d);
 ny = length(y1d);
 
 
-
 %% Find closest points on the surface
 % For each point (x,y), we store the closest point on the circle
 % (cpx,cpy)
@@ -45,7 +37,7 @@ ny = length(y1d);
 % meshgrid is only needed for finding the closest points, not afterwards
 [xx yy] = meshgrid(x1d, y1d);
 % function cpCircle for finding the closest points on a circle
-[cpx, cpy, dist] = cpCircle(xx,yy);
+[cpx2d, cpy2d, dist2d] = cpCircle(xx,yy);
 % make into vectors
 %cpxg = cpx(:); cpyg = cpy(:);
 
@@ -64,78 +56,50 @@ fd_stenrad = order/2;  % Finite difference stencil radius
 bw = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((fd_stenrad+(p+1)/2)^2));
 % start with a rough band and refine later, here just find the
 % indicies of all points within bandwidth of the surface.
-band_init = find(dist <= bw*dx);
+bandinit = find(dist2d <= bw*dx);
 % the corresponding closest points
-cpxg_init = cpx(band_init); cpyg_init = cpy(band_init);
-xg_init = xx(band_init); yg_init = yy(band_init);
+cpxinit = cpx2d(bandinit); cpyinit = cpy2d(bandinit);
+xinit = xx(bandinit); yinit = yy(bandinit);
 
 
-%% Construct an interpolation matrix for closest point
-% This creates a matrix which interpolates data from the grid x1d y1d,
-% onto the points cpx cpy.
-disp('Constructing interpolation matrix');
-% various alternatives, here we use the "full" E matrix...
-Etemp = interp2_matrix(x1d, y1d, cpxg_init, cpyg_init, p);
-tic; [i,j,S] = find(Etemp); toc;
-tic; innerband = unique(j); toc;
+%% Operators and banding
+% take the initial band (which might be too wide) and generate the
+% inner and outer band.  Also build Laplacian, Extension matrix and
+% Restriction operator.
 
+% this is a bit dangerous: will break other less tightly banded
+% codes, turn it off later
+global ICPM2009BANDINGCHECKS
+ICPM2009BANDINGCHECKS = 1;
 
-%% Create Laplacian matrix for heat equation
-% in general, want the biggest stencil here so the others fit too
-Ltemp = laplacian_2d_matrix(x1d,y1d, order, innerband, band_init);
+[L, E, R, iband, oband, iband2, oband2] = ...
+    ops_and_bands2d(x1d,y1d, xinit,yinit, cpxinit,cpyinit, bandinit, p, order);
 
-
-%% The outerband
-% We find a narrow outerband by using the column-space of L.
-tic; [i,j,S] = find(Ltemp); toc;
-tic; outerbandtemp = unique(j); toc;
-% indices are into band_init (the original columns of L),
-% look them up to get the outerband in terms of the
-% meshgrid(x1d,y1d) indices.
-outerband = band_init(outerbandtemp);
-
-cpxgout = cpxg_init(outerbandtemp); cpygout = cpyg_init(outerbandtemp);
-xgout = xg_init(outerbandtemp); ygout = yg_init(outerbandtemp);
-
-L = Ltemp(:, outerbandtemp);
-E = Etemp(outerbandtemp, innerband);
-clear Ltemp Etemp outerbandtemp  % optional, erase the originals
-
-
-%% Could instead regenerate everything, now that we have the two bands
-%cpxgin3 = cpx(innerband); cpygin3 = cpy(innerband);
-%cpxgout3 = cpx(outerband); cpygout3 = cpy(outerband);
-%E3 = interp2_matrix_band(x1d, y1d, cpxgout3, cpygout3, p, innerband);
-%L3 = laplacian_2d_matrix(x1d,y1d, order, innerband, outerband);
+x = xinit(iband);
+y = yinit(iband);
+cpx = cpxinit(iband);
+cpy = cpyinit(iband);
+xout = xinit(oband);
+yout = yinit(oband);
+cpxout = cpxinit(oband);
+cpyout = cpyinit(oband);
+%bdy = bdyinit(iband);
+%bdyout = bdyinit(oband);
 
 
 %% Other operators
-% Note: stencils need to be a subset of the one used to generate
-% the outerband above
-[Dxb,Dxf,Dyb,Dyf] = firstderiv_upw1_2d_matrices(x1d,y1d, innerband, outerband);
-[Dxc,Dyc] = firstderiv_cen2_2d_matrices(x1d,y1d, innerband, outerband);
-[Dxx,Dyy] = secondderiv_cen2_2d_matrices(x1d,y1d, innerband, outerband);
-% e.g., this one needs diagonals and might not work
-%Dxy = secondderiv_mixcen2_2d_matrix(x1d,y1d, innerband, outerband);
-
-%% Restriction operator
-% used to extract inner values from an outer band vector.  There
-% is probably a slick loop-free way to do this.
-innerInOuter = zeros(size(innerband));
-R = sparse([],[],[],length(innerband),length(outerband),length(innerband));
-for i=1:length(innerband)
-  I = find(outerband == innerband(i));
-  innerInOuter(i) = I;
-  R(i,I) = 1;
-end
-% closest points of the inner band
-cpxgin = R*cpxgout;  cpygin = R*cpygout;
-xgin = R*xgout;  ygin = R*ygout;
+% If we need other operators and they will fit in the band, build them
+% now.  (Note: stencils need to be a subset of the one used to
+% generate the outerband above)
+[Dxb,Dxf,Dyb,Dyf] = firstderiv_upw1_2d_matrices(x1d,y1d, iband2, oband2);
+[Dxc,Dyc] = firstderiv_cen2_2d_matrices(x1d,y1d, iband2, oband2);
+[Dxx,Dyy] = secondderiv_cen2_2d_matrices(x1d,y1d, iband2, oband2);
+% e.g., this one needs diagonals and might not work (i.e., won't!)
+%Dxy = secondderiv_mixcen2_2d_matrix(x1d,y1d, iband2, oband2);
 
 
 %% Diagonal splitting for iCPM
 M = lapsharp_unordered(L, E, R);
-
 
 
 %% Construct an interpolation matrix for plotting on circle
@@ -145,16 +109,16 @@ r = ones(size(thetas));
 % plotting grid in Cartesian coords
 [xp,yp] = pol2cart(thetas,r);
 xp = xp(:); yp = yp(:);
-Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, innerband);
-
+Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, iband2);
 
 % after building matrices, don't need this set
 ICPM2009BANDINGCHECKS = 0;
 
 
+
 %% Function u in the embedding space, initial conditions
 % u is a function defined on the grid (e.g. heat)
-[thg, rg] = cart2pol(cpxgin,cpygin);
+[thg, rg] = cart2pol(cpx,cpy);
 u0 = cos(thg);
 uexactfn = @(t,th) exp(-t)*cos(th);
 u = u0;
@@ -196,10 +160,7 @@ for kt = 1:numtimesteps
     unew = R*uext + dt*(L*uext);
     %unew = R*uext + dt*M*(R*uext);
   end
-  
 
-  
-  
   u = unew;
 
   t = kt*dt;
@@ -207,14 +168,15 @@ for kt = 1:numtimesteps
   % plotting
   if ( (kt < 5) | (mod(kt,200) == 0) | (kt == numtimesteps) )
     % plot in the embedded domain: shows the computational band
-    plot2d_compdomain(u, xgin, ygin, dx, dy, 1);
+    plot2d_compdomain(u, x, y, dx, dy, 1);
     hold on;
-    plot(xp,yp,'k-', 'linewidth', 2);
+    plot(xp, yp, 'k-', 'linewidth', 2);
     title( ['embedded domain: soln at time ' num2str(t) ...
             ', timestep #' num2str(kt)] );
 
     % plot value on circle
     figure(2); clf;
+    %subplot(2,1,2);
     circplot = Eplot*u;
     plot(thetas, circplot);
     title( ['soln at time ' num2str(t) ', on circle'] );
