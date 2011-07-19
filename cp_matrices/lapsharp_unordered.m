@@ -32,13 +32,15 @@ function M = lapsharp_unordered(L, E, R, delta)
     %implementation in that case in lapsharp.m)
 
     [i,j,r] = find(R);  % indices of diagonal elements
-    dd = find(R);       % linear index of diagonal
-
-    Ldiag = diag(L(dd));
-
-    Ldiagpad = sparse(i,j,L(dd),size(L,1),size(L,2));
-    % No, its not this:
-    %Ldiagpad = spdiags(L(dd), 0, size(L,1), size(L,2));
-
+    Ldiagpad = R .* L;
+    Ldiag = Ldiagpad(:,j);
     M = Ldiag + (L-Ldiagpad)*E;
+
+    % this gives error for large matrix
+    %dd = find(R);       % linear index of diagonal
+    %Ldiag = diag(L(dd));
+    %Ldiagpad = sparse(i,j,L(dd),size(L,1),size(L,2));
+    % No, its not this:
+    % Ldiagpad = spdiags(L(dd), 0, size(L,1), size(L,2));
+
   end
