@@ -1,4 +1,4 @@
-function [x,y,z] = paramHemisphereBand(n, varargin)
+function [x,y,z] = paramHemisphereBand(n, R, cen)
 %HEMISPHERE  A parameterization of a hemisphere.
 %   [x,y,z] = paramHemisphere(n, R) returns a mesh for a hemisphere of
 %   radius R.  If R is omitted it defaults to 1.  The hemisphere is in
@@ -12,30 +12,25 @@ function [x,y,z] = paramHemisphereBand(n, varargin)
 %   Like Matlab's "SPHERE" but with a hemi:
 %   http://www.youtube.com/watch?v=IyrcP5utXt4
 
+  % default
+  if (nargin < 2)
+    R = 1;
+  end
+  if (nargin < 3)
+    cen = [0,0,0];
+  end
+
   % multiple by two is the easiest way to get the equator right.
   [xs,ys,zs] = sphere(2*n);
-   zt = 0.25;
- 
+  zt = 0.25;
+
   ind = find(abs(zs(:,1))<zt);
-  
+
   x = xs(ind,:);
   y = ys(ind,:);
   z = zs(ind,:);
-  
-  
-  
 
-  if (nargin >= 2)
-    R = varargin{1};
-    if (nargin >= 3)
-      xc = varargin{2};
-      yc = varargin{3};
-      zc = varargin{4};
-    else
-      xc = 0; yc = 0; zc = 0;
-    end
-    x = R*x + xc;
-    y = R*y + yc;
-    z = R*z + zc;
-  end
-
+  x = R*x + cen(1);
+  y = R*y + cen(2);
+  z = R*z + cen(3);
+  
