@@ -42,3 +42,6 @@ z2 = (2*cpz(bdy) - z(bdy));
 % recompute just those ones (it should be ok to do all of them, but
 % this should be faster).
 [cpx(bdy),cpy(bdy),cpz(bdy), disttemp, bdytemp] = f(x2,y2,z2, varargin{:});
+
+
+
