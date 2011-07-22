@@ -24,7 +24,7 @@ function [x,y,z] = paramHemisphereBand(n, R, cen)
   [xs,ys,zs] = sphere(2*n);
   zt = 0.4;
 
-  ind = find(abs(zs(:,1))<zt);
+  ind = find(zs(:,1)<zt);
 
   x = xs(ind,:);
   y = ys(ind,:);
