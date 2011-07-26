@@ -19,7 +19,7 @@ addpath('../surfaces');
 %% 2D example on a circle
 % Construct a grid in the embedding space
 
-dx = 0.25/2;   % grid size
+dx = 0.25/8;   % grid size
 
 % make vectors of x, y, positions of the grid
 x1d = (-2:dx:2)';
@@ -104,10 +104,10 @@ M = lapsharp_unordered(L, E, R);
 
 %% Construct an interpolation matrix for plotting on circle
 % plotting grid on circle, using theta as a parameterization
-thetas = linspace(0,2*pi,1000);
-r = ones(size(thetas));
+thetap = linspace(0,2*pi,1000)';
+r = ones(size(thetap));
 % plotting grid in Cartesian coords
-[xp,yp] = pol2cart(thetas,r);
+[xp,yp] = pol2cart(thetap,r);
 xp = xp(:); yp = yp(:);
 Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, iband2);
 
@@ -178,17 +178,17 @@ for kt = 1:numtimesteps
     figure(2); clf;
     %subplot(2,1,2);
     circplot = Eplot*u;
-    plot(thetas, circplot);
+    plot(thetap, circplot);
     title( ['soln at time ' num2str(t) ', on circle'] );
     xlabel('theta'); ylabel('u');
     hold on;
     % plot analytic result
-    plot(thetas, exp(-t)*cos(thetas), 'r--');
-    plot(thetas, Eplot*u0, 'g-.');
+    plot(thetap, exp(-t)*cos(thetap), 'r--');
+    plot(thetap, Eplot*u0, 'g-.');
     legend('explicit Euler', 'exact answer', 'initial condition ', ...
            'Location', 'SouthEast');
-    %error_circ_inf = max(abs( exp(-t)*cos(thetas) - circplot' ));
-    error_circ_inf = max(abs( uexactfn(t,thetas) - circplot' ));
+    %error_circ_inf = max(abs( exp(-t)*cos(thetap) - circplot ));
+    error_circ_inf = max(abs( uexactfn(t,thetap) - circplot ));
     [dx dt t error_circ_inf]
 
     pause(0);
