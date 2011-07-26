@@ -1,4 +1,4 @@
-function [cpxx, cpyy, dist] = cpSquare(xx, yy, xc, yc)
+function [cpxx, cpyy, dist] = cpSquare(xx, yy, cen)
 %CPSQUARE  Closest Point function for a square
 %   [cpx, cpy, dist] = cpSquare(x, y)
 %      A square with side length 2 centered centered at
@@ -10,17 +10,14 @@ function [cpxx, cpyy, dist] = cpSquare(xx, yy, xc, yc)
 %   Code is vectorized: any size/shape for x should work.
 %   (well sort of: a loop inside)
 
-  if (nargin == 3)
-    error('must specify both xc,yc');
-  end
-  % center shift, defaults to 0
-  if (nargin < 4)
-    xc = 0;  yc = 0;
+  % defaults
+  if (nargin < 3)
+    cen = [0, 0];
   end
 
   % shift to the origin
-  x = x - xc;
-  y = y - yc;
+  xx = xx - cen(1);
+  yy = yy - cen(2);
 
   cpxx = zeros(size(xx));
   cpyy = zeros(size(yy));
@@ -60,6 +57,6 @@ function [cpxx, cpyy, dist] = cpSquare(xx, yy, xc, yc)
   dist = sqrt( (xx-cpxx).^2 + (yy-cpyy).^2 );
 
   % shift back
-  cpx = cpx + xc;
-  cpy = cpy + yc;
+  cpx = cpx + cen(1);
+  cpy = cpy + cen(2);
 
