@@ -1,4 +1,4 @@
-function [Dxb,Dxf, Dyb,Dyf] = average_upw1_2d_matrices(x,y, band1, band2, use_ndgrid)
+function [Axb,Axf,Ayb,Ayf] = average_upw1_2d_matrices(x,y, band1, band2, use_ndgrid)
 % AVERAGE_UPW1_2D_MATRICES builds a matrix which performs arithmetic
 % averaging
 %   [AXB,AXF,AYB,AYF] = AVERAGE_UPW1_2D_MATRICES(X,Y,BAND) returns the
@@ -36,19 +36,19 @@ function [Dxb,Dxf, Dyb,Dyf] = average_upw1_2d_matrices(x,y, band1, band2, use_nd
   weights = [1  1] / 2;
   PTS = [-1   0; ...
           0   0];
-  Dxb = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);
+  Axb = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);
 
   weights = [1  1] / 2;
   PTS = [ 0   0; ...
           1   0];
-  Dxf = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);
+  Axf = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);
 
   weights = [1  1] / 2;
   PTS = [ 0  -1; ...
           0   0];
-  Dyb = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);
+  Ayb = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);
 
   weights = [1  1] / 2;
   PTS = [ 0   0; ...
           0   1];
-  Dyf = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);
+  Ayf = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);
