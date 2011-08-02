@@ -1,14 +1,14 @@
-function [Axb,Axf,Ayb,Ayf,Azb,Azf] = average_upw1_3d_matrices(x,y, band1, band2, use_ndgrid)
+function [Axb,Axf,Ayb,Ayf,Azb,Azf] = average_upw1_3d_matrices(x,y,z, band1, band2, use_ndgrid)
 % AVERAGE_UPW1_3D_MATRICES builds a matrix which performs arithmetic
 % averaging
-%   [AXB,AXF,AYB,AYF,AZB,AZF] = AVERAGE_UPW1_3D_MATRICES(X,Y,BAND) returns 
+%   [AXB,AXF,AYB,AYF,AZB,AZF] = AVERAGE_UPW1_3D_MATRICES(X,Y,Z,BAND) returns 
 %   the arithmetic averaging in the backwards x-direction, forwards
 %   x-direction, and so on.
 %
-%   [AXB,AXF,AYB,AYF,AZB,AZF] = AVERAGE_UPW1_3D_MATRICES(X,Y,BAND1,BAND2) 
+%   [AXB,AXF,AYB,AYF,AZB,AZF] = AVERAGE_UPW1_3D_MATRICES(X,Y,Z,BAND1,BAND2) 
 %   performs the same with an optional outer band.
 %
-%   [AXB,AXF,AYB,AYF,AZB,AZF] = AVERAGE_UPW1_3D_MATRICES(X,Y,BAND1,BAND2,USE_NDGRID)
+%   [AXB,AXF,AYB,AYF,AZB,AZF] = AVERAGE_UPW1_3D_MATRICES(X,Y,Z,BAND1,BAND2,USE_NDGRID)
 %   with USE_NDGRID set as 'true' uses ndgrid ordering instead of meshgrid
 %   ordering.
 %
