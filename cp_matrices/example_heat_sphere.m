@@ -105,7 +105,7 @@ figure(2); set(gcf,'Position', [410 700 800 800]);
 %% Time-stepping for the heat equation
 
 Tf = 0.1;
-dt = 0.2*dx^2;
+dt = 0.1*dx^2;
 numtimesteps = ceil(Tf/dt)
 % adjust for integer number of steps
 dt = Tf / numtimesteps
