@@ -1,16 +1,5 @@
 function [x,y,z] = paramHemisphereBand(n, R, cen)
-%HEMISPHERE  A parameterization of a hemisphere.
-%   [x,y,z] = paramHemisphere(n, R) returns a mesh for a hemisphere of
-%   radius R.  If R is omitted it defaults to 1.  The hemisphere is in
-%   the (z>=0) half-space.  surf(x,y,z) can be used to make a plot.
-%
-%   [x,y,z] = paramHemisphere(n, R, xc,yc,zc) returns a mesh centered
-%   at (xc,yc,zc).
-% 
-%   "n" is twice as dense as you might think (mesh size is [n x 2*n]).
-%
-%   Like Matlab's "SPHERE" but with a hemi:
-%   http://www.youtube.com/watch?v=IyrcP5utXt4
+  warning('use paramSphereRing instead');
 
   % default
   if (nargin < 2)

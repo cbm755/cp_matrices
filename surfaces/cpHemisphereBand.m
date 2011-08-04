@@ -1,16 +1,5 @@
 function [cpx,cpy,cpz, dist, bdy1] = cpHemisphereBand(x,y,z, R, cen)
-%CPHEMISPHERE  Closest point function for a hemisphere.
-%   The hemisphere consists of those points with z >= 0.
-%   [cpx,cpy,cpz, dist, bdy1] = cpHemisphere(x,y,z)
-%      A unit hemisphere with "center" (sphere center) at the origin.
-%      "bdy1" is non-zero for points on the boundary.
-%   [cpx,cpy,cpz, dist, bdy1] = cpHemisphere(x,y,z, R)
-%      A radius R hemisphere centered at the origin.
-%   [cpx,cpy,cpz, dist, bdy1] = cpHemisphere(x,y,z, R, xc,yc,zc)
-%      A radius R hemisphere centered at (xc,yc,zc).
-%
-%   Code is vectorized: any size/shape for x should work.
-
+  warning('use cpSphereRing instead');
 
   % defaults
   if (nargin < 4)
