@@ -36,10 +36,11 @@ ny = length(y1d);
 
 % meshgrid is only needed for finding the closest points, not afterwards
 [xx yy] = meshgrid(x1d, y1d);
-% function cpCircle for finding the closest points on a circle
-[cpx2d, cpy2d, dist2d] = cpCircle(xx,yy);
-% make into vectors
-%cpxg = cpx(:); cpyg = cpy(:);
+% find the closest points
+cpf = @cpCircle;  param = @paramCircle;
+%cpf = @cpSemicircle;  param = @paramSemicircle;
+[cpx2d, cpy2d, dist2d] = cpf(xx, yy);
+%[cpx2d, cpy2d, dist2d, bdy2d] = cpbar_2d(xx, yy, cpf);
 
 
 %% Banding: do calculation in narrow bands
@@ -104,11 +105,12 @@ M = lapsharp_unordered(L, E, R);
 
 %% Construct an interpolation matrix for plotting on circle
 % plotting grid on circle, using theta as a parameterization
-thetap = linspace(0,2*pi,1000)';
-r = ones(size(thetap));
+%thetap = linspace(0,2*pi,1000)';
+%r = ones(size(thetap));
 % plotting grid in Cartesian coords
-[xp,yp] = pol2cart(thetap,r);
-xp = xp(:); yp = yp(:);
+%[xp,yp] = pol2cart(thetap,r);
+%xp = xp(:); yp = yp(:);
+[xp,yp,thp] = param(600);
 Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, iband2);
 
 % after building matrices, don't need this set
@@ -178,17 +180,17 @@ for kt = 1:numtimesteps
     figure(2); clf;
     %subplot(2,1,2);
     circplot = Eplot*u;
-    plot(thetap, circplot);
+    plot(thp, circplot);
     title( ['soln at time ' num2str(t) ', on circle'] );
     xlabel('theta'); ylabel('u');
     hold on;
     % plot analytic result
-    plot(thetap, exp(-t)*cos(thetap), 'r--');
-    plot(thetap, Eplot*u0, 'g-.');
+    plot(thp, exp(-t)*cos(thp), 'r--');
+    plot(thp, Eplot*u0, 'g-.');
     legend('explicit Euler', 'exact answer', 'initial condition ', ...
            'Location', 'SouthEast');
-    %error_circ_inf = max(abs( exp(-t)*cos(thetap) - circplot ));
-    error_circ_inf = max(abs( uexactfn(t,thetap) - circplot ));
+    %error_circ_inf = max(abs( exp(-t)*cos(thp) - circplot ));
+    error_circ_inf = max(abs( uexactfn(t,thp) - circplot ));
     [dx dt t error_circ_inf]
 
     pause(0);

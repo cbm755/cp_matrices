@@ -24,7 +24,7 @@ for i=1:8
   evplot = reshape(evplot, size(xp));
 
   figure(1);
-  plot(thetap, evplot, 'color', rand(3,1));
+  plot(thp, evplot, 'color', rand(3,1));
 
   if (1==0)
     figure(2);
@@ -40,8 +40,8 @@ plottime = toc
 
 
 % some target function, in embedding space (u) and on circle (up)
-u = cos(thg + 2); % + cos(3*thg);
-up = cos(thetap + 2); % + cos(3*thetap);
+u = cos(2*thg); % + cos(3*thg);
+up = cos(2*thp); % + cos(3*thp);
 
 % weights are inner product of eigenvectors and u
 rawweights = V' * u;
@@ -53,7 +53,7 @@ rawweights = V' * u;
 %end
 
 
-weights = rawweights .* (abs(rawweights) >= .1);
+weights = rawweights .* (abs(rawweights) >= .25);
 
 [Lambda weights rawweights]
 
@@ -63,17 +63,25 @@ for i=1:8
   u2 = u2 + weights(i) * V(:,i);
 end
 
-u3 = weights(2)*V(:,2) + ...
-     weights(3)*V(:,3);
+%usewind = [1 2 3 5];
+usewind = [3];
+u3 = zeros(size(thg));
+for i=usewind
+  u3 = u3 + weights(i)*V(:,i);
+end
+%u3 = weights(2)*V(:,2) + ...
+%     weights(3)*V(:,3);
 
 figure(3); clf;
-plot(thetap, up, 'r-');
+plot(thp, up, 'r-');
 hold on;
 xlabel('t'); ylabel('u');
-plot(thetap, Eplot*u2, 'b--');
+plot(thp, Eplot*u2, 'b--');
 
-plot(thetap, Eplot*u3, 'c--')
+plot(thp, Eplot*u3, 'c--')
+
+legend('target', 'reconstr', 'manual reconstr');
 
 figure(4); clf;
 xlabel('t'); ylabel('u');
-plot(thetap, up - Eplot*u3, 'c--')
+plot(thp, up - Eplot*u3, 'c--')

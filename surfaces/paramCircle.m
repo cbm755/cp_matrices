@@ -1,5 +1,5 @@
-function [x,y,th] = paramSemicircle(n, R, cen)
-%PARAMSEMICIRCLE   A parameterization of a semicircle
+function [x,y,th] = paramCircle(n, R, cen)
+%PARAMCIRCLE   A parameterization of a circle
 
   % defaults
   if (nargin < 2)
@@ -9,7 +9,7 @@ function [x,y,th] = paramSemicircle(n, R, cen)
     cen = [0,0];
   end
 
-  th = [0:pi/n:pi]';
+  th = [0:(2*pi/n):(2*pi)]';
 
   x = cos(th);
   y = sin(th);
