@@ -19,7 +19,7 @@ addpath('../surfaces');
 %% 2D example on a circle
 % Construct a grid in the embedding space
 
-dx = 0.25/8;   % grid size
+dx = 0.25/4;   % grid size
 
 % make vectors of x, y, positions of the grid
 x1d = (-2:dx:2)';
