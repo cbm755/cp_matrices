@@ -19,7 +19,7 @@ function M = lapsharp_unordered(L, E, R, delta)
   if (nargin >= 4)
     %% Full lapsharp
     %delta = 2*dim/eps^2 = 2*dim/dx^2
-    warning('not really tested');
+    warning('not really tested and probably wrong diagonal!');
     I = speye(size(L,1),size(E,2));
     M = L*E - myeps*(I - R*E);
 
