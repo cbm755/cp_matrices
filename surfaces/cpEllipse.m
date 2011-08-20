@@ -1,11 +1,29 @@
-function [cpx, cpy, dist] = cpEllipse(x, y, a, b)
+function [cpx, cpy, dist] = cpEllipse(x, y, a, b, cen)
 %CPELLIPSE  Closest Point function for an ellipse.
-%   [cpx, cpy, dist] = cpEllipse(x, y)
-%      An ellipse centered at the origin with major axis a and minor axis b.
-
-% Uses cpParamCurve with Newton solves to find cp
+%   [cpx, cpy, dist] = cpEllipse(x, y, a, b)
+%      An ellipse centered at the origin with major axis a and
+%      minor axis b.
+%   [cpx, cpy, dist] = cpEllipse(x, y, a, b, CEN)
+%      An ellipse centered at CEN with major axis a and minor axis b.
+%
+% Internally, uses cpParamCurve with Newton solves to find cp
 
 %%
+  % defaults
+  if (nargin < 4)
+    if (nargin == 3)
+      error('must provide both or either of a,b');
+    end
+    a = 1.5;
+    b = 0.75;
+  end
+  if (nargin < 5)
+    cen = [0,0];
+  end
+
+  % shift to the origin
+  x = x - cen(1);
+  y = y - cen(2);
 
 % parameterised curve:
 xs = @(t) a*cos(t);
@@ -54,3 +72,7 @@ plot(cpx(~fail), cpy(~fail), 'bx');
 hold on;
 axis equal;
 plot(x(~~fail), y(~~fail), 'rx');
+
+  % shift back
+  cpx = cpx + cen(1);
+  cpy = cpy + cen(2);

@@ -1,23 +1,23 @@
-function [x,y] = paramEllipse(n, aa,bb, cen)
-%PARAMSPHERE  A parameterization of a sphere
-%   [x,y,z] = paramSphere(N, R) returns a mesh for a sphere of radius
-%   R.  If R is omitted it defaults to 1.  surf(x,y,z) can be used to
-%   make a plot.
+function [x,y] = paramEllipse(n, aa, bb, cen)
+%PARAMELLIPSE  A parameterization of an ellipse
+%   [x,y] = paramEllipse(N,A,B) returns an N-point mesh for an ellipse
+%   centered at the origin with major axis A and minor axis B.
 %
-%   [x,y,z] = paramSphere(N, R, CEN) returns a mesh centered at CEN.
-%
-%   A wrapper of Matlab's "SPHERE".
+%   [x,y] = paramEllipse(N,A,B,CEN) returns a mesh for an ellipse
+%   centered at CEN.
 
   % defaults
-  if (nargin < 2)
-    aa = 1;
-    bb = 1;
-  end
   if (nargin < 3)
+    if (nargin == 2)
+      error('must provide both or either of a,b');
+    end
+    aa = 1.5;
+    bb = 0.75;
+  end
+  if (nargin < 4)
     cen = [0,0];
   end
 
-  
   th = 0:2*pi/n:2*pi-2*pi/n;
-  x = aa*cos(th);
-  y = bb*sin(th);
+  x = aa*cos(th) + cen(1);
+  y = bb*sin(th) + cen(2);
