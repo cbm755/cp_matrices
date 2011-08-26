@@ -56,7 +56,7 @@ band = find(dist <= bw*dx);
 
 % store closest points in the band;
 cpxg = cpxg(band); cpyg = cpyg(band); cpzg = cpzg(band);
-
+xg = xx(band); yg = yy(band); zg = zz(band);
 
 
 %% Function u in the embedding space
@@ -118,15 +118,18 @@ for kt = 1:numtimesteps
     u = E*unew;
 
     t = kt*dt;
+
     % plot value on sphere
-    figure(2);
-    sphplot = Eplot*u;
-    sphplot = reshape(sphplot, size(xp));
-    surf(xp, yp, zp, sphplot);
-    title( ['soln at time ' num2str(t)] );
-    xlabel('x'); ylabel('y'); zlabel('z');
-    caxis([-1.05 1.05]);   % lock color axis
-    axis equal; shading interp;
-    camlight left; colorbar;
-    pause(0);
+    if (mod(kt,100) == 0) | (kt < 10) | (kt == numtimesteps)
+      figure(2);
+      sphplot = Eplot*u;
+      sphplot = reshape(sphplot, size(xp));
+      surf(xp, yp, zp, sphplot);
+      title( ['soln at time ' num2str(t) ', kt= ' num2str(kt)] );
+      xlabel('x'); ylabel('y'); zlabel('z');
+      %caxis([-1.05 1.05]);   % lock color axis
+      axis equal; shading interp;
+      camlight left; colorbar;
+      pause(0.001);
+    end
 end;

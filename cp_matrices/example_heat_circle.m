@@ -59,7 +59,7 @@ notband = setdiff(1:nx*ny, band);
 
 % store closest points in the band;
 cpxg = cpxg(band); cpyg = cpyg(band);
-
+xg = xx(band); yg = yy(band);
 
 
 %% Function u in the embedding space
@@ -142,8 +142,10 @@ for kt = 1:numtimesteps
     u = E*unew;
 
     t = kt*dt;
-    % plot over computation band
+
     if ( (kt < 10) | (mod(kt,10) == 0) | (kt == numtimesteps) )
+        % plot over computation band
+        %plot2d_compdomain(u, xg, yg, dx, dx, 2)
         figure(2);
         subplot(2,1,1); hold off;
         uplot(band) = u;
