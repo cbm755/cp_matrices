@@ -47,7 +47,7 @@ function [weights, varargout] = buildInterpWeights(X, relpt, dx, p)
   end
 
   sumw = sum(weights);
-  if ( sumw - 1.0 > 32*eps)
+  if ( abs(sumw - 1.0) > 32*eps)
     err = sumw - 1.0
     error('interp weight problem, didn''t sum close enough to 1');
   end
