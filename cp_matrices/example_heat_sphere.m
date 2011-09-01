@@ -120,7 +120,7 @@ for kt = 1:numtimesteps
     t = kt*dt;
 
     % plot value on sphere
-    if (mod(kt,100) == 0) | (kt < 10) | (kt == numtimesteps)
+    if (mod(kt,100) == 0) || (kt < 10) || (kt == numtimesteps)
       figure(2);
       sphplot = Eplot*u;
       sphplot = reshape(sphplot, size(xp));

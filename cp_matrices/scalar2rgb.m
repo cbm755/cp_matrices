@@ -13,11 +13,11 @@ function RGB = scalar2rgb(u, caxes, colmap, int255)
 if (nargin < 4)
   int255 = false;
 end
-if (  (nargin < 3)  |  isempty(colmap)  )
+if (  (nargin < 3)  ||  isempty(colmap)  )
   %colmap = colormap('default');  % causes an error
   colmap = colormap(jet);
 end
-if ( (nargin < 2)  |  isempty(caxes) )
+if ( (nargin < 2)  ||  isempty(caxes) )
   u0 = min(u);
   u1 = max(u);
 else

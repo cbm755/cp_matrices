@@ -19,27 +19,27 @@ function E = interp3_matrix(x, y, z, xi, yi, zi, p, use_ndgrid)
 
   % input checking
   [temp1, temp2] = size(x);
-  if ~(  (ndims(x) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(x) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('x must be a vector, not e.g., meshgrid output');
   end
   [temp1, temp2] = size(y);
-  if ~(  (ndims(y) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(y) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('y must be a vector, not e.g., meshgrid output');
   end
   [temp1, temp2] = size(z);
-  if ~(  (ndims(z) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(z) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('z must be a vector, not e.g., meshgrid output');
   end
   [temp1, temp2] = size(xi);
-  if ~(  (ndims(xi) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(xi) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('xi must be a vector, not e.g., meshgrid output');
   end
   [temp1, temp2] = size(yi);
-  if ~(  (ndims(yi) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(yi) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('yi must be a vector, not e.g., meshgrid output');
   end
   [temp1, temp2] = size(zi);
-  if ~(  (ndims(zi) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(zi) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('zi must be a vector, not e.g., meshgrid output');
   end
 
@@ -55,8 +55,8 @@ function E = interp3_matrix(x, y, z, xi, yi, zi, p, use_ndgrid)
     error('too big to use doubles as indicies: implement int64 indexing')
   end
 
-  ptL = [x(1) y(1) z(1)];
-  ptH = [x(end) y(end) z(end)];
+  %ptL = [x(1) y(1) z(1)];
+  %ptH = [x(end) y(end) z(end)];
 
   dim = length(ddx);
   % 3D stencil size, p+1 points in each dimension

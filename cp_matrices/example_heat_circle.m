@@ -143,7 +143,7 @@ for kt = 1:numtimesteps
 
     t = kt*dt;
 
-    if ( (kt < 10) | (mod(kt,10) == 0) | (kt == numtimesteps) )
+    if ( (kt < 10) || (mod(kt,10) == 0) || (kt == numtimesteps) )
         % plot over computation band
         %plot2d_compdomain(u, xg, yg, dx, dx, 2)
         figure(2);

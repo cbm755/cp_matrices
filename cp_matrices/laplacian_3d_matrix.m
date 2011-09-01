@@ -16,32 +16,32 @@ function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid)
 
   % input checking
   [temp1, temp2] = size(x);
-  if ~(  (ndims(x) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(x) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('x must be a vector, not e.g., meshgrid output');
   end
   [temp1, temp2] = size(y);
-  if ~(  (ndims(y) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(y) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('y must be a vector, not e.g., meshgrid output');
   end
   [temp1, temp2] = size(z);
-  if ~(  (ndims(z) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(z) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('z must be a vector, not e.g., meshgrid output');
   end
 
   dx = x(2)-x(1);
   dy = y(2)-y(1);
   dz = z(2)-z(1);
-  ddx = [dx  dy  dz];
-  Nx = round( (x(end)-x(1)) / dx ) + 1;
-  Ny = round( (y(end)-y(1)) / dy ) + 1;
-  Nz = round( (z(end)-z(1)) / dz ) + 1;
+  if ~assertAlmostEqual([dx dx], [dy dz], 100*eps)
+    error('this routine requires dx == dy == dz');
+  end
+  %ddx = [dx  dy  dz];
+  %dim = length(ddx);
+  %Nx = round( (x(end)-x(1)) / dx ) + 1;
+  %Ny = round( (y(end)-y(1)) / dy ) + 1;
+  %Nz = round( (z(end)-z(1)) / dz ) + 1;
+  %ptL = [x(1) y(1) z(1)];
+  %ptH = [x(end) y(end) z(end)];
 
-  ptL = [x(1) y(1) z(1)];
-  ptH = [x(end) y(end) z(end)];
-
-  dim = length(ddx);
-
-  % TODO: code assumes dx=dy=dz?!
   if (order == 2)
     weights = [-6 1 1 1 1 1 1] / dx^2;
     PTS = [ 0   0   0; ...

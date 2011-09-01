@@ -21,26 +21,27 @@ function L = laplacian_2d_matrix(x,y, order, band1, band2, use_ndgrid)
 
   % input checking
   [temp1, temp2] = size(x);
-  if ~(  (ndims(x) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(x) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('x must be a vector, not e.g., meshgrid output');
   end
   [temp1, temp2] = size(y);
-  if ~(  (ndims(y) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(y) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('y must be a vector, not e.g., meshgrid output');
   end
 
   dx = x(2)-x(1);
   dy = y(2)-y(1);
-  ddx = [dx  dy];
-  Nx = round( (x(end)-x(1)) / dx ) + 1;
-  Ny = round( (y(end)-y(1)) / dy ) + 1;
-
+  if ~assertAlmostEqual(dx, dy, 100*eps)
+    error('this routine requires dx == dy');
+  end
+  %ddx = [dx  dy];
+  %dim = length(ddx);
+  %Nx = round( (x(end)-x(1)) / dx ) + 1;
+  %Ny = round( (y(end)-y(1)) / dy ) + 1;
   %ptL = [x(1) y(1)];
   %ptH = [x(end) y(end)];
 
-  dim = length(ddx);
 
-  % TODO: code assumes dx=dy=dz?!
   if (order == 2)
     weights = [-4 1 1 1 1] / dx^2;
     PTS = [ 0   0; ...

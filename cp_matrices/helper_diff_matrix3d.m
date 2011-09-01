@@ -66,7 +66,7 @@ function L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, ndgrid)
 
   % If we're using careful banding a la iCPM2009 then as a sanity
   % check all of the columns outside of band2 should be zero.
-  if (~isempty(ICPM2009BANDINGCHECKS)) & (ICPM2009BANDINGCHECKS)
+  if (~isempty(ICPM2009BANDINGCHECKS)) && (ICPM2009BANDINGCHECKS)
     Lout = L(:, setdiff(1:(Nx*Ny*Nz),band2));
     if (nnz(Lout) > 0)
       nnz(Lout)

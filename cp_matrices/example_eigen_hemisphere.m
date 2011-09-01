@@ -17,9 +17,9 @@ dx = 0.2/2^1;  % grid spacing
 R=1; %Radius of the circle
 
 pad = 5;
-x1d=(-R-pad*dx):dx:(R+pad*dx)';
-y1d=(-R-pad*dx):dx:(R+pad*dx)';
-z1d=(-R-pad*dx):dx:(R+pad*dx)';
+x1d=(-R-pad*dx):dx:(R+pad*dx);
+y1d=(-R-pad*dx):dx:(R+pad*dx);
+z1d=(-R-pad*dx):dx:(R+pad*dx);
 nx=length(x1d);
 ny=length(y1d);
 nz=length(z1d);

@@ -18,15 +18,15 @@ function [Dxb,Dxf, Dyb,Dyf, Dzb,Dzf] = ...
 
   % input checking
   [temp1, temp2] = size(x);
-  if ~(  (ndims(x) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(x) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('x must be a vector, not e.g., meshgrid output');
   end
   [temp1, temp2] = size(y);
-  if ~(  (ndims(y) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(y) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('y must be a vector, not e.g., meshgrid output');
   end
   [temp1, temp2] = size(z);
-  if ~(  (ndims(z) == 2) & (temp1 == 1 | temp2 == 1)  )
+  if ~(  (ndims(z) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('z must be a vector, not e.g., meshgrid output');
   end
 

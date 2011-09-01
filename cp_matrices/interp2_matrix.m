@@ -20,19 +20,19 @@ function E = interp2_matrix(x, y, xi, yi, p, use_ndgrid)
 
   % input checking
   [temp1,temp2] = size(x);
-  if (temp1 ~= 1 & temp2 ~= 1)
+  if (temp1 ~= 1 && temp2 ~= 1)
     error('x must be a short vector, not meshgrid output');
   end
   [temp1,temp2] = size(y);
-  if (temp1 ~= 1 & temp2 ~= 1)
+  if (temp1 ~= 1 && temp2 ~= 1)
     error('y must be a short vector, not meshgrid output');
   end
   [temp1,temp2] = size(xi);
-  if (temp1 ~= 1 & temp2 ~= 1)
+  if (temp1 ~= 1 && temp2 ~= 1)
     error('yi must be a vector, not meshgrid output');
   end
   [temp1,temp2] = size(yi);
-  if (temp1 ~= 1 & temp2 ~= 1)
+  if (temp1 ~= 1 && temp2 ~= 1)
     error('yi must be a vector, not meshgrid output');
   end
 
@@ -47,8 +47,8 @@ function E = interp2_matrix(x, y, xi, yi, p, use_ndgrid)
     error('too big to use doubles as indicies: implement int64 indexing')
   end
 
-  ptL = [x(1) y(1)];
-  ptH = [x(end) y(end)];
+  %ptL = [x(1) y(1)];
+  %ptH = [x(end) y(end)];
 
   dim = length(ddx);
   EXTWIDTH = p+1;

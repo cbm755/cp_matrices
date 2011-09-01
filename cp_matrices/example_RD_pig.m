@@ -56,8 +56,8 @@ zg = GD(:,10);
 xtest = x1d(1) + (i-1)*dx;
 ytest = y1d(1) + (j-1)*dx;
 ztest = z1d(1) + (k-1)*dx;
-if ( (norm(xtest - xg, inf) > 1e-14) |  ...
-     (norm(ytest - yg, inf) > 1e-14) | ...
+if ( (norm(xtest - xg, inf) > 1e-14) ||  ...
+     (norm(ytest - yg, inf) > 1e-14) || ...
      (norm(ztest - zg, inf) > 1e-14) )
   error('sanity fail');
 end
@@ -133,7 +133,7 @@ for kt = 1:numtimesteps
     
     t = kt*dt;
     
-    if ( (mod(kt,25)==0) | (kt<=10) | (kt==numtimesteps) )
+    if ( (mod(kt,25)==0) || (kt<=10) || (kt==numtimesteps) )
     % plot value on sphere
     figure(2); clf;
     uplot = Eplot*u;

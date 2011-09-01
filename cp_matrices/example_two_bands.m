@@ -205,7 +205,7 @@ for kt = 1:numtimesteps
   t = kt*dt;
 
   % plotting
-  if ( (kt < 5) | (mod(kt,200) == 0) | (kt == numtimesteps) )
+  if ( (kt < 5) || (mod(kt,200) == 0) || (kt == numtimesteps) )
     % plot in the embedded domain: shows the computational band
     plot2d_compdomain(u, xgin, ygin, dx, dy, 1);
     hold on;

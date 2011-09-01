@@ -156,7 +156,7 @@ for kt = 1:numtimesteps
 
     t = kt*dt;
     % plot over computation band
-    if ( (kt < 10) | (mod(kt,10) == 0) | (kt == numtimesteps) )
+    if ( (kt < 10) || (mod(kt,10) == 0) || (kt == numtimesteps) )
         figure(2);
         subplot(2,1,1); hold off;
         uplot(band) = u;

@@ -65,7 +65,7 @@ function L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, ndgrid)
   % check all of the columns outside of band2 should be zero.
   % (This won't be true when using just one band and its probably
   % not true in the dual-band but using bandwidth estimates)
-  if (~isempty(ICPM2009BANDINGCHECKS)) & (ICPM2009BANDINGCHECKS)
+  if (~isempty(ICPM2009BANDINGCHECKS)) && (ICPM2009BANDINGCHECKS)
     Lout = L(:,setdiff(1:(Nx*Ny),band2));
     if (nnz(Lout) > 0)
       nnz(Lout)
