@@ -183,6 +183,8 @@ if implicit
   A = I - dt*M;
 end
 
+figure(1);
+
 for kt = 1:numtimesteps
   if (implicit)
     %% implicit backward euler

@@ -17,9 +17,9 @@ addpath('../surfaces/readply');
 % NOTE: griddata needs to be generated for each choice of dx (by the
 % tri2cp C code).  its loaded below.  dim, p, order, x1d, y1d, z1d
 % must match this code too.
-dx = 0.1/4;
+dx = 0.1/2;
 
-x1d=(-2.0):dx:(2.0)';
+x1d=-2.0:dx:2.0;
 y1d=x1d;
 z1d=x1d;
 nx=length(x1d);
@@ -98,8 +98,8 @@ end
 % or whatever using the cp_matrices.
 
 tic
-%[V,D] = eigs(-M, 20, 'sm', opts);
-[V,D] = eigs(-M, 6, 0.5);
+[V,D] = eigs(-M, 10, 'sm');
+%[V,D] = eigs(-M, 6, 0.75);
 evtime = toc
 D = diag(D);
 [Lambda,I] = sort(abs(D));

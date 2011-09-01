@@ -55,8 +55,8 @@ function E = interp3_matrix(x, y, z, xi, yi, zi, p, use_ndgrid)
     error('too big to use doubles as indicies: implement int64 indexing')
   end
 
-  %ptL = [x(1) y(1) z(1)];
-  %ptH = [x(end) y(end) z(end)];
+  ptL = [x(1) y(1) z(1)];
+  ptH = [x(end) y(end) z(end)];
 
   dim = length(ddx);
   % 3D stencil size, p+1 points in each dimension
