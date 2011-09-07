@@ -9,7 +9,7 @@ function [x,y,th] = paramCircle(n, R, cen)
     cen = [0,0];
   end
 
-  th = [0:(2*pi/n):(2*pi)]';
+  th = ( 0:(2*pi/n):(2*pi) )';
 
   x = cos(th);
   y = sin(th);

@@ -17,7 +17,8 @@ function [cpx,cpy,cpz, dist, bdy] = cpCylinder(x,y,z, zlim, R, cen)
   x = x - cen(1);
   y = y - cen(2);
 
-  zlo = zlim(1);  zhi = zlim(2);
+  zlo = zlim(1);
+  zhi = zlim(2);
 
   bdy1 = (z < zlo);
   bdy2 = (z > zhi);

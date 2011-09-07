@@ -5,7 +5,7 @@ function [cpx,cpy,cpz, dist, bdy1] = cpFishBowl(x,y,z, R, xc,yc,zc)
   if (nargin < 4)
     R = 1;
   end
-  if (nargin == 5) | (nargin == 6)
+  if (nargin == 5) || (nargin == 6)
     error('must specify all of (xc,yc,zc)');
   end
   % default center is the origin

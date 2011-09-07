@@ -8,7 +8,7 @@ for i=1:length(tests)
   test = tests(i).name;
   % detect tests b/c directory contains other stuff (e.g., surdirs and
   % helper files)
-  if ( (~tests(i).isdir) & strncmp(test, 'test', 4) )
+  if ( (~tests(i).isdir) && strncmp(test, 'test', 4) )
     tic
     f = str2func(test(1:end-2));
     num_tests = num_tests + 1;
@@ -32,3 +32,4 @@ else
   disp(['***** All ' num2str(num_tests) ' tests passed *****']);
 end
 cd('..')
+
