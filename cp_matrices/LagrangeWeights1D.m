@@ -1,7 +1,12 @@
 function w = LagrangeWeights1D(xg, x, dx, N)
-% 1D Barycentric Lagrange interpolation weights.
-% xg is the base grid point, the left end grid point, B in the diagram
-% in findGridInterpBasePt.m
+%LAGRANGEWEIGHTS1D   Barycentric Lagrange interpolation weights
+%   w = LagrangeWeights1D(xg, x, dx, N)
+%   1D Barycentric Lagrange interpolation weights.
+%   xg is the base grid point, the left end grid point
+%     (see also "B" in the diagram in findGridInterpBasePt.m)
+%   x is the point of interpolation
+%   dx is the grid spacing (uniform)
+%   N is the number of points in the stencil (degree + 1)
 
   % Is exactly on a grid point, then return binary weights
   for j=0:(N-1)

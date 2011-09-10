@@ -1,4 +1,8 @@
 function [I,X] = findGridInterpBasePt(x, p, relpt, dx)
+%FINDGRIDINTERPBASEPT   Find the "base point" for an interpolation
+% This is best explained in the diagram below.
+%
+% [I,X] = findGridInterpBasePt(x, p, relpt, dx)
 % x: is the interpolation point, must lie inside the === signs below
 % p: degree interpolation (N-1 point interp)
 % relpt: a reference point, corresponding to (1,1) in your grid
