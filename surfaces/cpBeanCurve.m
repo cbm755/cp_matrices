@@ -39,7 +39,5 @@ function [cpx, cpy, dist] = cpBeanCurve(x, y)
 
   myspline = cscvn(pts');
 
-  %myspline.isPeriodic = 1;
-
   DEBUG = 0;
-  [cpx, cpy, dist] = cpSpline2DClosed(x, y, myspline, DEBUG);
+  [cpx, cpy, dist] = cpSpline2D(x, y, myspline, 1, DEBUG);

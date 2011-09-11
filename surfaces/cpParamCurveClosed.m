@@ -1,4 +1,4 @@
-function [cpx, cpy, dist, varargout] = cpParamCurve_2D(x,y,xs,ys,xp,yp,xpp,ypp,endpt1,endpt2,isclosed,DEBUG)
+function [cpx, cpy, dist, varargout] = cpParamCurveClosed(x,y,xs,ys,xp,yp,xpp,ypp,endpt,DEBUG)
 % matlab version of function in python code ParamCurve
 % Find closest points of parameterised curves using Newton's method
 
@@ -6,16 +6,16 @@ function [cpx, cpy, dist, varargout] = cpParamCurve_2D(x,y,xs,ys,xp,yp,xpp,ypp,e
 % xs,ys : parameterised curve
 % xp,yp : first derivative of curve function
 % xpp,ypp : second derivative of curve function
-% endpt1,endpt2: endpts for curve with boundaries / endvalues of parameter
-% isclosed: true for closed curves
+% endpt = [pt1 pt2]: endvalues of parameter (e.g., [0 2*pi])
+%
+% TODO: this code may produce ominous sounding messages that are
+% actually harmless.  Converse may also be the case :(
 
-% TODO: think about endpoints / curves without bndries
-
-% TODO: currently in 2D, generalise to 3D
+% TODO: currently in 2D, generalise to curves in 3D
 
 %%
 
-if (nargin < 12)
+if (nargin < 10)
   DEBUG = 0;
 end
 
@@ -28,7 +28,7 @@ g = @(t,x,y) 2*(xs(t) - x).*xp(t) + 2*(ys(t) - y).*yp(t);
 % second derivative:
 gp = @(t,x,y) 2*xp(t).*xp(t) + 2*(xs(t) - x).*xpp(t) + 2*yp(t).*yp(t) + 2*(ys(t) - y).*ypp(t);
 
-ss = linspace(endpt1, endpt2, 500);
+ss = linspace(endpt(1), endpt(2), 500);
 dd = d2(ss, x, y);
 [mindd_guess, i] = min(dd);
 s_guess = ss(i);
@@ -40,7 +40,7 @@ if (DEBUG >= 1)
   %plot(x,y,'k*');
   plot([x xs(s_guess)],[y ys(s_guess)],'r-*');
   axis equal
-  
+
   figure(11); clf; hold on;
   plot(tt, d2(tt,x,y), 'k-');
   plot(ss,dd,'k.');
@@ -70,26 +70,21 @@ outsideCounter = 0;
 s = s_guess;
 
 while (true)
-   n = n + 1;
-   
-   % Newton's method
-   if (abs(gp(s,x,y)) > tol)
-       snew = s - g(s,x,y) / gp(s,x,y);
-   else
-     % second deriv is zero
-     snew = s;
-   end
-
-   % if closed surface, force it to be periodic in the parameter
-   if (isclosed)
-   %if (sp.isPeriodic == 1)
-   %disp('blah');
-    snew2 = argPeriodic(snew-endpt1, endpt2-endpt1) + endpt1;
-    %[s snew s-snew snew2 snew2-snew]
-    snew = snew2;
-    %else
-    %tp = t;
+  n = n + 1;
+  %% Newton's method
+  if (abs(gp(s,x,y)) > tol)
+    snew = s - g(s,x,y) / gp(s,x,y);
+  else
+    % second deriv is zero
+    snew = s;
   end
+
+  %% Force parameter to be periodic
+  % TODO: Newton's method if probably not robust if the curve is not
+  % smooth at this point
+  snew2 = argPeriodic(snew-endpt(1), endpt(2)-endpt(1)) + endpt(1);
+  %[s snew s-snew snew2 snew2-snew]
+  snew = snew2;
 
   if (DEBUG >= 10)
     figure(10);
@@ -97,64 +92,44 @@ while (true)
     drawnow();
   end
 
-  if (~isclosed && (snew - endpt1 < -endpttol) || (snew - endpt2 > endpttol))
-    outsideCounter = outsideCounter + 1
-  end
-
-   if (outsideCounter >= 5)
-       fail = 1;
-       fprintf('*** probably diverging: (s_guess,n,s,snew)= %f, %d, %f, %f \n', s_guess,n,s,snew);
-       break;
-   elseif (n > maxn)
+  if (n > maxn)
        fail = 1;
        fprintf('too many iterations: (n,snew,x,y) = %d, %f, %f, %f \n', n, snew, x, y);
        g(s,x,y)
        gp(s,x,y)
+       warning('max iterations in Newton solve: CP is likely wrong!');
        break;
-   elseif (abs(s-snew) < tol)
-       if (isclosed || ((endpt1 <= snew) && (snew <= endpt2)))
-            fail = 0;
-            %fprintf('converged: (cpx,cpy,s,n)= %f, %f, %f, %d \n',xs(snew),ys(snew),snew,n);
-       else
-           fail = 1;
-           fprintf('converged outside interval (cpx,cpy,s,n)= %f, %f, %f, %d \n',xs(snew),ys(snew),snew,n);
-       end;
+  elseif (abs(s-snew) < tol)
+       fail = 0;
+       %fprintf('converged: (cpx,cpy,s,n)= %f, %f, %f, %d \n',xs(snew),ys(snew),snew,n);
        break;
-   end
-   %disp(n)
-   % update
-   s = snew;
+  end
+  % update
+  s = snew;
 end
 
+% TODO: if we had a list of parameter values corresponding to
+% non-smooth points (i.e., "breaks" from a spline representation), we
+% could loop over them and check if any are closer.  (Newton's
+% method will likely have trouble).
+
+cpx = xs(s); cpy = ys(s);
+dist = sqrt((cpx - x).^2 + (cpy - y).^2);
 
 if (fail)
-   % not converged: use endpt value
-   dpt1 = d2(endpt1, x, y);
-   dpt2 = d2(endpt2, x, y);
-   [dpt,i] = min([dpt1 dpt2]);
-   dist = sqrt(dpt);
-   endpt = [endpt1, endpt2];
-   cpx = xs(endpt(i)); cpy = ys(endpt(i));
-
-   varargout = {1};
-
-else   % converged
-
-    cpx = xs(s); cpy = ys(s);
-    dist = sqrt((cpx - x).^2 + (cpy - y).^2);
-
-    varargout = {0};
-
+  varargout = {1};
+else
+  varargout = {0};
 end
 
 if (DEBUG <= 0)
   assert(mindd_guess+tol >= dist^2, ...
          'initial guess was better: %g, (x,y)=(%g,%g), s=%g\n', ...
-         mindd_guess - dist^2, x, y, s ;
+         mindd_guess - dist^2, x, y, s);
 else
   if ~(mindd_guess+tol >= dist^2)
     fprintf('initial guess was better: %g, (x,y)=(%g,%g), s=%g\n', ...
-            mindd_guess - dist^2, x, y, s );
+            mindd_guess - dist^2, x, y, s);
     tg = [xp(s_guess), yp(s_guess)];
     nor = [x - xs(s_guess), y-ys(s_guess)];
     figure(10);
@@ -171,7 +146,8 @@ else
     keyboard
   end
 end
-end
+end % function
+
 
 function u = argPeriodic(v, P)
 %ARGPERIODIC  Return the principal value the argument.

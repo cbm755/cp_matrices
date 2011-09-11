@@ -1,13 +1,15 @@
-function [cpx, cpy, dist] = cpSpline2DClosed(x, y, sp)
-%CPSPLINE2DCLOSED  Closest Point function for closed spline in 2D
-%   Helper function, see cpEggCurve, cpBeanCurve for examples
+function [cpx, cpy, dist, varargout] = cpSpline2D(x, y, sp, isclosed, DEBUG)
+%CPSPLINE2D  Closest Point function for closed spline in 2D
+%   Helper function, see cpEggCurve, cpBeanCurve, cpCosCurve for
+%   examples.  Works for both closed and open curves.
 %
 %   Depends on the spline toolbox
 %   Internally, uses cpParamCurve_2D with Newton solves to find cp
 
-  if (nargin <= 3)
+  if (nargin <= 4)
     DEBUG = 0;
   end
+
   % first and second derivatives
   sp1 = fnder(sp);
   sp2 = fnder(sp,2);
@@ -44,24 +46,35 @@ function [cpx, cpy, dist] = cpSpline2DClosed(x, y, sp)
   cpx = zeros(nx,1);
   cpy = zeros(nx,1);
   dist = zeros(nx,1);
-  fail = zeros(nx,1);
+  bdy = zeros(nx,1);
 
   for pt = 1:nx
-    [cpx(pt), cpy(pt), dist(pt), fail(pt)] = ...
-        cpParamCurve_2D(x1d(pt),y1d(pt), ...
-                        xs,ys,xp,yp,xpp,ypp, ...
-                        endpt1,endpt2,DEBUG);
+    if (isclosed)
+      [cpx(pt), cpy(pt), dist(pt), bdy(pt)] = ...
+          cpParamCurveClosed(x1d(pt),y1d(pt), ...
+                             xs,ys,xp,yp,xpp,ypp, ...
+                             [endpt1 endpt2], DEBUG);
+    else
+      [cpx(pt), cpy(pt), dist(pt), bdy(pt)] = ...
+          cpParamCurveOpen(x1d(pt),y1d(pt), ...
+                           xs,ys,xp,yp,xpp,ypp, ...
+                           [endpt1 endpt2], DEBUG);
+    end
   end
 
   cpx = reshape(cpx, size(x));
   cpy = reshape(cpy, size(x));
   dist = reshape(dist, size(x));
-  fail = reshape(fail, size(x));
+  bdy = reshape(bdy, size(x));
+
+  if (~isclosed)
+    varargout = {bdy};
+  end
 
   if (DEBUG >= 1)
     figure(1);
-    plot(cpx(~fail), cpy(~fail), 'bx');
+    plot(cpx(~bdy), cpy(~bdy), 'bx');
     hold on;
     axis equal;
-    plot(x(~~fail), y(~~fail), 'rx');
+    plot(x(~~bdy), y(~~bdy), 'rx');
   end

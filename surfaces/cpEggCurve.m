@@ -20,6 +20,4 @@ function [cpx, cpy, dist] = cpEggCurve(x, y)
 
   myspline = cscvn(pts');
 
-  %myspline.isPeriodic = 1;
-
-  [cpx, cpy, dist] = cpSpline2DClosed(x, y, myspline);
+  [cpx, cpy, dist] = cpSpline2D(x, y, myspline, 1);

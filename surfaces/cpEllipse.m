@@ -54,7 +54,7 @@ fail = zeros(nx,1);
 
 for pt = 1:nx
   [cpx(pt), cpy(pt), dist(pt), fail(pt)] = ...
-      cpParamCurve_2D(x1d(pt),y1d(pt),xs,ys,xp,yp,xpp,ypp,endpt1,endpt2,1);
+      cpParamCurveClosed(x1d(pt),y1d(pt),xs,ys,xp,yp,xpp,ypp, [endpt1 endpt2]);
   %[t1,t2,t3,t4] = cpParamCurve_2D(x1d(pt),y1d(pt),xs,ys,xp,yp,xpp,ypp,endpt1,endpt2,1);
   %cpx(pt) = t1;
   %cpy(pt) = t2;
