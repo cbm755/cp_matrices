@@ -1,5 +1,5 @@
 /********************************************************************
- * HELPER_TRI2CP.c
+ * TRI2CP_HELPER.c
  * Takes triangles (as faces and vertices) and returns closest points.
  * Written as a mex interface for matlab/octave.
  *

@@ -1,5 +1,5 @@
-function [ijk,dd,cp,xyz] = helper_tri2cp(dx, relpt, bw, F, V, gridhashsz, dbglvl)
-%HELPER_TRI2CP  Helper function for TRI2CP
+function [ijk,dd,cp,xyz] = tri2cp_helper(dx, relpt, bw, F, V, gridhashsz, dbglvl)
+%TRI2CP_HELPER  Helper function for TRI2CP
 %   Don't call this directly, see TRI2CP instead
 %
 %   [ijk,dd,cp,xyz] = helper_tri2cp(dx, relpt, bandwidth, ...
@@ -30,9 +30,9 @@ function [ijk,dd,cp,xyz] = helper_tri2cp(dx, relpt, bw, F, V, gridhashsz, dbglvl
 %mex -O CFLAGS='\$CFLAGS -Wall -std\=c99' helper_tri2cp.c
 disp(' ');
 disp('******************************************************');
-disp('* HELPER_TRI2CP: compile this code with:');
+disp('* TRI2CP_HELPER: compile this code with:');
 disp('*');
-disp('*      mex helper_tri2cp.c');
+disp('*      mex tri2cp_helper.c');
 disp('*');
 disp('* (at the matlab prompt)');
 disp('******************************************************');
