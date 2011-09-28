@@ -1,13 +1,14 @@
-%% Gray--Scott reaction-diffusion on the Stanford Bunny
+%% Gray--Scott reaction-diffusion on a triangulated pig.
 % cp_matrices is a folder of useful functions to make implementing the
 % closest point method easier. These include closest point extension
 % matrices, and differentiation matrices.
 
+warning('use example_RD_tri.m instead');
 
 % adjust as appropriate
 addpath('../cp_matrices');
 addpath('../surfaces');
-addpath('../surfaces/tri_bunny');
+addpath('../surfaces/tri_pig');
 addpath('../surfaces/readply');
 
 loaddata = 1;
@@ -34,10 +35,10 @@ p = 3;  % degree interp
 order = 2;  % laplacian order, griddata hardcoded for 2.
 
 % ply file contains the triangles (for plotting, see below)
-PlyFile = 'bunny_input.ply';
+PlyFile = 'pig_loop2.ply';
 % griddata: processed from ply file by tri2cp (C code).  Contains
 % only points in the narrow band.
-GD = load( ['bunny_griddata_p' num2str(p) ...
+GD = load( ['pig_loop2_griddata_p' num2str(p) ...
            '_dx' num2str(dx) '.txt'] );
 % plus one b/c they're C indices
 i = GD(:,1) + 1;
@@ -94,7 +95,7 @@ end
 
 % parameters and functions for Gray--Scott
 % 120 works with 0.025
-F = 0.054;  k = 0.063;  nuu = 1/(3/dx)^2;  nuv = nuu/2;
+F = 0.054;  k = 0.063;  nuu = 1/120^2;  nuv = nuu/2;
 f = @(u,v) (-u.*v.*v  +  F*(1-u));
 g = @(u,v) ( u.*v.*v  -  (F+k)*v);
 
@@ -103,9 +104,9 @@ g = @(u,v) ( u.*v.*v  -  (F+k)*v);
 % Here its eigenvalues/eigenfunctions but could be timestepping
 % or whatever using the cp_matrices.
 
-%pert = (yg - min(yg)) / (max(yg) - min(yg));
-pert = (xg - min(xg)) / (max(xg) - min(xg));
-pert = pert + 1.0*(rand(size(xg))-0.5);
+[th,r,temp] = cart2pol(xg,yg,zg);
+%pert = 0.5*exp(-(6*(zg-.1)).^2) + 0.5*rand(size(xg));
+pert = 1*exp(-(6*(zg-0.05*cos(6*th))).^2); % + 0.5*rand(size(xg));
 u0 = 1 - pert;
 v0 = 0 + 0.5*pert;
 u = u0;
@@ -135,18 +136,16 @@ for kt = 1:numtimesteps
     
     if ( (mod(kt,25)==0) || (kt<=10) || (kt==numtimesteps) )
     % plot value on sphere
-    set(0, 'CurrentFigure', 2);
-    clf;
+    figure(2); clf;
     uplot = Eplot*u;
-    % swap y and z here
-    trisurf(Faces,xp,-zp,yp, uplot);
+    trisurf(Faces,xp,yp,zp, uplot);
     xlabel('x'); ylabel('y'); zlabel('z');
     title( ['u at time ' num2str(t)] );
     axis equal
     shading interp
     camlight left
     colorbar
-    pause(0.01);
+    pause(0);
     end
 
 end
