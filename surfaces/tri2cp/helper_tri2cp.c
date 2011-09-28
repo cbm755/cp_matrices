@@ -91,7 +91,7 @@ struct struct_cp {
 myfloat RELPTX, RELPTY, RELPTZ;
 myfloat DX;
 myfloat BANDWIDTH;
-int DEBUG_LEVEL = 0;  /* messages with smaller level will display */
+int DEBUG_LEVEL;  /* messages with smaller level will display */
 long number_vertices, number_faces;
 
 /* TODO: probably no need to be global */
@@ -99,7 +99,7 @@ long ExpectedGridSize, HashTableSize;
 
 struct struct_cp **gridPtList;
 char **keyList;
-long numgridpts = 0;
+long numgridpts;
 
 struct struct_vertex *vertex;
 struct struct_face   *face;
@@ -124,7 +124,7 @@ void dbg_printf(int level, const char *fmt, ...)
     vsnprintf(buf, BUFMAXSIZE-1, fmt, ap);
     va_end(ap);
     /*mexPrintf("  %s: %s", mexFunctionName(), buf);*/
-    mexPrintf("  %s: %s", "DEBUG", buf);
+    mexPrintf("  %s: %s", "MEXDEBUG", buf);
   }
 }
 
@@ -870,6 +870,8 @@ void mainRoutine(void)
   CPdd = mallocMatrix();
 #endif
 
+  numgridpts = 0;
+
   expectedgridsz = ExpectedGridSize;
   hashtablesz = HashTableSize;
   dbg_printf(2, "expected grid size: %ld\n", expectedgridsz);
@@ -940,6 +942,7 @@ void cleanup(void) {
 #endif
 
   freePlyData();
+  dbg_printf(10, "destroying hashtable...\n");
   hdestroy();
 
   for (i = 0; i < numgridpts; i++) {
