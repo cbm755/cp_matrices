@@ -14,12 +14,12 @@ addpath('../surfaces/tri2cp');
 loaddata = 1;
 
 if (loaddata == 1)
-dx = 0.1;
+dx = 0.05;
 
 % ply file contains the triangles
 disp('reading plyread');
-PlyFile = 'bunny.ply';
-%PlyFile = 'pig_loop2.ply';
+%PlyFile = 'bunny.ply';
+PlyFile = 'pig_loop2.ply';
 %PlyFile = 'annies_pig.ply';
 [Faces, Vertices] = plyread(PlyFile, 'tri');
 
@@ -36,7 +36,7 @@ xg = XYZ(:,1);
 yg = XYZ(:,2);
 zg = XYZ(:,3);
 
-x1d=(-2.0):dx:(2.0)';
+x1d=-2.0:dx:2.0;
 y1d=x1d;
 z1d=x1d;
 nx=length(x1d);

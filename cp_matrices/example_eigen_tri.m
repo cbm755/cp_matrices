@@ -12,12 +12,31 @@
 addpath('../cp_matrices');
 addpath('../surfaces');
 addpath('../surfaces/tri_pig');
+addpath('../surfaces/tri');
 addpath('../surfaces/readply');
+addpath('../surfaces/tri2cp');
 
-% NOTE: griddata needs to be generated for each choice of dx (by the
-% tri2cp C code).  its loaded below.  dim, p, order, x1d, y1d, z1d
-% must match this code too.
-dx = 0.1/2;
+dx = 0.05;
+
+% ply file contains the triangles
+disp('reading plyread');
+%PlyFile = 'bunny.ply';
+PlyFile = 'pig_loop2.ply';
+%PlyFile = 'annies_pig.ply';
+[Faces, Vertices] = plyread(PlyFile, 'tri');
+
+disp('running tri2cp');
+[IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, -2);
+i = IJK(:,1);
+j = IJK(:,2);
+k = IJK(:,3);
+dist = DIST;
+cpxg = CP(:,1);
+cpyg = CP(:,2);
+cpzg = CP(:,3);
+xg = XYZ(:,1);
+yg = XYZ(:,2);
+zg = XYZ(:,3);
 
 x1d=-2.0:dx:2.0;
 y1d=x1d;
@@ -25,6 +44,7 @@ z1d=x1d;
 nx=length(x1d);
 ny=length(y1d);
 nz=length(z1d);
+
 % the griddata file assumes something like this for ordering, but
 % its not necessary to actually do the meshgrid.
 %[x3d,y3d,z3d]=meshgrid(x1d,y1d,z1d);
@@ -34,8 +54,9 @@ dim = 3;
 p = 3;  % degree interp
 order = 2;  % laplacian order, griddata hardcoded for 2.
 
+if (1==0)
+  % DEPRECIATED
 % ply file contains the triangles (for plotting, see below)
-PlyFile = 'pig_loop2.ply';
 % griddata: processed from ply file by tri2cp (C code).  Contains
 % only points in the narrow band.
 GD = load( ['pig_loop2_griddata_p' num2str(p) ...
@@ -51,7 +72,7 @@ cpzg = GD(:,7);
 xg = GD(:,8);
 yg = GD(:,9);
 zg = GD(:,10);
-
+end
 
 %%sanity checks
 xtest = x1d(1) + (i-1)*dx;
@@ -81,12 +102,11 @@ if (build_matrices)
   M = lapsharp(L,E);
 
   %% plotting grid
-  [Faces, Vertices] = plyread(PlyFile, 'tri');
   xp = Vertices(:,1);
   yp = Vertices(:,2);
   zp = Vertices(:,3);
   Eplot = interp3_matrix_band(x1d,y1d,z1d, xp,yp,zp, 3, band);
-  Eplot1 = interp3_matrix_band(x1d,y1d,z1d, xp,yp,zp, 1, band);
+  %Eplot1 = interp3_matrix_band(x1d,y1d,z1d, xp,yp,zp, 1, band);
   %Eplot0 = interp3_matrix_band(x1d,y1d,z1d, xp,yp,zp, 0, band);
 end
 
