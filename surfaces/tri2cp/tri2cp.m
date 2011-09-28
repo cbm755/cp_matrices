@@ -1,7 +1,7 @@
 addpath('../../surfaces/tri_pig');
 addpath('../../surfaces/readply');
 
-dx = 0.1;
+dx = 0.05;
 
 relpt = -2;
 
@@ -53,17 +53,19 @@ hashtablesz = ceil(1.25*expectedgridsz)
 
 
 
-%% Compile
-
 %mex helper_tri2cp.c
-mex -O CFLAGS='\$CFLAGS -Wall -std\=c99' helper_tri2cp.c
+%mex -O CFLAGS='\$CFLAGS -Wall -std\=c99' helper_tri2cp.c
+%mex -O CFLAGS='\$CFLAGS -Wall' helper_tri2cp.c
 
 tic
-[IJK,DD,CP,XYZ] = helper_tri2cp(dx, [relpt, relpt, relpt], bw, ...
+[IJK,DD,CP,XYZ] = helper_tri2cp(dx, [relpt relpt relpt], bw, ...
                             Faces, Vertices, ...
                             [expectedgridsz, hashtablesz], ...
                             DEBUG_LEVEL);
 toc
+% NOTE: DD is squared distance
+DD = sqrt(DD);
+
 
 [IJK(end,:)  DD(end)  CP(end,:)  XYZ(end,:)]
 
