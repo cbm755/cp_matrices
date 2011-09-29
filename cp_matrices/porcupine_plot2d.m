@@ -9,7 +9,9 @@ function porcupine_plot2d(x, y, cpx, cpy, fignum, bdy)
     bdy = zeros(size(cpx));
   end
 
-  figure(fignum); clf; hold on;
+  %figure(fignum);
+  set(0, 'CurrentFigure', fignum);
+  clf; hold on;
   xlabel('x'); ylabel('y');
 
   for i=1:length(cpx(:))
