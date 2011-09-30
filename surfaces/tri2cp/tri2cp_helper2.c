@@ -35,6 +35,8 @@
 #include <errno.h>
 /* don't include math.h here, see multiprec.h */
 
+#include <limits.h>
+
 #include <mex.h>
 
 #include "uthash.h"
@@ -81,10 +83,12 @@ struct struct_face {
    be useful for debugging.  Do need (i,j,k) b/c search.h hashtable
    doesn't seem to give a way to walk the table. */
 struct struct_cp {
+  int key;
   myfloat dd;
   myfloat cpx, cpy, cpz;
   int i, j, k;
   myfloat x, y, z;
+  UT_hash_handle hh;
 };
 
 
@@ -99,6 +103,9 @@ long number_vertices, number_faces;
 /* TODO: probably no need to be global */
 long ExpectedGridSize, HashTableSize;
 
+/* new hash */
+struct struct_cp *newhashlist = NULL;
+
 struct struct_cp **gridPtList;
 char **keyList;
 long numgridpts;
@@ -110,6 +117,46 @@ myfloat *global_Sphere_Cy;
 myfloat *global_Sphere_Cz;
 myfloat *global_Sphere_w;
 
+
+void hashAddGridPt(int i, int j, int k, \
+		   myfloat dd, myfloat cpx, myfloat cpy, myfloat cpz, \
+		   myfloat x, myfloat y, myfloat z) {
+    struct struct_cp *gridpt;
+
+    gridpt = malloc(sizeof(struct struct_cp));
+    /* TODO: not ANSI, too big, need a long here */
+    gridpt->key = i*100*100 + j*100 + k;
+
+    gridpt->dd = dd;
+    gridpt->cpx = cpx;
+    gridpt->cpy = cpy;
+    gridpt->cpz = cpz;
+    gridpt->i = i;
+    gridpt->j = j;
+    gridpt->k = k;
+    gridpt->x = x;
+    gridpt->y = y;
+    gridpt->z = z;
+
+    HASH_ADD_INT( newhashlist, key, gridpt );  /* id: name of key field */
+}
+
+int hashFind(int i, int j, int k, struct struct_cp *gridpt) {
+  /*struct struct_cp *gridpt;*/
+    int findkey;
+    int foundit;
+    /*gridpt = malloc(sizeof(struct struct_cp));*/
+    /* TODO: not ANSI, too big, need a long here */
+    findkey = i*100*100 + j*100 + k;
+
+    HASH_FIND_INT( newhashlist, &findkey, gridpt );
+    
+    if (gridpt == NULL) {
+      foundit = 0;
+    } else {
+      foundit = 1;
+    }
+}
 
 
 /*
@@ -568,7 +615,9 @@ myfloat FindClosestPointToOneTri(myfloat a1, myfloat a2, myfloat a3, \
   /* Note: dd is dist squared! */
   /* TODO: HORRIBLE HACK 2010-07-28, this was to deal with a ply file
      with degenerate triangles. */
-  if (isinf(factor)) {
+  /*if (isinf(factor)) {*/
+  /* TODO, just gets worse and worse */
+  if ((factor > 1e20) || (factor < -1e20)) {
     dd = 10000.0;
     myerr("'factor' is infinite: panic!");
   } else {
@@ -638,7 +687,6 @@ myfloat FindClosestPointsGlobally(myfloat x, myfloat y, myfloat z, \
 }
 
 
-
 /* Ruuth's algorithm as described in [MR2008,MR2009]
  *
  *  preprocessing: find the bounding spheres around each triangle.
@@ -666,10 +714,11 @@ void FindClosestPointsFromTriangulation()
   myfloat x,y,z;
   myfloat cpx, cpy, cpz;
   long cc = 0;
-  ENTRY e, *ep;
-  struct struct_cp *gridpt;
+  /*ENTRY e, *ep; */
   char *tupstr, *tupstr2;
-
+  int foundit;
+  struct struct_cp *gridpt;
+  long total_count = 0;
   /* colin.key = strdup("(10,-20,300)"); */
   /* printf("key: %s\n", colin.key); */
   /* ep = hsearch(colin, FIND); */
@@ -690,7 +739,7 @@ void FindClosestPointsFromTriangulation()
 	CPdd[i][j][k] = 987654321.;
 #endif
 
-  long total_count = 0;
+
 
   /* 1/h: inverse of h */
   ih = 1/DX;
@@ -728,68 +777,35 @@ void FindClosestPointsFromTriangulation()
 	    }
 #endif
 
-	    /* TODO: strangely, how we form the key here strongly effects the run time.
-	     * Perhaps I don't understand the hash function, or its flaw in hsearch.  Could
-	     * try other hash table implementations (the google one maybe)
-	     */
-	    /*if ( snprintf(tupstr, TUPSTRSZ, "(%d,%d,%d)", i+640,j+640,k+640) >= TUPSTRSZ )*/
+	    /* Search hashstable */
 
-	    /* Build the key for this gridpoint */
-	    if ( snprintf(tupstr, TUPSTRSZ, "(%d,%d,%d)", i,j,k) >= TUPSTRSZ )
-	      myerr("Couldn't write tuple string, increase TUPSTRSZ?");
-	    /*dbg_printf(5, "DEBUG: tupstr=\"%s\"\n", tupstr);*/
-
-	    e.key = tupstr;
-	    e.data = NULL;  /* doesn't matter, only need key */
-
-	    ep = hsearch(e, FIND);
-	    if (ep == NULL) {
-	      /* we didn't find it so enter a new one */
-	      if ((gridpt = (struct struct_cp *)		\
-		   malloc(sizeof(struct struct_cp))) == NULL)
-		myerr_nix("Error allocating gridpt");
-
-	      /* we need a duplicate string to put in the table b/c
-		 tupstr gets reused next time through the loop. */
-	      if ((tupstr2 = strdup(tupstr)) == NULL)
-		myerr_nix("Error duplicating tuple string");
-
-	      gridpt->dd = dd;
-	      gridpt->cpx = cpx;
-	      gridpt->cpy = cpy;
-	      gridpt->cpz = cpz;
-	      gridpt->i = i;
-	      gridpt->j = j;
-	      gridpt->k = k;
-	      gridpt->x = x;
-	      gridpt->y = y;
-	      gridpt->z = z;
-	      /*dbg_printf(5, "DEBUG: gridPtCtr=%d\n", gridPtCtr);*/
-	      gridPtList[numgridpts] = gridpt;
-	      keyList[numgridpts] = tupstr2;
+	    foundit = hashFind(i, j, k, gridpt);
+	    
+	    if (~(foundit)) {
+	      /* not found, add new one */
+	      hashAddGridPt(i,j,k, dd, cpx,cpy,cpz, x,y,z);
 	      numgridpts++;
-	      e.key = tupstr2;
-	      e.data = (void *) gridpt;
-	      /* add it e to the hashtable */
-	      ep = hsearch(e, ENTER);
-	      if (ep == NULL) myerr_nix("Error, maybe hashtable is full\? Msg:");
 	    } else {
-	      /* it was already in the table, check if new pt is
-		 closer */
-	      gridpt = (struct struct_cp*) ep->data;
+	      /* already there, check if closer and update */
 	      if (dd < (gridpt->dd)) {
 		gridpt->dd = dd;
 		gridpt->cpx = cpx;
 		gridpt->cpy = cpy;
 		gridpt->cpz = cpz;
-		gridpt->i = i;
-		gridpt->j = j;
-		gridpt->k = k;
-		gridpt->x = x;
-		gridpt->y = y;
-		gridpt->z = z;
+		/*gridpt->i = i;
+		  gridpt->j = j;
+		  gridpt->k = k;
+		  gridpt->x = x;
+		  gridpt->y = y;
+		  gridpt->z = z;*/
+		if ( (gridpt->i != i) | (gridpt->j != j) | (gridpt->k != k) | \
+		     (gridpt->x != x) | (gridpt->y != y) | (gridpt->z != z) ) {
+		  myerr("panic");
+		}
 	      }
 	    }
+
+
 	  } /* end inside sphere */
 	}
       }
@@ -895,8 +911,8 @@ void mainRoutine(void)
 
   /* Create a new hash table.  To be portable we only can make one of
      these.  On GNU, could use hcreate_r(). */
-  if (hcreate(hashtablesz) == 0) myerr_nix("Error creating hash table");
-
+  /*if (hcreate(hashtablesz) == 0) myerr_nix("Error creating hash table");*/
+  
 
   dbg_printf(10, "running boundingSpheres()...\n");
   boundingSpheres();
@@ -944,8 +960,8 @@ void cleanup(void) {
 #endif
 
   freePlyData();
-  dbg_printf(10, "destroying hashtable...\n");
-  hdestroy();
+  /*dbg_printf(10, "destroying hashtable...\n");
+    hdestroy();*/
 
   for (i = 0; i < numgridpts; i++) {
     free(gridPtList[i]);
@@ -973,6 +989,46 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   int i;
   const int numInputs = 7;
 
+  struct struct_cp *pt;
+  int findkey;  
+
+  long c, d;
+  int withPruning = 1;
+  long bandsz;
+
+
+  /* empty hash list */
+  newhashlist = NULL;
+ 
+
+  /*
+  pt = malloc(sizeof(struct struct_cp));
+  pt->key = 10;
+  pt->x = 66.0;
+  HASH_ADD_INT(newhashlist, key, pt);  
+
+  pt = malloc(sizeof(struct struct_cp));
+  pt->key = 12;
+  pt->x = 106.0;
+  HASH_ADD_INT(newhashlist, key, pt);
+  */
+
+  hashAddGridPt(1, 1, 1,  1.0, 1.1,1.2,1.3,2.1,2.2,2.3);
+
+  if (hashFind(1, 1, 1, pt)) {
+    mexPrintf("hash: hashFind() found it\n");
+  } else {
+    mexPrintf("hash: hashFind(): not found\n");
+  }
+
+  findkey = 1*10000 + 200 + 1;
+  HASH_FIND_INT(newhashlist, &findkey, pt);
+  if (pt == NULL) {
+    mexPrintf("hash: not found\n");
+  } else {
+    mexPrintf("hash: found and x=%g\n", pt->x);
+  }
+  mexPrintf("maxint: %d\n", INT_MAX);
   /* input checking */
   if (nrhs != numInputs) {
     mexErrMsgTxt("wrong number of arguments");
@@ -993,8 +1049,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   inMaxHashSz = mxGetPr(prhs[5]);
   inDebugLevel = mxGetPr(prhs[6]);
 
-  number_faces = mxGetM(prhs[3]);
-  number_vertices = mxGetM(prhs[4]);
+  number_faces = (long) mxGetM(prhs[3]);
+  number_vertices = (long) mxGetM(prhs[4]);
 
   DEBUG_LEVEL = (int) inDebugLevel[0];
   dbg_printf(99, "setting debug level to %d: (display messages with level lower than %d)\n", DEBUG_LEVEL, DEBUG_LEVEL);
@@ -1028,9 +1084,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   mainRoutine();
 
-  long c, d;
-  int withPruning = 1;
-  long bandsz;
 
   /* This first pass through the results it just to find how many
      there are.  TODO: a bad idea: we rely on processing these
