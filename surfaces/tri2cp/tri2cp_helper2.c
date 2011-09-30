@@ -30,12 +30,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <search.h>
+/*#include <search.h>*/
 #include <string.h>
 #include <errno.h>
 /* don't include math.h here, see multiprec.h */
 
 #include <mex.h>
+
+#include "uthash.h"
 
 /* Use extended precision or not */
 /*#define EXTENDEDPRECISION*/
