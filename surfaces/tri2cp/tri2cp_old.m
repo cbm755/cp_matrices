@@ -1,7 +1,6 @@
 function [IJK,DIST,CP,XYZ] = tri2cp_old(Faces, Vertices, dx, relpt, p, fd_stenrad)
-%TRI2CP  Convert a triangulation to a banded closest point representation
-%   TODO
-%
+%TRI2CP_OLD  Convert a triangulation to a banded closest point representation
+%   Use TRI2CP instead.
 
 %addpath('../../surfaces/tri_pig');
 %addpath('../../surfaces/readply');
@@ -69,7 +68,7 @@ expectedgridsz = EXPECTEDGRIDSZ_SAFETY_FACTOR * ...
     ceil((bw/dx)*(4*pi*RAD^2)/(dx^2));
 hashtablesz = ceil(1.25*expectedgridsz);
 
-%mex -O CFLAGS='\$CFLAGS -Wall' helper_tri2cp_old.c
+mex -O CFLAGS='\$CFLAGS -Wall' tri2cp_helper_old.c
 
 tic
 [IJK,DD,CP,XYZ] = tri2cp_helper_old(dx, [relpt relpt relpt], bw, ...
@@ -80,25 +79,7 @@ toc
 % NOTE: DD is squared distance
 DIST = sqrt(DD);
 
-%[IJK(end,:)  DD(end)  CP(end,:)  XYZ(end,:)]
-
 num_grid_points = length(DD)
-
-%assert(numgp == 3594)
-%numgp - 3594
 
 % a test
 assert( max(max(abs(relpt + (IJK-1)*dx - XYZ))) == 0)
-
-if (1==0)
-figure(1); clf;
-%uplot = Eplot*u;
-%trisurf(Faces,xp,yp,zp, uplot);
-trisurf(Faces,xp,yp,zp, zp.^2);
-xlabel('x'); ylabel('y'); zlabel('z');
-axis equal
-shading interp
-camlight left
-colorbar
-pause(0);
-end

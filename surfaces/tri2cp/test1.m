@@ -14,7 +14,7 @@ PlyFile = 'pig_loop2.ply';
 
 disp('running tri2cp');
 [IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, -2);
-%[IJK2,DIST2,CP2,XYZ2] = tri2cp_old(Faces, Vertices, dx, -2);
+[IJK2,DIST2,CP2,XYZ2] = tri2cp_old(Faces, Vertices, dx, -2);
 
 max(IJK-IJK2)
 max(DIST-DIST2)

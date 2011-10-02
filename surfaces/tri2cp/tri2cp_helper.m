@@ -1,11 +1,10 @@
-function [ijk,dd,cp,xyz] = tri2cp_helper(dx, relpt, bw, F, V, gridhashsz, dbglvl)
+function [ijk,dd,cp,xyz] = tri2cp_helper(dx, relpt, bw, F, V, trim, dbglvl)
 %TRI2CP_HELPER  Helper function for TRI2CP
 %   Don't call this directly, see TRI2CP instead
 %
 %   [ijk,dd,cp,xyz] = helper_tri2cp(dx, relpt, bandwidth, ...
 %                            Faces, Vertices, ...
-%                            [expectedgridsz, hashtablesz], ...
-%                            DebugMsgLevel);
+%                            trim, DebugMsgLevel);
 %
 %   'dx': the grid size.
 %
@@ -18,16 +17,19 @@ function [ijk,dd,cp,xyz] = tri2cp_helper(dx, relpt, bw, F, V, gridhashsz, dbglvl
 %
 %   'Faces', 'Vertices': a triangulation (e.g., see triplot).
 %
+%   'trim': remove any extra points that light outside 'bandwidth'.
+%           Typically, tri2cp will find many more points outside of
+%           the specified bandwidth.  If 'trim' is nonzero, these
+%           extra points will be discarded.
+%
 %   'DebugMsgLevel': debug messages from the mex code with a value
 %                    less than this will be displayed.
 %
-%   TODO: documentation incomplete.
 
 
+%mex tri2cp_helper.c
+%mex -O CFLAGS='\$CFLAGS -Wall' tri2cp_helper.c
 
-%mex helper_tri2cp.c
-%mex -O CFLAGS='\$CFLAGS -Wall' helper_tri2cp.c
-%mex -O CFLAGS='\$CFLAGS -Wall -std\=c99' helper_tri2cp.c
 disp(' ');
 disp('******************************************************');
 disp('* TRI2CP_HELPER: compile this code with:');
