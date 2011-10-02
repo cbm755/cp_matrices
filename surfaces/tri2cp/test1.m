@@ -3,7 +3,7 @@ addpath('../tri');
 addpath('../readply');
 
 
-dx = 0.025;
+dx = 0.05;
 
 % ply file contains the triangles
 disp('reading plyread');
@@ -13,5 +13,10 @@ PlyFile = 'pig_loop2.ply';
 [Faces, Vertices] = plyread(PlyFile, 'tri');
 
 disp('running tri2cp');
-[IJK,DIST,CP,XYZ] = tri2cp2(Faces, Vertices, dx, -2);
 %[IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, -2);
+[IJK2,DIST2,CP2,XYZ2] = tri2cp2(Faces, Vertices, dx, -2);
+
+max(IJK-IJK2)
+max(DIST-DIST2)
+max(CP-CP2)
+max(XYZ-XYZ2)
