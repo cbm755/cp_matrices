@@ -142,7 +142,7 @@ void dbg_printf(int level, const char *fmt, ...)
 #define hashFind hashFind_LONG
 
 /* Needs to be 0.5*10^k  */
-#define MAXIND 500
+#define MAXIND (50000UL)
 #define KEYMULTFAC (2*MAXIND)
 #define KEYSHIFT (MAXIND-1)
 
@@ -151,9 +151,10 @@ void dbg_printf(int level, const char *fmt, ...)
  */
 void hashInit()
 {
+  double A, B;
+
   /* empty hash list */
   newhashlist = NULL;
-  double A, B;
 
   /* for the multifield key, need these global vars */
   keylen = offsetof(struct_cp, k) + sizeof(int) - offsetof(struct_cp, i);
@@ -169,12 +170,12 @@ void hashInit()
   A = (double) KEYMULTFAC;
   A = A*A*A;
   B = (double) ULLONG_MAX;
-  dbg_printf(0, "(floats) KEYMULTFAC^3 = %g, LONG_MAX = %g\n", A, B);
+  dbg_printf(0, "(floats) KEYMULTFAC^3 = %g, ULLONG_MAX = %g\n", A, B);
   dbg_printf(0, "sizeof(unsigned int)=%d\n", sizeof(unsigned int));
   dbg_printf(0, "sizeof(unsigned long)=%d\n", sizeof(unsigned long));
   dbg_printf(0, "sizeof(unsigned long long)=%d\n", sizeof(unsigned long long));
   if (0.95*A > B) {
-    myerr('not enough space in unsigned long long int');
+    myerr("not enough space in unsigned long long int");
   }
 }
 
@@ -337,7 +338,7 @@ void freePlyData()
  */
 void initShapeFromMatlabArray(double *Faces, long numF, double *Vertices, long numV)
 {
-  long i;
+  unsigned long i;
 
   mallocPlyData(numV, numF);
 
@@ -410,7 +411,7 @@ void boundingSpheresOptimal()
      minimum bounding circle) or by the two points of the longest side
      of the triangle (where the two points define a diameter of the
      circle). */
-  long i;
+  unsigned long i;
   myfloat ang[3];
   myfloat m[3];
   myfloat a[3], b[3], c[3];
@@ -565,7 +566,7 @@ void boundingSpheresOptimal()
 /*
  * a helper function for boundingSpheresCentroid() below
  */
-myfloat distance(long i, long j)
+myfloat distance(unsigned long i, unsigned long j)
 {
   myfloat sqrd;
 
@@ -595,7 +596,7 @@ myfloat distance2(myfloat x, myfloat y, myfloat z, long j)
  */
 void boundingSpheresCentroid()
 {
-  long i;
+  unsigned long i;
   myfloat R;
 
   for (i=0; i<number_faces; i++) {
@@ -649,10 +650,10 @@ void ProjectOnSegment(myfloat *c1, myfloat *c2, myfloat *c3, \
  * segments and points).  More testing required.
  */
 myfloat FindClosestPointToOneTri(myfloat a1, myfloat a2, myfloat a3, \
-				 long face_index, \
+				 unsigned long face_index, \
 				 myfloat *c1, myfloat *c2, myfloat *c3)
 {
-  long index_p, index_q, index_r;
+  unsigned long index_p, index_q, index_r;
   myfloat a11, a12, a22, b1, b2;
   myfloat i11, i12, i22, factor;
   myfloat q1, q2, q3;
@@ -730,7 +731,7 @@ myfloat FindClosestPointToOneTri(myfloat a1, myfloat a2, myfloat a3, \
   /* TODO: HORRIBLE HACK 2010-07-28, this was to deal with a ply file
      with degenerate triangles. */
   /*if (isinf(factor)) {*/
-  /* TODO, just gets worse and worse */
+  /* TODO, just gets worse and worse, where is isinf on windows? */
   if ((factor > 1e20) || (factor < -1e20)) {
     dd = 10000.0;
     myerr("'factor' is infinite: panic!");
@@ -780,7 +781,7 @@ for (i=0;i<1000000;i++)
 myfloat FindClosestPointsGlobally(myfloat x, myfloat y, myfloat z, \
 				  myfloat *c1, myfloat *c2, myfloat *c3)
 {
-  long i;
+  unsigned long i;
   myfloat dd, dd_min;
   myfloat t1, t2, t3;
 
@@ -866,8 +867,6 @@ void FindClosestPointsFromTriangulation()
 	       <= global_Sphere_w[n]*global_Sphere_w[n] ) {
 	    dd = FindClosestPointToOneTri(x,y,z, n, &cpx, &cpy, &cpz);
 	    cc++;
-	    /*printf("face: %d, point: (%d,%d,%d), x: (%g,%g,%g)\n", n, i,j,k, x,y,z);
-	      printf("%d %d %d %d %g %g %g %g\n", n, i,j,k, dd, cpx,cpy,cpz);*/
 
 #ifdef ALSOTHREEDMATRICES
 	    if (dd<CPdd[i][j][k]) {
@@ -878,30 +877,21 @@ void FindClosestPointsFromTriangulation()
 	    }
 #endif
 
-	    /* Search hashstable */
-
-	    /*foundit = hashFind2(i, j, k, &gridpt);*/
+	    /* Search hashtable */
 	    gridpt = hashFind(i, j, k);
-	    /*dbg_printf(10,"(%d,%d,%d), \t gridpt_ptr = %d\n", i,j,k,(int) gridpt);*/
+
 	    if (gridpt == NULL) {
 	      /* not found, add new one */
 	      hashAddGridPt(i,j,k, dd, cpx,cpy,cpz, x,y,z);
 	      numgridpts++;
 	    } else {
-	      /*dbg_printf(10,"gridpt=%d, cast NULL=%d\n", (int) gridpt, (int) NULL);*/
 	      /* already there, check if closer and update */
 	      if (dd < (gridpt->dd)) {
-		/*dbg_printf(10,"here too!\n");*/
 		gridpt->dd = dd;
 		gridpt->cpx = cpx;
 		gridpt->cpy = cpy;
 		gridpt->cpz = cpz;
-		/*gridpt->i = i;
-		  gridpt->j = j;
-		  gridpt->k = k;
-		  gridpt->x = x;
-		  gridpt->y = y;
-		  gridpt->z = z;*/
+		/* no need to update i,j,k,x,y,z because they haven't changed */
 		if ( (gridpt->i != i) | (gridpt->j != j) | (gridpt->k != k) | \
 		     (gridpt->x != x) | (gridpt->y != y) | (gridpt->z != z) ) {
 		  dbg_printf(10, "i,j,k=%d,%d,%d\n", i,j,k);
@@ -909,7 +899,6 @@ void FindClosestPointsFromTriangulation()
 		}
 	      }
 	    }
-
 
 	  } /* end inside sphere */
 	}
@@ -923,13 +912,14 @@ void FindClosestPointsFromTriangulation()
   dbg_printf(10, "found %ld grid points\n", numgridpts);
 
   /* TODO: double check only, remove? */
+  /*
   unsigned long numcheck;
   numcheck = HASH_COUNT(newhashlist);
   if (numgridpts != numcheck) {
     dbg_printf(0, "not the same: %ld, %ld\n", numgridpts, numcheck);
     myerr("sanity check on number of grid points failed");
   }
-
+  */
 }
 
 
@@ -1065,7 +1055,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /*int dimx, dimy, numdims;*/
   int i;
   const int numInputs = 7;
-
+  struct_cp *s;
   unsigned long d;
   int withPruning = 1;
   long bandsz;
@@ -1134,7 +1124,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
      there are.  TODO: a bad idea: we rely on processing these
      exactly the same twice. */
 
-  struct_cp *s;
+
   d = 0;
   for(s=newhashlist; s != NULL; s=s->hh.next) {
     if ( (!withPruning) || (s->dd <= BANDWIDTH*BANDWIDTH) ) {
