@@ -13,8 +13,8 @@ PlyFile = 'pig_loop2.ply';
 [Faces, Vertices] = plyread(PlyFile, 'tri');
 
 disp('running tri2cp');
-%[IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, -2);
-[IJK2,DIST2,CP2,XYZ2] = tri2cp2(Faces, Vertices, dx, -2);
+[IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, -2);
+%[IJK2,DIST2,CP2,XYZ2] = tri2cp_old(Faces, Vertices, dx, -2);
 
 max(IJK-IJK2)
 max(DIST-DIST2)

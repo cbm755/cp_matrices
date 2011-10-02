@@ -20,22 +20,22 @@
  * Can use extended precision internally: may not be completely tested
  * yet.  Results are copied back into doubles to return to matlab.
  *
+ * Might be some bug where different RELPTs take quite different
+ * amounts of time: this shouldn't happen.  problem with hashtable,
+ * try a different one?  Maybe the google one?
+ * See also the funny snprintf(tupstr, TUPSTRSZ, "(%d,%d,%d)") results
+ *
  ********************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-/*#include <search.h>*/
-#include <stddef.h>    /* hash needs this for offsetof */
+#include <search.h>
 #include <string.h>
 #include <errno.h>
 /* don't include math.h here, see multiprec.h */
 
-#include <limits.h>
-
 #include <mex.h>
-
-#include "uthash.h"
 
 /* Use extended precision or not */
 /*#define EXTENDEDPRECISION*/
@@ -54,6 +54,8 @@
 
 /***************************************************************************/
 
+/* 23 is enough space for 3D, 5 digit entries in tuple */
+#define TUPSTRSZ 23
 
 
 /* use 1st one for calls that set errno, 2nd otherwise */
@@ -63,26 +65,25 @@
 #define myerr(s) { mexErrMsgTxt(s); exit(EXIT_FAILURE); }
 
 
-typedef struct {
+struct struct_vertex {
   myfloat x, y, z;
   myfloat confidence;
   myfloat intensity;
-} struct_vertex;
+};
 
-typedef struct {
+struct struct_face {
   long v1, v2, v3;
-} struct_face;
+};
 
 /* Struct used for the hashtable.  Don't need the (x,y,z) but it might
-   be useful for debugging. */
-typedef struct {
-  unsigned long long key;
-  int i, j, k;  /* the hash table key */
-  myfloat cpx, cpy, cpz;
+   be useful for debugging.  Do need (i,j,k) b/c search.h hashtable
+   doesn't seem to give a way to walk the table. */
+struct struct_cp {
   myfloat dd;
+  myfloat cpx, cpy, cpz;
+  int i, j, k;
   myfloat x, y, z;
-  UT_hash_handle hh;
-} struct_cp;
+};
 
 
 
@@ -91,29 +92,22 @@ myfloat RELPTX, RELPTY, RELPTZ;
 myfloat DX;
 myfloat BANDWIDTH;
 int DEBUG_LEVEL;  /* messages with smaller level will display */
-unsigned long number_vertices, number_faces;
+long number_vertices, number_faces;
 
 /* TODO: probably no need to be global */
-/* TODO: REMOVE? */
-unsigned long ExpectedGridSize, HashTableSize;
+long ExpectedGridSize, HashTableSize;
 
-/* new hash */
-struct_cp *newhashlist = NULL;
+struct struct_cp **gridPtList;
+char **keyList;
+long numgridpts;
 
-/*struct_cp **gridPtList;
-  char **keyList;*/
-
-unsigned long numgridpts;
-
-struct_vertex *vertex;
-struct_face   *face;
+struct struct_vertex *vertex;
+struct struct_face   *face;
 myfloat *global_Sphere_Cx;
 myfloat *global_Sphere_Cy;
 myfloat *global_Sphere_Cz;
 myfloat *global_Sphere_w;
 
-struct {int i; int j; int k; } *lookup_key;
-unsigned int keylen;
 
 
 /*
@@ -134,164 +128,6 @@ void dbg_printf(int level, const char *fmt, ...)
   }
 }
 
-/*
-#define hashAddGridPt hashAddGridPt_MF
-#define hashFind hashFind_MF
-*/
-#define hashAddGridPt hashAddGridPt_LONG
-#define hashFind hashFind_LONG
-
-/* Needs to be 0.5*10^k  */
-#define MAXIND (50000UL)
-#define KEYMULTFAC (2*MAXIND)
-#define KEYSHIFT (MAXIND-1)
-
-/*
- *
- */
-void hashInit()
-{
-  double A, B;
-
-  /* empty hash list */
-  newhashlist = NULL;
-
-  /* for the multifield key, need these global vars */
-  keylen = offsetof(struct_cp, k) + sizeof(int) - offsetof(struct_cp, i);
-  lookup_key = malloc(sizeof(*lookup_key));
-  memset(lookup_key, 0, sizeof(*lookup_key));  /* zero fill */
-
-  /* Some checking for bounds.  Can't check if an integer is larger
-     than LONG_MAX so use floating points. */
-  dbg_printf(0, "KEYMULTFAC^3 = %llu, LONG_MAX = %llu,%llu,%llu,%llu\n", \
-	     KEYMULTFAC*KEYMULTFAC*KEYMULTFAC, ULONG_MAX, ULLONG_MAX, LONG_MAX, LLONG_MAX);
-  dbg_printf(0, "KEYMULTFAC = %d, KEYMULTFAC^3 = %ld, KEYMULTFAC^3 = %llu\n", \
-	     KEYMULTFAC, KEYMULTFAC*KEYMULTFAC*KEYMULTFAC, KEYMULTFAC*KEYMULTFAC*KEYMULTFAC);
-  A = (double) KEYMULTFAC;
-  A = A*A*A;
-  B = (double) ULLONG_MAX;
-  dbg_printf(0, "(floats) KEYMULTFAC^3 = %g, ULLONG_MAX = %g\n", A, B);
-  dbg_printf(0, "sizeof(unsigned int)=%d\n", sizeof(unsigned int));
-  dbg_printf(0, "sizeof(unsigned long)=%d\n", sizeof(unsigned long));
-  dbg_printf(0, "sizeof(unsigned long long)=%d\n", sizeof(unsigned long long));
-  if (0.95*A > B) {
-    myerr("not enough space in unsigned long long int");
-  }
-}
-
-/*
- *
- */
-void hashDeleteAll()
-{
-  struct_cp *s, *tmp;
-
-  HASH_ITER(hh, newhashlist, s, tmp) {
-    HASH_DEL(newhashlist, s);  /* delete; s advances to next */
-    free(s);
-  }
-
-  free(lookup_key);
-}
-
-
-/*
- * Add a gridpoint to the hash table.
- * Integer key version.
- */
-void hashAddGridPt_LONG(int i, int j, int k, \
-		   myfloat dd, myfloat cpx, myfloat cpy, myfloat cpz, \
-		   myfloat x, myfloat y, myfloat z)
-{
-  struct_cp *gridpt;
-
-  gridpt = malloc(sizeof(struct_cp));
-
-  /* this gives a unique (long) integer key for i,j,k \in [-4999 4999]
-     which we can then hash.  This seems to be faster (maybe 4%)
-     compared to using the "multiple contiguous fields" of struct_cp
-     in uthash.  Same formula must be used below in hashFind() */
-  if ( (abs(i) > MAXIND) | (abs(j) > MAXIND) | (abs(k) > MAXIND) ) {
-    dbg_printf(0, "MAXIND=%d, (i,j,k)=(%d,%d,%d)\n", MAXIND, i, j, k);
-    myerr("indices are too big");
-  }
-  gridpt->key = i*(KEYMULTFAC*KEYMULTFAC) + (j+KEYSHIFT)*KEYMULTFAC + (k+KEYSHIFT);
-
-  gridpt->i = i;
-  gridpt->j = j;
-  gridpt->k = k;
-  gridpt->cpx = cpx;
-  gridpt->cpy = cpy;
-  gridpt->cpz = cpz;
-  gridpt->dd = dd;
-  gridpt->x = x;
-  gridpt->y = y;
-  gridpt->z = z;
-
-  HASH_ADD( hh, newhashlist, key, sizeof(unsigned long long), gridpt );
-  /* HASH_ADD_INT( newhashlist, key, gridpt ); */
-}
-
-
-/*
- * Return a pointer to the grid point or NULL if cannot be found.
- * Integer key version.
- */
-struct_cp *hashFind_LONG(int i, int j, int k)
-{
-  struct_cp *s;
-  unsigned long long findkey;
-  findkey = i*(KEYMULTFAC*KEYMULTFAC) + (j+KEYSHIFT)*KEYMULTFAC + (k+KEYSHIFT);
-  HASH_FIND( hh, newhashlist, &findkey, sizeof(unsigned long long), s );
-  /* HASH_FIND_INT( newhashlist, &findkey, s ); */
-  return(s);
-}
-
-
-/*
- * Add a gridpoint to the hash table.
- * Multifield key version.
- */
-void hashAddGridPt_MF(int i, int j, int k, \
-		   myfloat dd, myfloat cpx, myfloat cpy, myfloat cpz, \
-		   myfloat x, myfloat y, myfloat z)
-{
-  struct_cp *gridpt;
-
-  gridpt = malloc(sizeof(struct_cp));
-  memset(gridpt, 0, sizeof(struct_cp));  /* zero fill */
-
-  gridpt->i = i;
-  gridpt->j = j;
-  gridpt->k = k;
-  gridpt->cpx = cpx;
-  gridpt->cpy = cpy;
-  gridpt->cpz = cpz;
-  gridpt->dd = dd;
-  gridpt->x = x;
-  gridpt->y = y;
-  gridpt->z = z;
-
-  /* add our structure to the hash table */
-  HASH_ADD( hh, newhashlist, i, keylen, gridpt);
-}
-
-
-
-/*
- * Return a pointer to the grid point or NULL if cannot be found.
- * Multifield key version
- */
-struct_cp *hashFind_MF(int i, int j, int k)
-{
-  struct_cp *s;
-  lookup_key->i = i;
-  lookup_key->j = j;
-  lookup_key->k = k;
-  HASH_FIND( hh, newhashlist, &lookup_key->i, keylen, s );
-  return(s);
-}
-
 
 
 /*
@@ -299,11 +135,11 @@ struct_cp *hashFind_MF(int i, int j, int k)
  */
 void mallocPlyData(long numv, long numf)
 {
-  if ((vertex = (struct_vertex *)			\
-       malloc(numv * sizeof(struct_vertex))) == NULL)
+  if ((vertex = (struct struct_vertex *)			\
+       malloc(numv * sizeof(struct struct_vertex))) == NULL)
     myerr_nix("Error mallocing ply data")
 
-  if ((face = (struct_face *) malloc(numf * sizeof(struct_face))) == NULL)
+  if ((face = (struct struct_face *) malloc(numf * sizeof(struct struct_face))) == NULL)
     myerr_nix("Error mallocing ply data")
 
   if ((global_Sphere_Cx = (myfloat *) malloc(numf * sizeof(myfloat))) == NULL)
@@ -338,7 +174,7 @@ void freePlyData()
  */
 void initShapeFromMatlabArray(double *Faces, long numF, double *Vertices, long numV)
 {
-  unsigned long i;
+  long i;
 
   mallocPlyData(numV, numF);
 
@@ -411,7 +247,7 @@ void boundingSpheresOptimal()
      minimum bounding circle) or by the two points of the longest side
      of the triangle (where the two points define a diameter of the
      circle). */
-  unsigned long i;
+  long i;
   myfloat ang[3];
   myfloat m[3];
   myfloat a[3], b[3], c[3];
@@ -566,7 +402,7 @@ void boundingSpheresOptimal()
 /*
  * a helper function for boundingSpheresCentroid() below
  */
-myfloat distance(unsigned long i, unsigned long j)
+myfloat distance(long i, long j)
 {
   myfloat sqrd;
 
@@ -596,7 +432,7 @@ myfloat distance2(myfloat x, myfloat y, myfloat z, long j)
  */
 void boundingSpheresCentroid()
 {
-  unsigned long i;
+  long i;
   myfloat R;
 
   for (i=0; i<number_faces; i++) {
@@ -650,10 +486,10 @@ void ProjectOnSegment(myfloat *c1, myfloat *c2, myfloat *c3, \
  * segments and points).  More testing required.
  */
 myfloat FindClosestPointToOneTri(myfloat a1, myfloat a2, myfloat a3, \
-				 unsigned long face_index, \
+				 long face_index, \
 				 myfloat *c1, myfloat *c2, myfloat *c3)
 {
-  unsigned long index_p, index_q, index_r;
+  long index_p, index_q, index_r;
   myfloat a11, a12, a22, b1, b2;
   myfloat i11, i12, i22, factor;
   myfloat q1, q2, q3;
@@ -730,9 +566,7 @@ myfloat FindClosestPointToOneTri(myfloat a1, myfloat a2, myfloat a3, \
   /* Note: dd is dist squared! */
   /* TODO: HORRIBLE HACK 2010-07-28, this was to deal with a ply file
      with degenerate triangles. */
-  /*if (isinf(factor)) {*/
-  /* TODO, just gets worse and worse, where is isinf on windows? */
-  if ((factor > 1e20) || (factor < -1e20)) {
+  if (isinf(factor)) {
     dd = 10000.0;
     myerr("'factor' is infinite: panic!");
   } else {
@@ -781,7 +615,7 @@ for (i=0;i<1000000;i++)
 myfloat FindClosestPointsGlobally(myfloat x, myfloat y, myfloat z, \
 				  myfloat *c1, myfloat *c2, myfloat *c3)
 {
-  unsigned long i;
+  long i;
   myfloat dd, dd_min;
   myfloat t1, t2, t3;
 
@@ -802,6 +636,7 @@ myfloat FindClosestPointsGlobally(myfloat x, myfloat y, myfloat z, \
 }
 
 
+
 /* Ruuth's algorithm as described in [MR2008,MR2009]
  *
  *  preprocessing: find the bounding spheres around each triangle.
@@ -819,7 +654,7 @@ myfloat FindClosestPointsGlobally(myfloat x, myfloat y, myfloat z, \
  */
 void FindClosestPointsFromTriangulation()
 {
-  unsigned long n;
+  long n;
   int i,j,k;
   int iL,iU;
   int jL,jU;
@@ -828,9 +663,21 @@ void FindClosestPointsFromTriangulation()
   myfloat dd;
   myfloat x,y,z;
   myfloat cpx, cpy, cpz;
-  struct_cp *gridpt;
-  unsigned long cc = 0;
-  unsigned long total_count = 0;
+  long cc = 0;
+  ENTRY e, *ep;
+  struct struct_cp *gridpt;
+  char *tupstr, *tupstr2;
+
+  /* colin.key = strdup("(10,-20,300)"); */
+  /* printf("key: %s\n", colin.key); */
+  /* ep = hsearch(colin, FIND); */
+  /* printf("%s -> %s:%d\n", colin.key, */
+  /* 	 ep ? ep->key : "NULL", ep ? (int)(ep->data) : 0); */
+
+
+  if ((tupstr = (char *) malloc(TUPSTRSZ)) == NULL)
+    myerr_nix("Error mallocing tuple string");
+
 
   /* introduce dummy distance to the surface.  Outside band means it
      might as well be infinite */
@@ -841,7 +688,7 @@ void FindClosestPointsFromTriangulation()
 	CPdd[i][j][k] = 987654321.;
 #endif
 
-
+  long total_count = 0;
 
   /* 1/h: inverse of h */
   ih = 1/DX;
@@ -865,8 +712,10 @@ void FindClosestPointsFromTriangulation()
 		 (y-global_Sphere_Cy[n])*(y-global_Sphere_Cy[n]) +
 		 (z-global_Sphere_Cz[n])*(z-global_Sphere_Cz[n]) )
 	       <= global_Sphere_w[n]*global_Sphere_w[n] ) {
-	    dd = FindClosestPointToOneTri(x,y,z, n, &cpx, &cpy, &cpz);
+	    dd =  FindClosestPointToOneTri(x,y,z, n, &cpx, &cpy, &cpz);
 	    cc++;
+	    /*printf("face: %d, point: (%d,%d,%d), x: (%g,%g,%g)\n", n, i,j,k, x,y,z);
+	      printf("%d %d %d %d %g %g %g %g\n", n, i,j,k, dd, cpx,cpy,cpz);*/
 
 #ifdef ALSOTHREEDMATRICES
 	    if (dd<CPdd[i][j][k]) {
@@ -877,49 +726,78 @@ void FindClosestPointsFromTriangulation()
 	    }
 #endif
 
-	    /* Search hashtable */
-	    gridpt = hashFind(i, j, k);
+	    /* TODO: strangely, how we form the key here strongly effects the run time.
+	     * Perhaps I don't understand the hash function, or its flaw in hsearch.  Could
+	     * try other hash table implementations (the google one maybe)
+	     */
+	    /*if ( snprintf(tupstr, TUPSTRSZ, "(%d,%d,%d)", i+640,j+640,k+640) >= TUPSTRSZ )*/
 
-	    if (gridpt == NULL) {
-	      /* not found, add new one */
-	      hashAddGridPt(i,j,k, dd, cpx,cpy,cpz, x,y,z);
+	    /* Build the key for this gridpoint */
+	    if ( snprintf(tupstr, TUPSTRSZ, "(%d,%d,%d)", i,j,k) >= TUPSTRSZ )
+	      myerr("Couldn't write tuple string, increase TUPSTRSZ?");
+	    /*dbg_printf(5, "DEBUG: tupstr=\"%s\"\n", tupstr);*/
+
+	    e.key = tupstr;
+	    e.data = NULL;  /* doesn't matter, only need key */
+
+	    ep = hsearch(e, FIND);
+	    if (ep == NULL) {
+	      /* we didn't find it so enter a new one */
+	      if ((gridpt = (struct struct_cp *)		\
+		   malloc(sizeof(struct struct_cp))) == NULL)
+		myerr_nix("Error allocating gridpt");
+
+	      /* we need a duplicate string to put in the table b/c
+		 tupstr gets reused next time through the loop. */
+	      if ((tupstr2 = strdup(tupstr)) == NULL)
+		myerr_nix("Error duplicating tuple string");
+
+	      gridpt->dd = dd;
+	      gridpt->cpx = cpx;
+	      gridpt->cpy = cpy;
+	      gridpt->cpz = cpz;
+	      gridpt->i = i;
+	      gridpt->j = j;
+	      gridpt->k = k;
+	      gridpt->x = x;
+	      gridpt->y = y;
+	      gridpt->z = z;
+	      /*dbg_printf(5, "DEBUG: gridPtCtr=%d\n", gridPtCtr);*/
+	      gridPtList[numgridpts] = gridpt;
+	      keyList[numgridpts] = tupstr2;
 	      numgridpts++;
+	      e.key = tupstr2;
+	      e.data = (void *) gridpt;
+	      /* add it e to the hashtable */
+	      ep = hsearch(e, ENTER);
+	      if (ep == NULL) myerr_nix("Error, maybe hashtable is full\? Msg:");
 	    } else {
-	      /* already there, check if closer and update */
+	      /* it was already in the table, check if new pt is
+		 closer */
+	      gridpt = (struct struct_cp*) ep->data;
 	      if (dd < (gridpt->dd)) {
 		gridpt->dd = dd;
 		gridpt->cpx = cpx;
 		gridpt->cpy = cpy;
 		gridpt->cpz = cpz;
-		/* no need to update i,j,k,x,y,z because they haven't changed */
-		if ( (gridpt->i != i) | (gridpt->j != j) | (gridpt->k != k) | \
-		     (gridpt->x != x) | (gridpt->y != y) | (gridpt->z != z) ) {
-		  dbg_printf(10, "i,j,k=%d,%d,%d\n", i,j,k);
-		  myerr("panic");
-		}
+		gridpt->i = i;
+		gridpt->j = j;
+		gridpt->k = k;
+		gridpt->x = x;
+		gridpt->y = y;
+		gridpt->z = z;
 	      }
 	    }
-
 	  } /* end inside sphere */
 	}
       }
     }
   }
-
-
   dbg_printf(10, "total loops: %ld\n", total_count);
   dbg_printf(10, "made %ld calls to Find_CP_to_one_tri()\n", cc);
   dbg_printf(10, "found %ld grid points\n", numgridpts);
 
-  /* TODO: double check only, remove? */
-  /*
-  unsigned long numcheck;
-  numcheck = HASH_COUNT(newhashlist);
-  if (numgridpts != numcheck) {
-    dbg_printf(0, "not the same: %ld, %ld\n", numgridpts, numcheck);
-    myerr("sanity check on number of grid points failed");
-  }
-  */
+  free(tupstr);
 }
 
 
@@ -930,26 +808,33 @@ void FindClosestPointsFromTriangulation()
  */
 void outputGridToFile(const char *fname, int withPruning)
 {
-  unsigned long d = 0;
+  long c, d = 0;
   FILE *fd;
-  struct_cp *s;
-
-  myerr("Depreciated");
 
   if ((fd = fopen(fname, "w")) == NULL) myerr_nix("Error writing griddata");
 
+  for (c = 0; c < numgridpts; c++) {
+    if ((!withPruning) || ((gridPtList[c]->dd <= BANDWIDTH*BANDWIDTH))) {
+      /* ! (1 and 1 = 1) = 0
+         ! (1 and 0 = 0) = 1
+         ! (0 and d = 0) = 1 */
+      d++;
 #ifdef EXTENDEDPRECISION
 #define PSTR "%d %d %d %.21Le %.21Le %.21Le %.21Le %.21Le %.21Le %.21Le\n"
 #else
 #define PSTR "%d %d %d %.18g %.18g %.18g %.18g %.18g %.18g %.18g\n"
 #endif
-
-  d = 0;
-  for(s = newhashlist; s != NULL; s = s->hh.next) {
-    if ( (!withPruning) || (s->dd <= BANDWIDTH*BANDWIDTH) ) {
-      fprintf(fd, PSTR, s->i,s->j,s->k, sqrt(s->dd),	\
-	      s->cpx,s->cpy,s->cpz, s->x,s->y,s->z);
-      d++;
+      fprintf(fd, PSTR,						\
+	      gridPtList[c]->i,					\
+	      gridPtList[c]->j,					\
+	      gridPtList[c]->k,					\
+	      sqrt(gridPtList[c]->dd),				\
+	      gridPtList[c]->cpx,				\
+	      gridPtList[c]->cpy,				\
+	      gridPtList[c]->cpz,				\
+	      gridPtList[c]->x,					\
+	      gridPtList[c]->y,					\
+	      gridPtList[c]->z);
     }
   }
   if ( fclose(fd) != 0 )  myerr_nix("Error closing file");
@@ -966,6 +851,8 @@ void outputGridToFile(const char *fname, int withPruning)
  */
 void mainRoutine(void)
 {
+  long i;
+  long expectedgridsz, hashtablesz;
 
 #ifdef ALSOTHREEDMATRICES
   /* This makes lots of assumptions about the grid.  Most importantly
@@ -984,6 +871,29 @@ void mainRoutine(void)
 #endif
 
   numgridpts = 0;
+
+  expectedgridsz = ExpectedGridSize;
+  hashtablesz = HashTableSize;
+  dbg_printf(2, "expected grid size: %ld\n", expectedgridsz);
+  dbg_printf(2, "max hash tabel size: %ld\n", hashtablesz);
+
+
+  dbg_printf(12, "Debug: mallocing lists... \n");
+  gridPtList = (struct struct_cp **) malloc(expectedgridsz*sizeof(struct struct_cp *));
+  if (gridPtList == NULL) myerr_nix("Error: malloc() grid list failed, msg");
+  for (i = 0; i < expectedgridsz; i++)
+    gridPtList[i] = (struct struct_cp *) NULL;
+
+  if ((keyList = (char **) malloc(expectedgridsz*sizeof(char *))) == NULL)
+    myerr_nix("Error: malloc() key list failed, msg");
+  for (i = 0; i < expectedgridsz; i++)
+    keyList[i] = (char *) NULL;
+
+  dbg_printf(4, "done mallocing\n");
+
+  /* Create a new hash table.  To be portable we only can make one of
+     these.  On GNU, could use hcreate_r(). */
+  if (hcreate(hashtablesz) == 0) myerr_nix("Error creating hash table");
 
 
   dbg_printf(10, "running boundingSpheres()...\n");
@@ -1021,10 +931,8 @@ void mainRoutine(void)
 
 
 
-/*
- *
- */
 void cleanup(void) {
+  long i;
 
 #ifdef ALSOTHREEDMATRICES
   freeMatrix(CPx);
@@ -1034,9 +942,16 @@ void cleanup(void) {
 #endif
 
   freePlyData();
-
   dbg_printf(10, "destroying hashtable...\n");
-  hashDeleteAll();
+  hdestroy();
+
+  for (i = 0; i < numgridpts; i++) {
+    free(gridPtList[i]);
+    free(keyList[i]);
+  }
+  free(gridPtList);
+  free(keyList);
+  /*return(0);*/
 }
 
 
@@ -1055,14 +970,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   /*int dimx, dimy, numdims;*/
   int i;
   const int numInputs = 7;
-  struct_cp *s;
-  unsigned long d;
-  int withPruning = 1;
-  long bandsz;
-
-
-  /* todo: move to main()? */
-  hashInit();
 
   /* input checking */
   if (nrhs != numInputs) {
@@ -1084,8 +991,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   inMaxHashSz = mxGetPr(prhs[5]);
   inDebugLevel = mxGetPr(prhs[6]);
 
-  number_faces = (long) mxGetM(prhs[3]);
-  number_vertices = (long) mxGetM(prhs[4]);
+  number_faces = mxGetM(prhs[3]);
+  number_vertices = mxGetM(prhs[4]);
 
   DEBUG_LEVEL = (int) inDebugLevel[0];
   dbg_printf(99, "setting debug level to %d: (display messages with level lower than %d)\n", DEBUG_LEVEL, DEBUG_LEVEL);
@@ -1119,16 +1026,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   mainRoutine();
 
+  long c, d;
+  int withPruning = 1;
+  long bandsz;
 
   /* This first pass through the results it just to find how many
      there are.  TODO: a bad idea: we rely on processing these
      exactly the same twice. */
-
-
   d = 0;
-  for(s=newhashlist; s != NULL; s=s->hh.next) {
-    if ( (!withPruning) || (s->dd <= BANDWIDTH*BANDWIDTH) ) {
-      //printf("user id %d: name %s\n", s->id, s->name);
+  for (c = 0; c < numgridpts; c++) {
+    if ((!withPruning) || ((gridPtList[c]->dd <= BANDWIDTH*BANDWIDTH))) {
+      /* ! (1 and 1 = 1) = 0
+         ! (1 and 0 = 0) = 1
+         ! (0 and d = 0) = 1 */
       d++;
     }
   }
@@ -1153,25 +1063,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     D = mxGetPr(d_out_m);*/
 
   d = 0;
-  for(s = newhashlist; s != NULL; s = s->hh.next) {
-    if ( (!withPruning) || (s->dd <= BANDWIDTH*BANDWIDTH) ) {
-      mxIJK[0*bandsz+d] = s->i + 1;  /* plus 1 here for matlab indexing */
-      mxIJK[1*bandsz+d] = s->j + 1;
-      mxIJK[2*bandsz+d] = s->k + 1;
-      mxDD[d] = s->dd;  /* squared distance */
-      mxCP[0*bandsz+d] = s->cpx;
-      mxCP[1*bandsz+d] = s->cpy;
-      mxCP[2*bandsz+d] = s->cpz;
-      mxXYZ[0*bandsz+d] = s->x;
-      mxXYZ[1*bandsz+d] = s->y;
-      mxXYZ[2*bandsz+d] = s->z;
-
+  for (c = 0; c < numgridpts; c++) {
+    if ((!withPruning) || ((gridPtList[c]->dd <= BANDWIDTH*BANDWIDTH))) {
       if ( (d < 5) || (d >= bandsz - 5) ) {
-	dbg_printf(20,							\
-		   "%5d: %d %d %d   %9.6g %9.6g %9.6g   %9.6f   %7.4g %7.4g %7.4g\n", \
-		   d, s->i,s->j,s->k, s->dd, s->cpx,s->cpy,s->cpz, s->x,s->y,s->z);
+	dbg_printf(20, "%5d: %d %d %d   %9.6g %9.6g %9.6g   %9.6f   %7.4g %7.4g %7.4g\n", \
+		  d,							\
+		  gridPtList[c]->i,					\
+		  gridPtList[c]->j,					\
+		  gridPtList[c]->k,					\
+		  gridPtList[c]->dd,					\
+		  gridPtList[c]->cpx,					\
+		  gridPtList[c]->cpy,					\
+		  gridPtList[c]->cpz,					\
+		  gridPtList[c]->x,					\
+		  gridPtList[c]->y,					\
+		  gridPtList[c]->z);
       }
-
+      /* TODO: I've added one here for option base 1 in matlab */
+      mxIJK[0*bandsz+d] = gridPtList[c]->i + 1;
+      mxIJK[1*bandsz+d] = gridPtList[c]->j + 1;
+      mxIJK[2*bandsz+d] = gridPtList[c]->k + 1;
+      mxDD[d] = gridPtList[c]->dd;  /* squared distance */
+      mxCP[0*bandsz+d] = gridPtList[c]->cpx;
+      mxCP[1*bandsz+d] = gridPtList[c]->cpy;
+      mxCP[2*bandsz+d] = gridPtList[c]->cpz;
+      mxXYZ[0*bandsz+d] = gridPtList[c]->x;
+      mxXYZ[1*bandsz+d] = gridPtList[c]->y;
+      mxXYZ[2*bandsz+d] = gridPtList[c]->z;
       d++;
     }
   }
