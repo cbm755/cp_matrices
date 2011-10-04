@@ -49,7 +49,7 @@ cpf = @cpCircle;  param = @paramCircle;
 % assume satisfies the bandwidth formula below (e.g., output from
 % tri2cp)
 dim = 2;  % dimension
-p = 3;    % interpolation order
+p = 3;    % interpolation degree
 order = 2;  % Laplacian order: bw will need to increase if changed
 fd_stenrad = order/2;  % Finite difference stencil radius
 % The formula for bw is found in [Ruuth & Merriman 2008] and the

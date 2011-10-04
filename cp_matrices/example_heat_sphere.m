@@ -23,7 +23,7 @@ addpath('../surfaces');
 dx = 0.1;                   % grid size
 
 % make vectors of x, y, positions of the grid
-x1d = (-2.0:dx:2.0)';
+x1d = -2.0:dx:2.0';
 y1d = x1d;
 z1d = x1d;
 
@@ -129,7 +129,8 @@ for kt = 1:numtimesteps
       xlabel('x'); ylabel('y'); zlabel('z');
       %caxis([-1.05 1.05]);   % lock color axis
       axis equal; shading interp;
-      camlight left; colorbar;
+      if ~exist OCTAVE_VERSION camlight left;
+      colorbar;
       pause(0.001);
     end
 end;

@@ -16,14 +16,27 @@ loaddata = 1;
 if (loaddata == 1)
 dx = 0.05;
 
-% ply file contains the triangles
-disp('reading plyread');
+x1d=(-2.0:dx:2.0)';
+y1d=x1d;
+z1d=x1d;
+nx=length(x1d);
+ny=length(y1d);
+nz=length(z1d);
+% cp_matrices assumes something like the following for ordering, but
+% its not necessary to actually build the meshgrid:
+%[x3d,y3d,z3d]=meshgrid(x1d,y1d,z1d);
+%[cpx,cpy,cpz,dist] = cpSphere(x3d,y3d,z3d);
+
+
 %PlyFile = 'bunny.ply';
 PlyFile = 'pig_loop2.ply';
 %PlyFile = 'annies_pig.ply';
+%PlyFile = 'annies_pig.ply';
+%PlyFile = 'bumpy_torus_scaled.ply';
+disp( ['reading triangulation from "' PlyFile '"'] );
 [Faces, Vertices] = plyread(PlyFile, 'tri');
 
-disp('running tri2cp');
+disp('converting to closest point representation');
 [IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, -2);
 i = IJK(:,1);
 j = IJK(:,2);
@@ -36,16 +49,6 @@ xg = XYZ(:,1);
 yg = XYZ(:,2);
 zg = XYZ(:,3);
 
-x1d=-2.0:dx:2.0;
-y1d=x1d;
-z1d=x1d;
-nx=length(x1d);
-ny=length(y1d);
-nz=length(z1d);
-% the griddata file assumes something like this for ordering, but
-% its not necessary to actually do the meshgrid.
-%[x3d,y3d,z3d]=meshgrid(x1d,y1d,z1d);
-%[cpx,cpy,cpz,dist] = cpSphere(x3d,y3d,z3d);
 
 
 dim = 3;

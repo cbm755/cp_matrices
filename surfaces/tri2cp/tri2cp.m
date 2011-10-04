@@ -13,7 +13,8 @@ function [IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, relpt, p, fd_stenrad)
 %   'dx': the grid size.
 %
 %   'relpt': a 3-vector specifying a point from which the integer grid
-%            is defined. (if you are debugging and using the full 3D
+%            is defined.  A scale relpt will be promoted to a
+%            3-vector.  (if you are debugging and using the full 3D
 %            matrix support, then relpt must be lower left corner of
 %            data.)
 %
@@ -90,8 +91,12 @@ end
 
 trim = 1;
 
+if (all(size(relpt) == [1 1]))
+  relpt = [relpt relpt relpt];
+end
+
 tic
-[IJK,DD,CP,XYZ] = tri2cp_helper(dx, [relpt relpt relpt], bw, ...
+[IJK,DD,CP,XYZ] = tri2cp_helper(dx, relpt, bw, ...
                                 Faces, Vertices, ...
                                 trim, DEBUG_LEVEL);
 toc
@@ -101,4 +106,4 @@ DIST = sqrt(DD);
 num_grid_points = length(DD)
 
 % a test
-assert( max(max(abs(relpt + (IJK-1)*dx - XYZ))) == 0)
+assert( max(abs( relpt(1) + (IJK(:,1)-1)*dx - XYZ(:,1) )) == 0)
