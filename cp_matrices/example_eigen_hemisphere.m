@@ -40,8 +40,8 @@ bw = 1.001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
 if (pad < bw)
   warning('maybe insufficient padding');
 end
-band = find(dist <= bw*dx);
-outband = find(dist > bw*dx);
+band = find(abs(dist) <= bw*dx);
+outband = find(abs(dist) > bw*dx);
 
 % Last place we need the 3D array
 xg = x3d(band);

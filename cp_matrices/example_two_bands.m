@@ -64,7 +64,7 @@ fd_stenrad = order/2;  % Finite difference stencil radius
 bw = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((fd_stenrad+(p+1)/2)^2));
 % start with a rough band and refine later, here just find the
 % indicies of all points within bandwidth of the surface.
-band_init = find(dist <= bw*dx);
+band_init = find(abs(dist) <= bw*dx);
 % the corresponding closest points
 cpxg_init = cpx(band_init); cpyg_init = cpy(band_init);
 xg_init = xx(band_init); yg_init = yy(band_init);

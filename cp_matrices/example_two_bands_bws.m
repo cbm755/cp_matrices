@@ -59,8 +59,8 @@ fd_stenrad = order/2;  % Finite difference stencil radius
 
 bw1 = 1.0001*sqrt((dim)*((p+1)/2)^2);
 bw2 = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((fd_stenrad+(p+1)/2)^2));
-band1 = find(dist <= bw1*dx);
-band2 = find(dist <= bw2*dx);
+band1 = find(abs(dist) <= bw1*dx);
+band2 = find(abs(dist) <= bw2*dx);
 % todo: had some slick way to find bw1 indices in bw2
 %band1in2 = 
 

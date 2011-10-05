@@ -11,6 +11,8 @@ create that grid...
 tests/ contains a set of unit tests (feel free to add more!).
 run_all_tests.m in the parent directory runs all of them.
 
+../surfaces/ contains various CP representations and tools
+
 TODO: move run_all_tests.m to tests/ and clean up to run only files
 that start with the word "test"
 

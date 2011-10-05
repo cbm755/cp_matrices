@@ -52,7 +52,7 @@ p = 3;    % interpolation order
 % band.  The formula for bw is found in [Ruuth & Merriman 2008] and
 % the 1.0001 is a safety factor.
 bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
-band = find(dist <= bw*dx);
+band = find(abs(dist) <= bw*dx);
 
 % store closest points in the band;
 cpxg = cpxg(band); cpyg = cpyg(band); cpzg = cpzg(band);
