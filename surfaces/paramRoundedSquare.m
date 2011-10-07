@@ -1,28 +1,58 @@
-function [cpxx, cpyy, dist] = paramRoundedSquare(xx, yy, radii, cen)
+function [x, y] = paramRoundedSquare(n, radii, cen)
+%PARAMROUNDEDSQUARE  Parameterization of a square with rounded corners
+%   [x, y] = paramRoundedSquare(n, radii, center)
+%   'n' is the approximate number of points.
+
+  % defaults
+  if (nargin < 2)
+    radii = 0.25;
+  end
+  if (nargin < 3)
+    cen = [0 0];
+  end
 
   if (length(radii) == 1)
     radii = radii*[1 1 1 1];
   end
-  cpfs = {};
-  cpfs{1} = @(x,y) cpArc(x,y, radii(1), [ 1  1] - radii(1), 0, pi/2);
-  cpfs{3} = @(x,y) cpArc(x,y, radii(2), [-1  1] - radii(2), pi/2, pi);
-  cpfs{5} = @(x,y) cpArc(x,y, radii(3), [-1 -1] - radii(3), pi, 3*pi/2);
-  cpfs{7} = @(x,y) cpArc(x,y, radii(4), [ 1 -1] - radii(4), 3*pi/2, 0);
+
+  paramfs = {};
+  paramfs{1} = @(n) paramArc(n, radii(1), [ 1-radii(1)  1-radii(1)], 0,      pi/2);
+  paramfs{3} = @(n) paramArc(n, radii(2), [-1+radii(2)  1-radii(2)], pi/2,   pi);
+  paramfs{5} = @(n) paramArc(n, radii(3), [-1+radii(3) -1+radii(3)], pi,     3*pi/2);
+  paramfs{7} = @(n) paramArc(n, radii(4), [ 1-radii(4) -1+radii(4)], 3*pi/2, 0);
 
   Pts = {};
   Pts{1} = [ 1-radii(1)   1];
   Pts{2} = [-1+radii(2)   1];
   Pts{3} = [-1   1-radii(2)];
   Pts{4} = [-1  -1+radii(3)];
-  Pts{1} = [-1+radii(3)  -1];
-  Pts{2} = [ 1-radii(4)  -1];
-  Pts{3} = [ 1  -1+radii(4)];
-  Pts{4} = [ 1   1-radii(1)];
-  cpfs{2} = @(x,y) cpLineSegment(x,y, Pts{1}, Pts{2});
-  cpfs{4} = @(x,y) cpLineSegment(x,y, Pts{3}, Pts{4});
-  cpfs{6} = @(x,y) cpLineSegment(x,y, Pts{5}, Pts{6});
-  cpfs{8} = @(x,y) cpLineSegment(x,y, Pts{7}, Pts{8});
+  Pts{5} = [-1+radii(3)  -1];
+  Pts{6} = [ 1-radii(4)  -1];
+  Pts{7} = [ 1  -1+radii(4)];
+  Pts{8} = [ 1   1-radii(1)];
+  paramfs{2} = @(n) paramLineSegment(n, Pts{1}, Pts{2});
+  paramfs{4} = @(n) paramLineSegment(n, Pts{3}, Pts{4});
+  paramfs{6} = @(n) paramLineSegment(n, Pts{5}, Pts{6});
+  paramfs{8} = @(n) paramLineSegment(n, Pts{7}, Pts{8});
 
-  keyboard
+  % how many points per segment?  first compute the arclenths
+  arclens = [radii(1)*pi/2  ...
+             (2 - radii(1) - radii(2)) ...
+             radii(2)*pi/2  ...
+             (2 - radii(2) - radii(3))  ...
+             radii(3)*pi/2  ...
+             (2 - radii(2) - radii(3))  ...
+             radii(4)*pi/2 ...
+             (2 - radii(4) - radii(1))];
+  arclens = arclens / sum(arclens);
+  m = ceil(arclens * n);
 
-  [cpx, cpy, dist, cpCompoundObject(xx,yy, cpfs);
+  [x,y] = paramfs{1}(m(1));
+  for j=2:length(paramfs)
+    [x2,y2] = paramfs{j}(m(j));
+    x = [x x2(2:end)];
+    y = [y y2(2:end)];
+  end
+
+  x = x + cen(1);
+  y = y + cen(2);

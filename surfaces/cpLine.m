@@ -15,6 +15,7 @@ function [varargout] = cpLine(varargin)
     error('wrong number of input arguments');
   end
 
+  %% other inputs
   x = {};
   for j=1:dim
     x{j} = varargin{j};
@@ -26,10 +27,8 @@ function [varargout] = cpLine(varargin)
     p = zeros(size(dir));
   end
 
-
-
   %% Project
-  %s = dot(x - p,  dir) / norm(dir, 2);
+  %s = dot(x - p,  dir) / norm(dir, 2)^2;
   s = zeros(size(x{1}));
   for j=1:dim
     s = s + ( x{j} - p(j) ) .* dir(j);

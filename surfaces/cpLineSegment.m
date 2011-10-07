@@ -1,8 +1,12 @@
 function [varargout] = cpLineSegment(varargin)
 %CPLINESEGMENT  Closest Point function for a line segment in 2D/3D
-%   [cpx,cpy, dist, bdy] = cpLine(x,y,pt1,pt2)
-%   [cpx,cpy,cpz, dist, bdy] = cpLine(x,y,z, pt1, pt2)
-%   A line segment between 'pt1' and 'pt2'
+%   [cpx,cpy, dist, bdy] = cpLineSegment(x,y, pt1, pt2)
+%   [cpx,cpy,cpz, dist, bdy] = cpLineSegment(x,y,z, pt1, pt2)
+%
+%   In either case, return closest points for a line segment between
+%   'pt1' and 'pt2'
+%
+%   (outputs 'dist' and 'bdy' are optional)
 
   %% last input is a vector, use it determine dimension
   vec = varargin{nargin};

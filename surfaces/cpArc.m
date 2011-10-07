@@ -21,6 +21,14 @@ function [cpx, cpy, dist, bdy] = cpArc(x, y, R, cen, angle1, angle2)
   if (nargin < 6)
     angle2 = pi/2;
   end
+  % (-pi,pi]
+  angle1 = angle(exp(i*angle1));
+  angle2 = angle(exp(i*angle2));
+  %  if (angle2 < angle1)
+  %  temp = angle1;
+  %  angle1 = angle2;
+  %  angle2 = angle1;
+  %end
 
   % shift to the origin
   x = x - cen(1);
@@ -38,7 +46,9 @@ function [cpx, cpy, dist, bdy] = cpArc(x, y, R, cen, angle1, angle2)
   dist1 = sqrt( (x-cpx1).^2 + (y-cpy1).^2 );
   dist2 = sqrt( (x-cpx2).^2 + (y-cpy2).^2 );
 
-  where0 = ( (th >= angle1) & (th <= angle2) );
+  %where0 = ( (th >= angle1) & (th <= angle2) );
+  where0 = ( (angle2 >= angle1) & ( (th >= angle1) & (th <= angle2) ) )  |  ...
+           ( (angle2 <  angle1) & ( (th >= angle1) | (th <= angle2) ) );
   where1 = dist1 < dist2;
 
   cpx = where0 .* cpx0  +  (~where0) .* ( ...
