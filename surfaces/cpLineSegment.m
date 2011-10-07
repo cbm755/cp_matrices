@@ -19,6 +19,9 @@ function [varargout] = cpLineSegment(varargin)
   p = varargin{dim+1};
   q = varargin{dim+2};
 
+  %% annoyingly dimensional dependent
+  % not really, I just don't know how to return the output in a
+  % cell array
   if (dim == 2)
     [cp0_1,cp0_2,dist0,bdy0,s0] = cpLine(x{:}, q-p, p);
     cp0 = {cp0_1  cp0_2};
