@@ -1,4 +1,4 @@
-function [cpx, cpy, dist] = cpRoundedSquare(x, y, radii, cen)
+function [cpx, cpy, sdist] = cpRoundedSquare(x, y, radii, cen)
 %CPROUNDEDSQUARE  Closest Point function for a square with rounded corners
 %   [cpx, cpy, dist] = cpRoundedSquare(x, y, radius)
 %      A square with side length 2 centered centered at
@@ -9,6 +9,9 @@ function [cpx, cpy, dist] = cpRoundedSquare(x, y, radii, cen)
 %      radius 'radii(j)'.
 %   [cpx, cpy, dist] = cpRoundedSquare(x, y, radii, [xc yc])
 %      As above, centered centered at the point (xc,yc)
+%
+%   Note: returns signed distance (with negative inside).
+
 
   % defaults
   if (nargin < 3)
@@ -46,6 +49,37 @@ function [cpx, cpy, dist] = cpRoundedSquare(x, y, radii, cen)
   cpfs{8} = @(x,y) cpLineSegment(x,y, Pts{7}, Pts{8});
 
   [cpx, cpy, dist] = cpCompoundObject(x,y, cpfs);
+
+  %% mask for signed distance
+  if (nargout < 3)
+    sdist = dist;
+  else
+    if (max(radii) > 1)
+      warning('signed distance calculation may not be correct for large radii');
+    end
+
+    wh1 = (( x-(1-radii(1)) ).^2  +  ( y-(1-radii(1)) ).^2 <= radii(1)^2);
+    wh1 = ((x>=1-radii(1)) & (y>=1-radii(1))) .* wh1;
+
+    wh2 = (( x-(-1+radii(2)) ).^2  +  ( y-(1-radii(2)) ).^2 <= radii(2)^2);
+    wh2 = (x<=-1+radii(2) & y>=1-radii(2)) .* wh2;
+
+    wh3 = (( x-(-1+radii(3)) ).^2  +  ( y-(-1+radii(3)) ).^2 <= radii(3)^2);
+    wh3 = (x<=-1+radii(3) & y<=-1+radii(3)) .* wh3;
+
+    wh4 = (( x-(1-radii(4)) ).^2  +  ( y-(-1+radii(4)) ).^2 <= radii(4)^2);
+    wh4 = (x>=1-radii(4) & y<=-1+radii(4)) .* wh4;
+
+    wh12 = ( x<=(1-radii(1)) & x>=(-1+radii(2)) & (y <= 1) & (y >= 0));
+    wh23 = ( y<=(1-radii(2)) & y>=(-1+radii(3)) & (x <= 0) & (x >=-1));
+    wh34 = ( x<=(1-radii(4)) & x>=(-1+radii(3)) & (y >=-1) & (y <= 0));
+    wh41 = ( y<=(1-radii(1)) & y>=(-1+radii(4)) & (x <= 1) & (x >= 0));
+
+    wh = wh1 | wh2 | wh3 | wh4;
+    wh = wh | wh12 | wh23 | wh34 | wh41;
+
+    sdist = (wh) .* (-dist) + (~wh) .* dist;
+  end
 
   cpx = cpx + cen(1);
   cpy = cpy + cen(2);

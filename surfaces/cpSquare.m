@@ -1,14 +1,15 @@
-function [cpxx, cpyy, dist] = cpSquare(xx, yy, cen)
+function [cpxx, cpyy, sdist] = cpSquare(xx, yy, cen)
 %CPSQUARE  Closest Point function for a square
-%   [cpx, cpy, dist] = cpSquare(x, y)
+%   [cpx, cpy, sdist] = cpSquare(x, y)
 %      A square with side length 2 centered centered at
 %      the origin.
-%   [cpx, cpy, dist] = cpSquare(x, y, xc, yc)
+%   [cpx, cpy, sdist] = cpSquare(x, y, xc, yc)
 %      A square with side length 2 centered centered at
 %      the point (xc,yc)
 %
-%   Code is vectorized: any size/shape for x should work.
-%   (well sort of: a loop inside)
+%   Note: returns signed distance (with negative inside).
+%
+%   Not vectorized, uses a loop internally.
 
   % defaults
   if (nargin < 3)
@@ -55,6 +56,8 @@ function [cpxx, cpyy, dist] = cpSquare(xx, yy, cen)
   end
 
   dist = sqrt( (xx-cpxx).^2 + (yy-cpyy).^2 );
+  sdist = max( abs(xx), abs(yy) ) - 1;
+  sdist = (sdist>0) .* max(dist, sdist)  +   (sdist <= 0) .* sdist;
 
   % shift back
   cpx = cpx + cen(1);

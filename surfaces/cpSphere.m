@@ -1,13 +1,13 @@
-function [cpx,cpy,cpz, dist] = cpSphere(x,y,z, R, cen)
+function [cpx,cpy,cpz, sdist] = cpSphere(x,y,z, R, cen)
 %CPSPHERE  Closest point function for a sphere.
-%   [cpx,cpy,cpz, dist] = cpSphere(x,y,z, R) returns the
+%   [cpx,cpy,cpz, sdist] = cpSphere(x,y,z, R) returns the
 %   closest point and distance to (x,y,z).  If R is omitted it
 %   defaults to a unit sphere, centered at the origin.
 %
-%   [cpx,cpy,cpz, dist] = cpSphere(x,y,z, R, xc,yc,zc) is a sphere
+%   [cpx,cpy,cpz, sdist] = cpSphere(x,y,z, R, xc,yc,zc) is a sphere
 %   of radius R, centered at (xc,yc,zc)
 %
-%   Code is vectorized: any size/shape for x should work.
+%   Note: returns signed distance (with negative inside).
 
 
   % defaults
@@ -26,7 +26,8 @@ function [cpx,cpy,cpz, dist] = cpSphere(x,y,z, R, cen)
   [th, phi, r] = cart2sph(x,y,z);
   [cpx,cpy,cpz] = sph2cart(th, phi, R);
 
-  dist = sqrt( (x-cpx).^2 + (y-cpy).^2 + (z-cpz).^2 );
+  %dist = sqrt( (x-cpx).^2 + (y-cpy).^2 + (z-cpz).^2 );
+  sdist = r - R;
 
   % shift back
   cpx = cpx + cen(1);

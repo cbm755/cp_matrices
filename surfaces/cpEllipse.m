@@ -1,12 +1,14 @@
-function [cpx, cpy, dist] = cpEllipse(x, y, a, b, cen)
+function [cpx, cpy, sdist] = cpEllipse(x, y, a, b, cen)
 %CPELLIPSE  Closest Point function for an ellipse.
-%   [cpx, cpy, dist] = cpEllipse(x, y, a, b)
+%   [cpx, cpy, sdist] = cpEllipse(x, y, a, b)
 %      An ellipse centered at the origin with major axis a and
 %      minor axis b.
-%   [cpx, cpy, dist] = cpEllipse(x, y, a, b, CEN)
+%   [cpx, cpy, sdist] = cpEllipse(x, y, a, b, CEN)
 %      An ellipse centered at CEN with major axis a and minor axis b.
 %
-% Internally, uses cpParamCurve with Newton solves to find cp
+%   Internally, uses cpParamCurve with Newton solves to find cp
+%
+%   Note: returns signed distance (with negative inside).
 
 %%
   % defaults
@@ -66,6 +68,20 @@ cpx = reshape(cpx, size(x));
 cpy = reshape(cpy, size(x));
 dist = reshape(dist, size(x));
 fail = reshape(fail, size(x));
+
+% in the top (above 45degree lines), y vs cpy will be a good indicator
+% of sign
+sdist = ...
+    (y>=x & y>-x).*(   sign((y-cpy)).*dist  ) + ...   % top
+    (y>x  & y<=-x).*( -sign((x-cpx)).*dist  ) + ...   % right
+    (y<=x & y<-x).*(  -sign((y-cpy)).*dist  ) + ...   % bottom
+    (y<x  & y>=-x).*(  sign((x-cpx)).*dist  );        % left
+
+% above cases miss the origin
+wh = (x==0 & y==0)
+%wh = (x.^2 + y.^2 <= (1/8*min(a,b))^2);   %use small circle instead
+sdist = (~wh) .* sdist + (wh) .* (-dist);
+
 
 figure(1);
 plot(cpx(~fail), cpy(~fail), 'bx');
