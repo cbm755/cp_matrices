@@ -42,9 +42,9 @@ function [cpxx, cpyy, dist] = cpSquare(xx, yy, cen)
       cpx = 1;
     elseif (x <= -1)
       cpx = -1;
-    elseif (x >= abs(y))
+    elseif (x > abs(y))
       cpx = 1;
-    elseif (x <= -abs(y))
+    elseif (x < -abs(y))
       cpx = -1;
     else
       cpx = x;
