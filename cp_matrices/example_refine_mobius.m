@@ -29,6 +29,8 @@ z1d_c = (-1:dx:1)';
 
 % cpbar for boundary conditions
 cpf = @(x,y,z) cpbar_3d(x, y, z, cpf1);
+%cpf = cpf1;
+
 
 disp('starting initial coarse');
 % meshgrid is only needed at this coarse grid
@@ -36,7 +38,8 @@ disp('starting initial coarse');
 
 [cpx_c, cpy_c, cpz_c, dist_c, bdy_c] = cpf(xxc,yyc,zzc);
 
-%% Banding: make a narrow band around the circle
+
+% Bandwidth formula
 dim = 2;  % dimension
 p = 3;    % interpolation order
 % "band" is a vector of the indices of the points in the computation
@@ -44,18 +47,23 @@ p = 3;    % interpolation order
 % the 1.0001 is a safety factor.
 bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
 
-% actually this is optional, you can pass the entire grid to
-% refine_grid() and the result will be banded according to "bw"
-
-% so either of these is ok:
+% actually banding the coarse grid is optional, you can pass the
+% entire grid to refine_grid() and the result will be banded according
+% to "bw".  So either of these is ok:
 %band_c = find(abs(dist_c) <= bw*dx);
 band_c = ( 1:length(xxc(:)) )';
+
 
 % store closest points in the band (can discard others)
 cpx_c = cpx_c(band_c); cpy_c = cpy_c(band_c); cpz_c = cpz_c(band_c);
 x_c = xxc(band_c); y_c = yyc(band_c); z_c = zzc(band_c);
 dist_c = dist_c(band_c);
 bdy_c = bdy_c(band_c);
+
+%figure(2); clf;
+%porcupine_plot3d_param(x_c,y_c,z_c, cpx_c,cpy_c,cpz_c, bdy_c, @paramMobiusStrip, 2)
+%view(3)
+%camlight left
 
 clear xxc yyc zzc
 
@@ -69,3 +77,10 @@ A = tic;
 [band,x,y,z,cpx,cpy,cpz,dist,bdy,dx,x1d,y1d,z1d] = refine_grid(2, cpf, dx, x1d_c, y1d_c, z1d_c, bw, band_c, dist_c, bdy_c);
 %dx2 = dx/2^1;
 time_refine_total = toc(A)
+
+%figure(3); clf;
+%porcupine_plot3d_param(x,y,z, cpx,cpy,cpz, bdy, @paramMobiusStrip, 3)
+%view(3)
+%camlight left
+
+

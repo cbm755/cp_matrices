@@ -561,15 +561,16 @@ function [cp, dist, bdy, res] = helper_fmincon(xpt, f, initial_guess, paramf, op
     newres = res;
   end
   cp = paramf(newres(1),newres(2));
-  dist = fval;
-  if (abs(dist - norm(cp - xpt,2)^2) > 2e-15)
-    dist
-    norm(cp - xpt,2)^2
-    dist - norm(cp - xpt,2)^2
+  dd = fval;
+  if (abs(dd - sum((cp - xpt).^2)) > 2e-15)
+    dd
+    sum((cp - xpt).^2)
+    dd - sum((cp - xpt).^2)
     warning('actual distance doesn''t match opt result')
     keyboard
   end
 
+  dist = sqrt(dd);
   res = newres;
 
   if (MakePlots)
