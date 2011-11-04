@@ -1,4 +1,4 @@
-function [cpx,cpy,cpz, dist, bdy] = cpMobiusStrip(x, y, z, Rad, Thick, cen)
+function [cpx,cpy,cpz, dist, bdy, uu, vv] = cpMobiusStrip(x, y, z, Rad, Thick, cen)
 %CPMOBIUSSTRIP  Closest point representation of a Mobius strip
 %   [cpx,cpy,cpz, dist, bdy] = cpMobiusStrip(x, y, z)
 %
@@ -27,12 +27,13 @@ function [cpx,cpy,cpz, dist, bdy] = cpMobiusStrip(x, y, z, Rad, Thick, cen)
   optf = @mobius_distsqr_optf;
   surfmesh = {[] [] [] [] []};
   [surfmesh{:}] = paramMobiusStrip(100);
-  paramAdjust = @mobius_param_adjust;
+  paramAdjust = [];
+  paramfEdge = @(u) mobius_edge_parm(u, 1, Rad, Thick);
 
-  How = 0
-  [cpx,cpy,cpz,dist,bdy] = cpParamSurface(x,y,z, paramf, paramf2nd, [], surfmesh, [-inf -1], [inf 1], paramAdjust, How);
+  How = 2;
+  [cpx,cpy,cpz,dist,bdy,uu,vv] = cpParamSurface(x,y,z, paramf, paramf2nd, paramfEdge, [], surfmesh, [-inf -1], [inf 1], paramAdjust, How);
 
-  %[cpx,cpy,cpz,dist,bdy] = cpParamSurface(x,y,z, paramf, paramf2nd, optf, surfmesh, [-inf -1], [inf 1], paramAdjust);
+  % TODO: should reset uu to [0,2*pi) here (and swap sign of v)
 
 
 
@@ -55,17 +56,16 @@ function [cpx,cpy,cpz, dist, bdy] = cpMobiusStrip(x, y, z, Rad, Thick, cen)
     grad(2) = 2*(x - xpt)' * (xv);
   end
 
-  function [F, J] = mobius_mylsqfun(t, p)
+  function [F, J] = mobius_lsqfun(t, p)
     % return point difference vector (and Jacobian), designed for
     % "lsqnonlin".
     u = t(1);
     v = t(2);
     [x,xu,xv] = mobius_parm(u, v, Rad, Thick);
-    %F = [x(1) - p(1); x(2) - p(2); x(3) - p(3)];
     F = x - p;
-    if (nargout > 1)   % Two output arguments
-      J = [xu(1)  xv(1); xu(2)  xv(2); xu(3)  xv(3)];
-    end
+    %if (nargout > 1)   % Two output arguments
+    J = [xu(1)  xv(1); xu(2)  xv(2); xu(3)  xv(3)];
+    %end
 end
 
 end % main cpMobiusStrip
@@ -125,17 +125,41 @@ function [xxuu, xxvv, xxuv] = mobius_parm_2ndpartials(u,v, R, T)
   %y = t1 .* sin(u);
   %z = R*T*v .* sin(0.5*u);
   %xx = [x;y;z];
-  xuu = R*T*v*sin(1/2*u)*sin(u) - 1/4*R*T*v*cos(1/2*u)*cos(u) - R*cos(u)*(T*v*cos(1/2*u) + 1);
-  yuu = -R*sin(u)*(T*v*cos(1/2*u) + 1) - 1/4*R*T*v*cos(1/2*u)*sin(u) - R*T*v*sin(1/2*u)*cos(u);
-  zuu = -1/4*R*T*v*sin(1/2*u);
+  xuu = R*T*v.*sin(1/2*u).*sin(u) - 1/4*R*T*v.*cos(1/2*u).*cos(u) - R*cos(u).*(T*v.*cos(1/2*u) + 1);
+  yuu = -R*sin(u)*(T*v.*cos(1/2*u) + 1) - 1/4*R*T*v.*cos(1/2*u).*sin(u) - R*T*v.*sin(1/2*u).*cos(u);
+  zuu = -1/4*R*T*v.*sin(1/2*u);
   xvv = 0;
   yvv = 0;
   zvv = 0;
-  xuv = -R*T*cos(1/2*u)*sin(u) - 1/2*R*T*sin(1/2*u)*cos(u);
-  yuv = R*T*cos(1/2*u)*cos(u) - 1/2*R*T*sin(1/2*u)*sin(u);
+  xuv = -R*T*cos(1/2*u).*sin(u) - 1/2*R*T*sin(1/2*u).*cos(u);
+  yuv = R*T*cos(1/2*u).*cos(u) - 1/2*R*T*sin(1/2*u).*sin(u);
   zuv = 1/2*R*T*cos(1/2*u);
   xxuu = [xuu; yuu; zuu];
   xxvv = [xvv; yvv; zvv];
   xxuv = [xuv; yuv; zuv];
 end
 
+
+
+function [xx, xxu, xxuu] = mobius_edge_parm(u, v, R, T)
+  %v = 1;
+  %x = R*(1 + T*v .* cos(.5*u)) .* cos(u) - R*T/2;
+  %y = R*(1 + T*v .* cos(.5*u)) .* sin(u);
+  %z = R*T*v .* sin(0.5*u);
+
+  t1 = R*(1 + T*v .* cos(.5*u));
+  x = t1 .* cos(u) - R*T/2;
+  y = t1 .* sin(u);
+  z = R*T*v .* sin(0.5*u);
+  xx = [x;y;z];
+
+  xu = t1 .* -sin(u)   +   R*(T*v .* -sin(.5*u)*0.5) .* cos(u);
+  yu = t1 .* cos(u)    +   R*(T*v .* -sin(.5*u)*0.5) .* sin(u);
+  zu = R*T*v .* cos(0.5*u) * 0.5;
+  xxu = [xu; yu; zu];
+
+  xuu = R*T*v.*sin(1/2*u).*sin(u) - 1/4*R*T*v.*cos(1/2*u).*cos(u) - R*cos(u).*(T*v.*cos(1/2*u) + 1);
+  yuu = -R*sin(u).*(T*v.*cos(1/2*u) + 1) - 1/4*R*T*v.*cos(1/2*u).*sin(u) - R*T*v.*sin(1/2*u).*cos(u);
+  zuu = -1/4*R*T*v*sin(1/2*u);
+  xxuu = [xuu; yuu; zuu];
+end
