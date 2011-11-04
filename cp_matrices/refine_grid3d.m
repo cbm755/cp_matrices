@@ -1,9 +1,6 @@
-function [band, xg,yg,zg, cpxg,cpyg,cpzg, distg, x1d,y1d,z1d] = refine_grid3d(cpf, dx0, x1d0,y1d0,z1d0, bw0, band0, dist0)
+function [band,xg,yg,zg,cpxg,cpyg,cpzg,distg,bdyg,dx,x1d,y1d,z1d] = refine_grid3d(cpf,dx0,x1d0,y1d0,z1d0,bw0,band0,dist0,bdy0,use_ndgrid)
 %REFINE_GRID3D   Make a finer CP representation
 %   Call parent wrapper function "refine_grid" instead.
-
-  % TODO: some way for user to control this
-  ndgrid = 0;
 
   dim = 3;
 
@@ -14,7 +11,7 @@ function [band, xg,yg,zg, cpxg,cpyg,cpzg, distg, x1d,y1d,z1d] = refine_grid3d(cp
   Nx0 = length(x1d0);
   Ny0 = length(y1d0);
   Nz0 = length(z1d0);
-
+  % new 1d grids (the theoretical meshgrid)
   x1d = x1d0(1):dx:x1d0(end);
   y1d = y1d0(1):dx:y1d0(end);
   z1d = z1d0(1):dx:z1d0(end);
@@ -26,16 +23,14 @@ function [band, xg,yg,zg, cpxg,cpyg,cpzg, distg, x1d,y1d,z1d] = refine_grid3d(cp
   bw = bw0;  % TODO: could recalculate (at least give the user and
               % option to specify a new bandwidth
 
-  %I = (dist <= bw);  % TODO: this doesn't look quite right
-
   if (1==1)
-    % add a factor, but how much?
+    % optionally narrow the band to the new bw, could add a safety factor
     I = (abs(dist0) <= (bw + 0*sqrt(2))*dx);
     band0 = band0(I);
   end
 
 
-  if ndgrid
+  if use_ndgrid
     % ndgrid ordering: not tested!
     warning('ndgrid not tested');
     [iic, jjc, kkc] = ind2sub([Nx0 Ny0 Nz0], band0);
@@ -81,7 +76,7 @@ function [band, xg,yg,zg, cpxg,cpyg,cpzg, distg, x1d,y1d,z1d] = refine_grid3d(cp
   jj = ijk(:,2);
   kk = ijk(:,3);
 
-  if ndgrid
+  if use_ndgrid
     warning('not tested');
     band = sub2ind([Nx Ny Nz], ii, jj, kk);
   else
@@ -93,10 +88,14 @@ function [band, xg,yg,zg, cpxg,cpyg,cpzg, distg, x1d,y1d,z1d] = refine_grid3d(cp
   yg = relpt(2) + (jj-1)*dx;
   zg = relpt(3) + (kk-1)*dx;
 
-  % todo: bdy
-  [cpx, cpy, cpz, dist] = cpf(xg, yg, zg);
+  if isempty(bdy0)
+    [cpx, cpy, cpz, dist] = cpf(xg, yg, zg);
+    bdy = [];
+  else
+    [cpx, cpy, cpz, dist, bdy] = cpf(xg, yg, zg);
+  end
 
-  %% our grid is probably an overesimate
+  %% our grid should be an overesimate
   I = find(abs(dist) <= bw*dx);
   xg = xg(I);
   yg = yg(I);
@@ -106,3 +105,8 @@ function [band, xg,yg,zg, cpxg,cpyg,cpzg, distg, x1d,y1d,z1d] = refine_grid3d(cp
   cpzg = cpz(I);
   distg = dist(I);
   band = band(I);
+  if ~isempty(bdy0)
+    bdyg = bdy(I);
+  else
+    bdyg = [];
+  end

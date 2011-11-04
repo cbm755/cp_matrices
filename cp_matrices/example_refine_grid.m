@@ -19,17 +19,13 @@ x1d = ((-2-1*dx):dx:(2+1*dx))';
 %x1d = -1.8:dx:1.8;
 %y1d = x1d;
 
-relpt = [x1d(1) y1d(1)];
-
-nx = length(x1d);
-ny = length(y1d);
-
 
 %% Find a coarse band of closest points
 % meshgrid is only needed at this coarse grid
 [xx yy] = meshgrid(x1d, y1d);
-cpf = @cpEllipse;  paramf = @paramEllipse;
+%cpf = @cpEllipse;  paramf = @paramEllipse;
 %cpf = @cpCircle;  paramf = @paramCircle;
+cpf1 = @cpSemicircle;  paramf = @paramSemicircle;  cpf = @(x,y) cpbar_2d(x,y,cpf1);
 [cpx, cpy, dist] = cpf(xx,yy);
 
 %% Banding: make a narrow band around the circle
@@ -48,37 +44,33 @@ distg = dist(band);
 
 time_ini = toc
 
+%% Refine the grid
+M = 4;  % how many times to refine
+[band2,xg2,yg2,cpx2,cpy2,dist2,dx2,x1d2,y1d2] = ...
+    refine_grid(M, cpf, dx, x1d, y1d, bw, band, distg);
 
-%% Now refine
-NLevels=5;
+
+%% An alternative approach
+% here we keep all the levels of refinement by doing the looping
+% manually.
+NLevels = 5;
 
 % first level is what we already computed
 k = 1;
 a_band{k} = band;
-a_xg{k} = xg;
-a_yg{k} = yg;
-a_cpx{k} = cpxg;
-a_cpy{k} = cpyg;
+a_xg{k} = xg;       a_yg{k} = yg;
+a_cpx{k} = cpxg;    a_cpy{k} = cpyg;
+a_x1d{k} = x1d;     a_y1d{k} = y1d;
 a_dist{k} = distg;
-a_x1d{k} = x1d;
-a_y1d{k} = y1d;
 a_dx{k} = dx;
 
 % loop to refine
 for k=2:NLevels
-  tic
-  a_dx{k} = a_dx{k-1}/2;
-  [a_band{k}, a_xg{k}, a_yg{k}, a_cpx{k}, a_cpy{k}, a_dist{k}, a_x1d{k}, a_y1d{k}] = ...
-      refine_grid(cpf, a_dx{k-1}, a_x1d{k-1}, a_y1d{k-1}, bw, a_band{k-1}, a_dist{k-1});
-  toc
-end
 
-%% Can also do it with a loop or cell arrays
-%dx2 = dx/2^1;
-%[band2,xg2,yg2,cpx2,cpy2,dist2,x1d2,y1d2] = refine_grid(cpf, dx, x1d, y1d,, bw, band, distg);
-%
-%dx3 = dx/2^2;
-%[band3,xg3,yg3,cpx3,cpy3,dist3] = refine_grid(cpf, dx2, x1d2, y1d2, bw, band2, dist2);
+  %a_dx{k} = a_dx{k-1}/2;
+  [a_band{k}, a_xg{k}, a_yg{k}, a_cpx{k}, a_cpy{k}, a_dist{k}, a_dx{k}, a_x1d{k}, a_y1d{k}] = ...
+      refine_grid(1, cpf, a_dx{k-1}, a_x1d{k-1}, a_y1d{k-1}, bw, a_band{k-1}, a_dist{k-1});
+end
 
 
 

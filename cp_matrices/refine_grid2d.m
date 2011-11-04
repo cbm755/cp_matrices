@@ -1,9 +1,6 @@
-function [band,xg,yg,cpxg,cpyg,distg,x1d,y1d] = refine_grid2d(cpf, dx0, x1d0, y1d0, bw0, band0, dist0)
+function [band,xg,yg,cpxg,cpyg,distg,bdyg,dx,x1d,y1d] = refine_grid2d(cpf,dx0,x1d0,y1d0,bw0,band0,dist0,bdy0,use_ndgrid)
 %REFINE_GRID2D   Make a finer CP representation
 %   Call parent wrapper function "refine_grid" instead.
-
-  % TODO: some way for user to control this
-  ndgrid = 0;
 
   dim = 2;
 
@@ -23,16 +20,14 @@ function [band,xg,yg,cpxg,cpyg,distg,x1d,y1d] = refine_grid2d(cpf, dx0, x1d0, y1
   bw = bw0;  % TODO: could recalculate (at least give the user and
               % option to specify a new bandwidth
 
-  %I = (dist <= bw);  % TODO: this doesn't look quite right
-
   if (1==1)
-    % add a factor, but how much?
+    % optionally narrow the band to the new bw, could add a safety factor
     I = (abs(dist0) <= (bw + 0*sqrt(2))*dx);
     band0 = band0(I);
   end
 
 
-  if ndgrid
+  if use_ndgrid
     % ndgrid ordering: not tested!
     warning('ndgrid not tested');
     [iic, jjc] = ind2sub([Nx0 Ny0], band0);
@@ -66,7 +61,7 @@ function [band,xg,yg,cpxg,cpyg,distg,x1d,y1d] = refine_grid2d(cpf, dx0, x1d0, y1
   ii = ij(:,1);
   jj = ij(:,2);
 
-  if ndgrid
+  if use_ndgrid
     warning('not tested');
     band = sub2ind([Nx Ny], ii, jj);
   else
@@ -77,10 +72,14 @@ function [band,xg,yg,cpxg,cpyg,distg,x1d,y1d] = refine_grid2d(cpf, dx0, x1d0, y1
   xg = relpt(1) + (ii-1)*dx;
   yg = relpt(2) + (jj-1)*dx;
 
-  % todo: bdy
-  [cpx, cpy, dist] = cpf(xg, yg);
+  if isempty(bdy0)
+    [cpx, cpy, dist] = cpf(xg, yg);
+    bdy = [];
+  else
+    [cpx, cpy, dist, bdy] = cpf(xg, yg);
+  end
 
-  %% our grid is probably an overesimate
+  %% our grid should be an overesimate
   I = find(abs(dist) <= bw*dx);
   xg = xg(I);
   yg = yg(I);
@@ -88,6 +87,12 @@ function [band,xg,yg,cpxg,cpyg,distg,x1d,y1d] = refine_grid2d(cpf, dx0, x1d0, y1
   cpyg = cpy(I);
   distg = dist(I);
   band = band(I);
+  if ~isempty(bdy0)
+    bdyg = bdy(I);
+  else
+    bdyg = [];
+  end
+
 
   makePlots = 0;
   if (makePlots)
