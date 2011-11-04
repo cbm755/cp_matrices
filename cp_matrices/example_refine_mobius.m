@@ -24,7 +24,7 @@ z1d_c = (-1:dx:1)';
 %cpf1 = @cpHemisphere;  paramf = @paramHemisphere;
 %x1d_c = (-2:dx:2)';
 %y1d_c = ((-2-dx):dx:(2+dx))';
-%z1d_c = ((-2-2*dx):dx:(2+2*dx))';
+%z1d_c = ((-1-2*dx):dx:(2+2*dx))';
 
 
 % cpbar for boundary conditions
@@ -40,7 +40,7 @@ disp('starting initial coarse');
 
 
 % Bandwidth formula
-dim = 2;  % dimension
+dim = 3;  % dimension
 p = 3;    % interpolation order
 % "band" is a vector of the indices of the points in the computation
 % band.  The formula for bw is found in [Ruuth & Merriman 2008] and
@@ -60,14 +60,16 @@ x_c = xxc(band_c); y_c = yyc(band_c); z_c = zzc(band_c);
 dist_c = dist_c(band_c);
 bdy_c = bdy_c(band_c);
 
+clear xxc yyc zzc
+
+time_ini = toc
+
+
 %figure(2); clf;
-%porcupine_plot3d_param(x_c,y_c,z_c, cpx_c,cpy_c,cpz_c, bdy_c, @paramMobiusStrip, 2)
+%porcupine_plot3d_param(x_c,y_c,z_c, cpx_c,cpy_c,cpz_c, bdy_c, paramf, 2)
 %view(3)
 %camlight left
 
-clear xxc yyc zzc
-
-time_ini = toc   % 65 seconds
 
 dx_c = dx;   % store the coarse dx
 
@@ -79,8 +81,7 @@ A = tic;
 time_refine_total = toc(A)
 
 %figure(3); clf;
-%porcupine_plot3d_param(x,y,z, cpx,cpy,cpz, bdy, @paramMobiusStrip, 3)
+%porcupine_plot3d_param(x,y,z, cpx,cpy,cpz, bdy, paramf, 3)
 %view(3)
 %camlight left
-
 
