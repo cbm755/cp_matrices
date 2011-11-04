@@ -1,6 +1,6 @@
 addpath(pwd);
-tests = dir('tests');
-cd('tests');
+tests = dir('tests_unit');
+cd('tests_unit');
 
 num_tests = 0;
 num_failed = 0;
