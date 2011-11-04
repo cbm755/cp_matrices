@@ -33,15 +33,13 @@ function [cpx,cpy,cpz, dist, bdy] = cpbar_3d(x,y,z, f, varargin)
 %cpz(Reg) = (2*cpznew - z1);
 %[cpx,cpy,cpz,Regtemp,dist3Dtemp] = cphemi(cpx,cpy,cpz,R);
 
+lbdy = logical(bdy);
 
 % project into interior
-x2 = (2*cpx(bdy) - x(bdy));
-y2 = (2*cpy(bdy) - y(bdy));
-z2 = (2*cpz(bdy) - z(bdy));
+x2 = (2*cpx(lbdy) - x(lbdy));
+y2 = (2*cpy(lbdy) - y(lbdy));
+z2 = (2*cpz(lbdy) - z(lbdy));
 
 % recompute just those ones (it should be ok to do all of them, but
 % this should be faster).
-[cpx(bdy),cpy(bdy),cpz(bdy), disttemp, bdytemp] = f(x2,y2,z2, varargin{:});
-
-
-
+[cpx(lbdy),cpy(lbdy),cpz(lbdy), disttemp, bdytemp] = f(x2,y2,z2, varargin{:});

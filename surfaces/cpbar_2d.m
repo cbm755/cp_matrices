@@ -21,11 +21,12 @@ function [cpx,cpy, dist, bdy] = cpbar_2d(x,y, f, varargin)
 
 [cpx,cpy, dist, bdy] = f(x, y, varargin{:});
 
+lbdy = logical(bdy);
+
 % project into the interior
-x1 = (2*cpx(bdy) - x(bdy));
-y1 = (2*cpy(bdy) - y(bdy));
+x1 = (2*cpx(lbdy) - x(lbdy));
+y1 = (2*cpy(lbdy) - y(lbdy));
 
 % recompute just those ones (it should be ok to do all of them, but
 % this should be faster).
-[cpx(bdy),cpy(bdy), disttemp, bdytemp] = f(x1, y1, varargin{:});
-
+[cpx(lbdy),cpy(lbdy), disttemp, bdytemp] = f(x1, y1, varargin{:});

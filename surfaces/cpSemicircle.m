@@ -41,7 +41,9 @@ function [cpx, cpy, dist, bdy] = cpSemicircle(x, y, R, xc, yc)
 
   dist = sqrt( (x-cpx).^2 + (y-cpy).^2 );
 
-  bdy = (Reg1 | Reg2);
+  % note: this way doesn't identify the left and right bdries
+  %bdy = (Reg1 | Reg2);
+  bdy = Reg1 + 2*Reg2;
 
   % shift back
   cpx = cpx + xc;
