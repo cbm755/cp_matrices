@@ -16,6 +16,7 @@ disp('Constructing interpolation matrix');
 Etemp = interp3_matrix(x1d,y1d,z1d, cpxinit,cpyinit,cpzinit, p);
 tic; [i,j,S] = find(Etemp); toc;
 tic; ibandfull = unique(j); toc;
+% find index of the inner band in the original band
 iband = zeros(size(ibandfull));
 for i=1:length(ibandfull)
   I = find(ibandfull(i) == band_init);

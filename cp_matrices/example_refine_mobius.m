@@ -17,14 +17,14 @@ tic
 dx = 0.2;
 % Mobius strip
 cpf1 = @cpMobiusStrip;  paramf = @paramMobiusStrip;
-x1d_c = (-2:dx:2)';
+x1d_c = ((-1-6*dx):dx:(1+6*dx))';
 y1d_c = x1d_c;
-z1d_c = (-1:dx:1)';
-% Sphere
+z1d_c = ((-0.5-6*dx):dx:(0.5+6*dx))';
+% Hemisphere
 %cpf1 = @cpHemisphere;  paramf = @paramHemisphere;
-%x1d_c = (-2:dx:2)';
-%y1d_c = ((-2-dx):dx:(2+dx))';
-%z1d_c = ((-1-2*dx):dx:(2+2*dx))';
+%x1d_c = ((-1-5*dx):dx:(1+5*dx))';
+%y1d_c = ((-1-6*dx):dx:(1+6*dx))';
+%z1d_c = (( 0-7*dx):dx:(1+7*dx))';
 
 
 % cpbar for boundary conditions
@@ -76,7 +76,7 @@ dx_c = dx;   % store the coarse dx
 %% refine it twice
 disp('starting refinement');
 A = tic;
-[band,x,y,z,cpx,cpy,cpz,dist,bdy,dx,x1d,y1d,z1d] = refine_grid(2, cpf, dx, x1d_c, y1d_c, z1d_c, bw, band_c, dist_c, bdy_c);
+[band,x,y,z,cpx,cpy,cpz,dist,bdy,dx,x1d,y1d,z1d] = refine_grid(2, cpf, dx_c, x1d_c, y1d_c, z1d_c, bw, band_c, dist_c, bdy_c);
 %dx2 = dx/2^1;
 time_refine_total = toc(A)
 

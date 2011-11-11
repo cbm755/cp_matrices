@@ -19,10 +19,8 @@ function M = lapsharp_unordered(L, E, R, delta)
   if (nargin >= 4)
     %% Full lapsharp
     %delta = 2*dim/eps^2 = 2*dim/dx^2
-    warning('not really tested and probably wrong diagonal!');
     I = speye(size(L,1),size(E,2));
-    M = L*E - myeps*(I - R*E);
-
+    M = L*E - delta*(I - R*E);
   else
     %% Diagonal splitting
     % a particular case of the above (implemented with less
@@ -33,7 +31,7 @@ function M = lapsharp_unordered(L, E, R, delta)
 
     [i,j,r] = find(R);  % indices of diagonal elements
     Ldiagpad = R .* L;
-    Ldiag = Ldiagpad(:,j);
+    Ldiag = Ldiagpad(i,j);  % a square matrix
     M = Ldiag + (L-Ldiagpad)*E;
 
     % this gives error for large matrix
@@ -42,5 +40,4 @@ function M = lapsharp_unordered(L, E, R, delta)
     %Ldiagpad = sparse(i,j,L(dd),size(L,1),size(L,2));
     % No, its not this:
     % Ldiagpad = spdiags(L(dd), 0, size(L,1), size(L,2));
-
   end
