@@ -1,4 +1,4 @@
-function [IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, relpt, p, fd_stenrad)
+function [IJK,DIST,CP,XYZ,CPFACE] = tri2cp(Faces, Vertices, dx, relpt, p, fd_stenrad)
 %TRI2CP  Convert a triangulation to a banded closest point representation
 %   Given a triangulation as a list of faces and vertices (for
 %   example, from a .ply file), TRI2CP will convert them to a
@@ -96,10 +96,11 @@ if (all(size(relpt) == [1 1]))
 end
 
 tic
-[IJK,DD,CP,XYZ] = tri2cp_helper(dx, relpt, bw, ...
-                                Faces, Vertices, ...
-                                trim, DEBUG_LEVEL);
+[IJK,DD,CP,XYZ,CPFACE] = tri2cp_helper(dx, relpt, bw, ...
+                                           Faces, Vertices, ...
+                                           trim, DEBUG_LEVEL);
 toc
+
 % NOTE: DD is squared distance
 DIST = sqrt(DD);
 

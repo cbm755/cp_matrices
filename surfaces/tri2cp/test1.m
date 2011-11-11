@@ -12,11 +12,13 @@ PlyFile = 'pig_loop2.ply';
 %PlyFile = 'annies_pig.ply';
 [Faces, Vertices] = plyread(PlyFile, 'tri');
 
-disp('running tri2cp');
-[IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, -2);
-[IJK2,DIST2,CP2,XYZ2] = tri2cp_old(Faces, Vertices, dx, -2);
+%mex tri2cp_helper.c
 
-max(IJK-IJK2)
-max(DIST-DIST2)
-max(CP-CP2)
-max(XYZ-XYZ2)
+disp('running tri2cp');
+[IJK,DIST,CP,XYZ,WHICH_FACES] = tri2cp(Faces, Vertices, dx, -2);
+%[IJK2,DIST2,CP2,XYZ2] = tri2cp_old(Faces, Vertices, dx, -2);
+
+%max(IJK-IJK2)
+%max(DIST-DIST2)
+%max(CP-CP2)
+%max(XYZ-XYZ2)

@@ -81,6 +81,7 @@ typedef struct {
   myfloat cpx, cpy, cpz;
   myfloat dd;
   myfloat x, y, z;
+  long which_face;
   UT_hash_handle hh;
 } struct_cp;
 
@@ -204,8 +205,8 @@ void hashDeleteAll()
  * Integer key version.
  */
 void hashAddGridPt_LONG(int i, int j, int k, \
-		   myfloat dd, myfloat cpx, myfloat cpy, myfloat cpz, \
-		   myfloat x, myfloat y, myfloat z)
+			myfloat dd, myfloat cpx, myfloat cpy, myfloat cpz, \
+			myfloat x, myfloat y, myfloat z, long which_face)
 {
   struct_cp *gridpt;
 
@@ -231,6 +232,7 @@ void hashAddGridPt_LONG(int i, int j, int k, \
   gridpt->x = x;
   gridpt->y = y;
   gridpt->z = z;
+  gridpt->which_face = which_face;
 
   HASH_ADD( hh, newhashlist, key, sizeof(unsigned long long), gridpt );
   /* HASH_ADD_INT( newhashlist, key, gridpt ); */
@@ -716,7 +718,7 @@ myfloat FindClosestPointToOneTri(myfloat a1, myfloat a2, myfloat a3, \
   } else if ((lambda<0) && (mu>=0) && (lambda+mu<=1)) {
     ProjectOnSegment(c1,c2,c3,r1,r2,r3,FP0,FP0,FP0);
   } else if ((lambda>=0) && (mu>=0) && (lambda+mu<=1)) {
-    /* do nothing, what case is this? */
+    /* TODO: do nothing, what case is this? */
   } else {
     dbg_printf(0, "Error: non-enumerated case, can this happen?\n");
 #ifdef EXTENDEDPRECISION
@@ -886,7 +888,7 @@ void FindClosestPointsFromTriangulation()
 
 	    if (gridpt == NULL) {
 	      /* not found, add new one */
-	      hashAddGridPt(i,j,k, dd, cpx,cpy,cpz, x,y,z);
+	      hashAddGridPt(i,j,k, dd, cpx,cpy,cpz, x,y,z, n);
 	      numgridpts++;
 	    } else {
 	      /* already there, check if closer and update */
@@ -895,6 +897,7 @@ void FindClosestPointsFromTriangulation()
 		gridpt->cpx = cpx;
 		gridpt->cpy = cpy;
 		gridpt->cpz = cpz;
+		gridpt->which_face = n;
 		/* no need to update i,j,k,x,y,z because they haven't changed */
 		if ( (gridpt->i != i) | (gridpt->j != j) | (gridpt->k != k) | \
 		     (gridpt->x != x) | (gridpt->y != y) | (gridpt->z != z) ) {
@@ -1053,7 +1056,7 @@ void cleanup(void) {
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
   double *indx, *inrelpt, *inbw, *inF, *inV, *inPrune, *inDebugLevel;
-  double *mxIJK, *mxDD, *mxCP, *mxXYZ;
+  double *mxIJK, *mxDD, *mxCP, *mxXYZ, *mxWHICHF;
 
   int i;
   const int numInputs = 7;
@@ -1140,12 +1143,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   plhs[0] = mxCreateDoubleMatrix(bandsz, 3, mxREAL);
   plhs[1] = mxCreateDoubleMatrix(bandsz, 1, mxREAL);
   plhs[2] = mxCreateDoubleMatrix(bandsz, 3, mxREAL);
+  /* TODO: IJK and which_face should be int? */
   plhs[3] = mxCreateDoubleMatrix(bandsz, 3, mxREAL);
+  plhs[4] = mxCreateDoubleMatrix(bandsz, 1, mxREAL);
   /* associate pointers */
   mxIJK = mxGetPr(plhs[0]);
   mxDD  = mxGetPr(plhs[1]);
   mxCP  = mxGetPr(plhs[2]);
   mxXYZ = mxGetPr(plhs[3]);
+  mxWHICHF = mxGetPr(plhs[4]);
 
 
   d = 0;
@@ -1161,11 +1167,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxXYZ[0*bandsz+d] = s->x;
       mxXYZ[1*bandsz+d] = s->y;
       mxXYZ[2*bandsz+d] = s->z;
+      mxWHICHF[d] = s->which_face + 1;  /* +1 for matlab indexing */
 
       if ( (d < 5) || (d >= bandsz - 5) ) {
 	dbg_printf(20,							\
-		   "%5d: %d %d %d   %9.6g %9.6g %9.6g   %9.6f   %7.4g %7.4g %7.4g\n", \
-		   d, s->i,s->j,s->k, s->dd, s->cpx,s->cpy,s->cpz, s->x,s->y,s->z);
+		   "%5d: %d %d %d   %9.6g %9.6g %9.6g   %9.6f   %7.4g %7.4g %7.4g, face=%d\n", \
+		   d, s->i,s->j,s->k, s->dd, s->cpx,s->cpy,s->cpz, s->x,s->y,s->z, s->which_face);
       }
 
       d++;

@@ -1,8 +1,8 @@
-function [ijk,dd,cp,xyz] = tri2cp_helper(dx, relpt, bw, F, V, trim, dbglvl)
+function [ijk,dd,cp,xyz,cpface] = tri2cp_helper(dx, relpt, bw, F, V, trim, dbglvl)
 %TRI2CP_HELPER  Helper function for TRI2CP
 %   Don't call this directly, see TRI2CP instead
 %
-%   [ijk,dd,cp,xyz] = helper_tri2cp(dx, relpt, bandwidth, ...
+%   [ijk,dd,cp,xyz,cpface] = helper_tri2cp(dx, relpt, bandwidth, ...
 %                            Faces, Vertices, ...
 %                            trim, DebugMsgLevel);
 %
