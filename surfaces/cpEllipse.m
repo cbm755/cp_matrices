@@ -14,13 +14,13 @@ function [cpx, cpy, sdist] = cpEllipse(x, y, a, b, cen)
   % defaults
   if (nargin < 4)
     if (nargin == 3)
-      error('must provide both or either of a,b');
+      error('must provide both a and b (or neither)');
     end
     a = 1.5;
     b = 0.75;
   end
   if (nargin < 5)
-    cen = [0,0];
+    cen = [0 0];
   end
 
   % shift to the origin
