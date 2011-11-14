@@ -132,5 +132,6 @@ for kt = 1:numtimesteps
       if ~exist OCTAVE_VERSION camlight left;
       colorbar;
       pause(0.001);
+      end
     end
-end;
+end
