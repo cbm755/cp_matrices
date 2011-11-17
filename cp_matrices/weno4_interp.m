@@ -23,12 +23,9 @@ function w = weno4_interp(cp, f, x)
 %   The scheme implemented here is derived in [Macdonald & Ruuth
 %   2008, Level Set Equations on Surfaces...].
 %
-%   TODO: support nonvector relpt
+%   TODO: support vector relpt
 %   TODO: support calling without a "cpgrid"?
 %   TODO: dual-band support.
-%   TODO: we should  be able to precompute and store the E,W, etc
-%   matrices (roughly half the time in my simple test).  Could use
-%   "persistent" variables to store this...
 
   [n1,dim] = size(x);
   if dim == 2
@@ -44,6 +41,7 @@ end
 function w = weno4_interp2d(cp, f, xy)
 %WENO4_INTERP2D  nonlinear WENO interpolation 2D
 
+  tic
   x1d = cp.x1d;
   y1d = cp.y1d;
   Nx = length(x1d);
@@ -59,34 +57,29 @@ function w = weno4_interp2d(cp, f, xy)
   % determine the basepoint, roughly speaking this is "floor(xy)"
   % in terms of the grid
   [ij,X] = findGridInterpBasePt(xy, 3, relpt, dx);
+  % +1 here because the basepoint is actually the lowerleft corner
+  % of the stencil and we want the "floor".
   xi = X(:,1) + dx;
   yi = X(:,2) + dx;
   ij = ij + 1;
 
   I = sub2ind([Ny Nx], ij(:,2), ij(:,1));
-  band = cp.band;
-  nzmax = length(I);
-  % basepoint in band
-  B = sparse([], [], [], length(I), length(band), nzmax);
-  for c = 1:length(I)
-    I2 = find(band == I(c));
-    if isempty(I2)
-      error('can''t find');
-    end
-    B(c, I2) = 1;
-  end
+  B = findInBand(I, cp.band, Nx*Ny);
 
   [E W N S] = neighbourMatrices(cp, cp.band, cp.band);
+  preptime = toc;
 
   % some duplicated work because many interpolation points will have the
   % same basepoint
-
+  tic
   g = S*f;     u1 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x);
   g = f;       u2 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x);
   g = N*f;     u3 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x);
   g = N*(N*f); u4 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x);
 
   w = helper1d(u1, u2, u3, u4, yi, dx, y);
+  wenotime = toc;
+  fprintf('weno4: preptime=%g, wenotime=%g\n', preptime, wenotime)
 end
 
 
@@ -94,6 +87,7 @@ end
 function w = weno4_interp3d(cp, f, xyz)
 %WENO4_INTERP3D  nonlinear WENO interpolation 3D
 
+  tic
   x1d = cp.x1d;
   y1d = cp.y1d;
   z1d = cp.z1d;
@@ -109,27 +103,21 @@ function w = weno4_interp3d(cp, f, xyz)
   y = xyz(:,2);
   z = xyz(:,3);
 
-  % determine the basepoint
+  % determine the basepoint, roughly speaking this is "floor(xy)"
+  % in terms of the grid
   [ijk,X] = findGridInterpBasePt(xyz, 3, relpt, dx);
+  % +1 here because the basepoint is actually the lowerleft corner
+  % of the stencil and we want the "floor".
   xi = X(:,1) + dx;
   yi = X(:,2) + dx;
   zi = X(:,3) + dx;
   ijk = ijk + 1;
 
   I = sub2ind([Ny Nx Nz], ijk(:,2), ijk(:,1), ijk(:,3));
-  band = cp.band;
-  nzmax = length(I);
-  % basepoint in band
-  B = sparse([], [], [], length(I), length(band), nzmax);
-  for c = 1:length(I)
-    I2 = find(band == I(c));
-    if isempty(I2)
-      error('can''t find');
-    end
-    B(c, I2) = 1;
-  end
+  B = findInBand(I, cp.band, Nx*Ny*Nz);
 
   [E W N S U D] = neighbourMatrices(cp, cp.band, cp.band);
+  preptime = toc;
 
   % some duplicated work because many interpolation points will have the
   % same basepoint
@@ -161,8 +149,9 @@ function w = weno4_interp3d(cp, f, xyz)
   w4 = helper1d(u1, u2, u3, u4, yi, dx, y);
 
   w = helper1d(w1, w2, w3, w4, zi, dx, z);
-  toc
+  wenotime = toc;
 
+  fprintf('weno4: preptime=%g, wenotime=%g\n', preptime, wenotime)
 end
 
 

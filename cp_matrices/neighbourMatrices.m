@@ -18,30 +18,20 @@ function [Mip1 Mim1 Mjp1 Mjm1 Mkp1 Mkm1] = neighbourMatrices(cp, band1, band2)
   end
 
   dim = cp.dim;
-  %band = cp.band;
-
-  if (dim >= 2)
-    x1d = cp.x1d;
-    y1d = cp.y1d;
-    Nx = length(x1d);
-    Ny = length(y1d);
-  end
+  Nx = length(cp.x1d);
+  Ny = length(cp.y1d);
   if (dim >= 3)
-    z1d = cp.z1d;
-    Nz = length(z1d);
+    Nz = length(cp.z1d);
   end
   if (dim < 2) | (dim > 3)
     warning('dimension not implemented');
   end
 
-  %dx = x1d(2) - x1d(1);
-  %relpt = x1d(1);
-
   if (dim == 2)
+    meshgridsz = Nx*Ny;
     [j, i] = ind2sub([Ny Nx], band1);
     ip1 = i+1;  im1 = i-1;
     jp1 = j+1;  jm1 = j-1;
-    ip2 = i+2;  jp2 = j+2;
     % im1 becomes negative, or ip1 too large, these could go outside the
     % meshgrid.  sub2ind() has checks for this and will give an error.
     % TODO: this could still be troublesome because it means relpt
@@ -52,6 +42,7 @@ function [Mip1 Mim1 Mjp1 Mjm1 Mkp1 Mkm1] = neighbourMatrices(cp, band1, band2)
     bandjp1 = sub2ind([Ny Nx], jp1, i);
     bandjm1 = sub2ind([Ny Nx], jm1, i);
   elseif ( dim==3 )
+    meshgridsz = Nx*Ny*Nz;
     [j, i, k] = ind2sub([Ny Nx Nz], band1);
     ip1 = i+1;  im1 = i-1;
     jp1 = j+1;  jm1 = j-1;
@@ -64,33 +55,13 @@ function [Mip1 Mim1 Mjp1 Mjm1 Mkp1 Mkm1] = neighbourMatrices(cp, band1, band2)
     bandkm1 = sub2ind([Ny Nx Nz], j,   i,   km1);
   end
 
-  tic;
-  nzmax = length(band1);
-  Mip1 = sparse([], [], [], length(band1), length(band2), nzmax);
-  Mim1 = sparse([], [], [], length(band1), length(band2), nzmax);
-  Mjp1 = sparse([], [], [], length(band1), length(band2), nzmax);
-  Mjm1 = sparse([], [], [], length(band1), length(band2), nzmax);
+  Mip1 = findInBand(bandip1, band2, meshgridsz);
+  Mim1 = findInBand(bandim1, band2, meshgridsz);
+  Mjp1 = findInBand(bandjp1, band2, meshgridsz);
+  Mjm1 = findInBand(bandjm1, band2, meshgridsz);
   if (dim == 3)
-    Mkp1 = sparse([], [], [], length(band1), length(band2), nzmax);
-    Mkm1 = sparse([], [], [], length(band1), length(band2), nzmax);
+    Mkp1 = findInBand(bandkp1, band2, meshgridsz);
+    Mkm1 = findInBand(bandkm1, band2, meshgridsz);
   end
 
-  % TODO: might be faster to build the index permutation vectors
-  % and then construct the matrices all-at-once.
-  for c = 1:length(band1)
-    %I = find(band == bandip1(c));
-    %if ~isempty(I)
-    %  Mip1(c, I) = 1;
-    %end
-    % if I is empty, it does the right thing
-    I = find(band2 == bandip1(c));   Mip1(c, I) = 1;
-    I = find(band2 == bandim1(c));   Mim1(c, I) = 1;
-    I = find(band2 == bandjp1(c));   Mjp1(c, I) = 1;
-    I = find(band2 == bandjm1(c));   Mjm1(c, I) = 1;
-    if (dim == 3)
-      I = find(band2 == bandkp1(c));   Mkp1(c, I) = 1;
-      I = find(band2 == bandkm1(c));   Mkm1(c, I) = 1;
-    end
-  end
-  toc
 
