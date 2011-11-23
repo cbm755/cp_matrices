@@ -21,6 +21,16 @@ class Circle(ClosestPoint):
         self._bb = [center - radius, center + radius]
         self._hasParam = True
 
+    def closestPointVectorized(self, x, y):
+        th, r = cart2pol(x, y)
+        cpx, cpy = pol2cart(th, self._radius)
+        #cp = self._center + a([x,y])
+
+        #dist = norm(xx - cp, 2)
+        #dist = sqrt( (x-cpx)**2 + (y-cpy)**2 )
+        sdist = r - self._radius
+        return cp, sdist, 0, {}
+
     def closestPointToCartesian(self, xx):
         # TODO: could probably be vectorized
         x,y = xx - self._center
