@@ -51,7 +51,7 @@ p = 3;    % interpolation order
 % "band" is a vector of the indices of the points in the computation
 % band.  The formula for bw is found in [Ruuth & Merriman 2008] and
 % the 1.0001 is a safety factor.
-bw = 1.001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
+bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
 band = find(abs(dist) <= bw*dx);
 
 % store closest points in the band;
