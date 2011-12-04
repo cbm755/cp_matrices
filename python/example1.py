@@ -2,7 +2,17 @@
 #
 
 import numpy as np
-import numpy
+#import numpy
+
+# the reload here lets you use this in ipython as:
+#   "run -i newapproach.py"
+# even if changing the surfaces module.
+import surfaces
+reload(surfaces)
+
+# there was already an old cpGrid object...
+import cpGrid_new as cpGrid
+reload(cpGrid_new)
 
 x1d,dx = np.linspace(-2,2,11,retstep=True)
 y1d = x1d.copy()   # otherwise, its a pointer
@@ -12,11 +22,10 @@ xxg,yyg = np.meshgrid(x1d, y1d)
 # vectors instead of 2D arrays
 xx = xxg.flatten()
 yy = yyg.flatten()
-# or
-xy = np.hstack((xx.T, yy.T))
+# TODO: make this a n x 2 matrix...
+xy = np.hstack( (xx.reshape(xx.shape[0],1), yy.reshape(yy.shape[0],1)) )
 
-import surfaces
-reload(surfaces)
+
 #from closestpoint import coordinate_transform as tf
 q = surfaces.Circle()
 
@@ -51,46 +60,21 @@ dist = dist[band]
 #bdy = bdy[band]
 x = xx[band]
 y = yy[band]
+xy = xy[band,:]
+
+g1 = cpGrid.cpGrid(x1d, y1d, dx)
+g1.cpx = cpx
+g1.cpy = cpy
+g1.band = band
+g1.dist = dist
+g1.x = x
+g1.y = y
+g1.xy = xy
+
+#IJ = cpGrid.i2s(xxg.shape,band)
+
+# a grid nows how to convert subscripts to linear indices and vice-versa
+g1.ij = g1.ind2sub(band)
+
 
 #q.viztest()
-
-IJ = i2s(xxg.shape,band)
-
-
-
-def i2s(sz,ind):
-    """works like ind2sub but with v = s2i(sz,ind) instead of
-    [v1,v2,v3,...] = ind2sub(sz,ind)
-    works along dimension 2 (i.e. rows specify the index)
-    CAUTION no error checking (if index out of range)"""
-
-    ind = numpy.array(ind) + 1
-    sz = numpy.array(sz)
-    sub=numpy.zeros([ind.size,sz.size]).astype(numpy.int);
-
-    for i in range(len(sz)-1):
-
-        sub[:,i] = numpy.mod(ind,sz[i]);
-        sub[sub[:,i]==0,i] = sz[i];
-        ind = (ind - sub[:,i])/sz[i] + 1;
-
-    sub[:,i+1] = ind;
-    sub = sub - 1
-
-    return sub
-
-
-
-def s2i(sz,v):
-    """ works like sub2ind but with s2i(sz,[v1,v2,v3,...]) instead of
-    sub2ind(sz,v1,v2,v3,...)
-    works along dimension 2 (i.e. rows specify the indices)
-    CAUTION no error checking (if index out of range)"""
-
-    index = numpy.array(v[:,0]).astype(numpy.int)
-    sc=1
-    for i in range(1,len(sz)):
-        sc = sc*(sz[i-1]);
-        index = index + sc*(v[:,i]);
-
-    return index
