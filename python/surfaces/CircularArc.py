@@ -8,7 +8,7 @@ specify the start and stop angles.
 
 TODO: how to deal with pi for longdouble/float96?
 """
-from ClosestPoint import ShapeWithBdy
+from Surface import ShapeWithBdy
 
 from coordinate_transform import cart2pol, pol2cart
 import numpy

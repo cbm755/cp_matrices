@@ -2,7 +2,7 @@
 TODO: can we load all the various classes automatically here?
 """
 #import Hemisphere
-# ClosestPoint is base classes only, don't import directly
+# Surface is base classes only, don't import directly
 from Hemisphere import *
 from Sphere import *
 from Circle import *

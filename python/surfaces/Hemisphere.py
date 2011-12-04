@@ -6,7 +6,7 @@ Not necessarily all implemented yet
 
 TODO: WIP
 """
-from ClosestPoint import ShapeWithBdy
+from Surface import ShapeWithBdy
 
 from numpy import array as a
 #from numpy import linspace, real, imag, exp, pi

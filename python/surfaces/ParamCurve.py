@@ -8,7 +8,7 @@ generalize this to 3D, (x,y,z) = (f(t),g(t),h(t))
 Newton's method on derivative of distance squared works better than
 straight optimization on distance squared.
 """
-from ClosestPoint import ShapeWithBdy
+from Surface import ShapeWithBdy
 
 from numpy import array as a
 from numpy import sqrt, linspace, pi, abs  #, cos

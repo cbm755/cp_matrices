@@ -7,7 +7,7 @@ TODO: this is periodic for now...
 TODO: code needs some cleanup, there is still stuff left from a
 optimization code with endpoints.
 """
-from ClosestPoint import ClosestPoint
+from Surface import Surface
 
 from numpy import array as a
 from numpy import sqrt, linspace, pi, abs, floor
@@ -20,7 +20,7 @@ from scipy.interpolate import splprep, splev
 import scipy.interpolate as si
 import scipy.integrate
 
-class SplineCurve(ClosestPoint):
+class SplineCurve(Surface):
     def __init__(self, sc=1.68882661023481):  #, preset='egg'):
         #scale_matlab = 1.6917222947492
 

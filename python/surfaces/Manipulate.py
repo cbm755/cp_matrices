@@ -7,10 +7,10 @@ TODO: implement rotation, use a matrix internally.
 
 TODO: should deal with bdy, others in a reasonable way...
 """
-from ClosestPoint import ClosestPoint
+from Surface import Surface
 from numpy import array as a
 
-class Translate(ClosestPoint):
+class Translate(Surface):
     def __init__(self, cpparent, shift):
         self._shift = shift
         self._cpparent = cpparent

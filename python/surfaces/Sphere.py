@@ -3,12 +3,12 @@ Closest point function for a sphere.
 
 Works in multidimensions.
 """
-from ClosestPoint import ClosestPoint
+from Surface import Surface
 
 from numpy import array as a
 from scipy.linalg import norm
 
-class Sphere(ClosestPoint):
+class Sphere(Surface):
     def __init__(self, center=a([0.0, 0.0, 0.0]), radius=1.0):
         self._center = center
         self._radius = radius

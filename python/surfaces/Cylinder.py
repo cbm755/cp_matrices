@@ -3,7 +3,7 @@
     TODO: generalize to add height's
 '''
 
-from ClosestPoint import ShapeWithBdy
+from Surface import ShapeWithBdy
 
 class Cylinder(ShapeWithBdy):
     def __init__(self, radius=1.0, top=1.0, bottom=-1.0):

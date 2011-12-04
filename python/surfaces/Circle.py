@@ -4,14 +4,14 @@ Closest point representation of a circle.
 A special case of Sphere but implemented differently because this
 version is clearer to understand.
 """
-from ClosestPoint import ClosestPoint
+from Surface import Surface
 
 from coordinate_transform import cart2pol, pol2cart
 import numpy
 from numpy import array as a
 from numpy.linalg import norm
 
-class Circle(ClosestPoint):
+class Circle(Surface):
     def __init__(self, center=a([0.0, 0.0]), radius=1.0):
         # TODO: could make it subclass of sphere and just call:
         # self.super(self, center=center, radius=radius)

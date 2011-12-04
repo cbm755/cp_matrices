@@ -6,11 +6,11 @@ Algorithm: take the minimum distance and return that cp
 
 TODO: dealing with boundaries properly might be difficult
 """
-from ClosestPoint import ClosestPoint
+from Surface import Surface
 #import numpy
 from numpy import array as a
 
-class Multi(ClosestPoint):
+class Multi(Surface):
     def __init__(self, list):
         self._list = list
 

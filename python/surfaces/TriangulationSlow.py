@@ -5,7 +5,7 @@ TODO: have better approaches coded elsewhere
 
 TODO: code from oo/cpFromTri.py, should be in class, separate file or what?  Triangle_ops as a module seems like a good idea
 """
-from ClosestPoint import ClosestPoint
+from Surface import Surface
 import numpy
 from numpy import array as a
 from numpy.linalg import norm
@@ -214,7 +214,7 @@ def loadPly(fname, fptype=numpy.float64):
     return (Vertices,Faces)
 
 
-class TriangulationSlow(ClosestPoint):
+class TriangulationSlow(Surface):
     def __init__(self):
         # todo: use a ply library?
         self.V, self.F = loadPly('bunny35947_input.ply')

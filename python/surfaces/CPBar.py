@@ -2,7 +2,7 @@
 CPBar function.  Wraps a object and does the CPBar projection to it if
 the closest point hit a bdy.
 """
-from ClosestPoint import ShapeWithBdy
+from Surface import ShapeWithBdy
 
 import numpy
 from numpy import array as a

@@ -1,7 +1,7 @@
 #import numpy
 from numpy import array as a
 
-class ClosestPoint():
+class Surface():
     def __init__(self):
         print 'base class constructor'
 
