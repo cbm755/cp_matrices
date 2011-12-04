@@ -31,12 +31,12 @@ from time import time
 # cp_hemisphere.init(center=a([0,0,0]), radius=SURF_SR)
 # cpfun_inner = cp_hemisphere.cp_hemisphere
 
-import closestpoint
+import surfaces
 
-q2 = closestpoint.Hemisphere()
+q2 = surfaces.Hemisphere()
 # wrap the object in CPBar, for accurately imposing boundary
 # conditions on shapes with boundaries (like a hemisphere)
-q = closestpoint.CPBar(parent=q2)
+q = surfaces.CPBar(parent=q2)
 cpfun = q.cp
 
 #cpfun = cpbar

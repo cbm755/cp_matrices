@@ -88,7 +88,7 @@ class Surface():
 
 
 
-class ShapeWithBdy(ClosestPoint):
+class ShapeWithBdy(Surface):
     def _viztest2d(self, extra_bb):
         import pylab
         import numpy
