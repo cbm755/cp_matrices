@@ -14,13 +14,15 @@ def buildDiffMatrix(g):
 
 
     progout = 10 ** (ceil(log10(len(g.band)))-1)
-    print "building D"
+    print "building D using loops"
     st=time()
 
     # get the stencil info
     (f,stencil,armlen) = stencils.Laplacian_2nd(dim=2)
     diffWeights = f(g.dx)
     stencilsize = len(diffWeights)
+
+    (warn1,warn2,warn3,warn4) = (0,0,0,0)
 
     # make empty lists for i,j and a_{ij}
     ii = [];  jj = [];  aij = []
@@ -35,30 +37,38 @@ def buildDiffMatrix(g):
             ij2 = ij + pt
             # TODO, clean up
             if (ij2[0][0] < 0):
-                print('warning: periodic BC applied on x left')
+                warn1 = warn1 + 1
                 ij2[0][0] = g.nx - 1
             if (ij2[0][1] < 0):
-                print('warning: periodic BC applied on y left')
+                warn2 = warn2 + 1
                 ij2[0][1] = g.ny - 1
             if (ij2[0][0] >= g.nx):
-                print('warning: periodic BC applied on x right')
+                warn3 = warn3 + 1
                 ij2[0][0] = 0
             if (ij2[0][1] >= g.ny):
-                print('warning: periodic BC applied on y right')
+                warn4 = warn4 + 1
                 ij2[0][1] = 0
             c2 = g.sub2ind(ij2)
             #print (c,s,pt,ij,ij2,c2)
             jj.extend(c2)
             aij.extend([diffWeights[s]])
 
-    print (len(aij), len(ii), len(jj))
-    print (len(g.band), g.nx*g.ny)
-    print (max(aij), max(ii), max(jj))
-    print (min(aij), min(ii), min(jj))
+    #print (len(aij), len(ii), len(jj))
+    #print (len(g.band), g.nx*g.ny)
+    #print (max(aij), max(ii), max(jj))
+    #print (min(aij), min(ii), min(jj))
 
     D = coo_matrix( (aij,(ii,jj)), shape=(len(g.band), g.nx*g.ny), dtype=type(g.dx) )
     print "  D row " + str(len(g.band))
-    print "elapsed time = " + str(time()-st)
+    if warn1 > 0:
+        print "  warning: periodic BC applied on left %d times" % warn1
+    if warn2 > 0:
+        print "  warning: periodic BC applied on bottom %d times" % warn2
+    if warn3 > 0:
+        print "  warning: periodic BC applied on right %d times" % warn2
+    if warn4 > 0:
+        print "  warning: periodic BC applied on top %d times" % warn2
+    print "  elapsed time = " + str(time()-st)
     return D.tocsr()
 
 
@@ -74,7 +84,7 @@ def buildDiffMatrixFast(g):
     from numpy import array as a
 
     progout = 10 ** (ceil(log10(len(g.band)))-1)
-    print "building D"
+    print "building D using vectors"
     st=time()
 
     # get the stencil info
@@ -88,6 +98,8 @@ def buildDiffMatrixFast(g):
     ij = g.ij
     #I = g.band
     #I2 = g.sub2ind(ij)
+
+    BCwarn = 0
 
     nx = g.nx
     ny = g.ny
@@ -104,6 +116,7 @@ def buildDiffMatrixFast(g):
         ij2 = (M2) * (ny-1) + (~M2) * ij2
         ij2 = (M3) * 0 + (~M3) * ij2
         ij2 = (M4) * 0 + (~M4) * ij2
+        BCwarn = BCwarn | M1.any() | M2.any() | M3.any() | M4.any()
 
         I2 = g.sub2ind(ij2)
         #ii.extend(I)  # BUG!  this won't be banded in the rows
@@ -111,13 +124,14 @@ def buildDiffMatrixFast(g):
         jj.extend(I2)
         aij.extend([diffWeights[s]]*len(g.band))
 
-    print (len(aij), len(ii), len(jj))
-    print (len(g.band), g.nx*g.ny)
-    print (max(aij), max(ii), max(jj))
-    print (min(aij), min(ii), min(jj))
+    #print (len(aij), len(ii), len(jj))
+    #print (len(g.band), g.nx*g.ny)
+    #print (max(aij), max(ii), max(jj))
+    #print (min(aij), min(ii), min(jj))
     D = coo_matrix( (aij,(ii,jj)), shape=(len(g.band), g.nx*g.ny), dtype=type(g.dx) )
-    print "  D row " + str(len(g.band))
-    print "elapsed time = " + str(time()-st)
+    if BCwarn > 0:
+        print "  warning: periodic BC applied at least once"
+    print "  elapsed time = " + str(time()-st)
     return D.tocsr()
 
 

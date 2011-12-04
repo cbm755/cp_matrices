@@ -51,14 +51,24 @@ cpx,cpy,dist,bdy,xtra = cpfun(xx,yy)
 
 
 
-# no banding in this code, so just set band to everything
-band = range(0, len(x1d)*len(y1d))
+# Banding: do calculation in a narrow band around the circle
+dim = 2;  # dimension
+p = 3;    # interpolation degree
+# "band" is a vector of the indices of the points in the computation
+# band.  The formula for bw is found in [Ruuth & Merriman 2008] and
+# the 1.0001 is a safety factor.
+bw = 1.0001*np.sqrt((dim-1)*((p+1)/2)**2 + ((1+(p+1)/2)**2))
 
-#x = xx[band]
-#y = yy[band]
-#xy = xy[band,:]
-x = xx
-y = yy
+# this comma is signficant
+band, = np.nonzero(np.abs(dist) <= bw*dx)
+
+cpx = cpx[band]
+cpy = cpy[band]
+dist = dist[band]
+#bdy = bdy[band]
+x = xx[band]
+y = yy[band]
+xy = xy[band,:]
 
 g1 = cpGrid.cpGrid(x1d, y1d, dx)
 g1.cpx = cpx
@@ -92,7 +102,7 @@ L = LL[:,band]
 cpxy = np.hstack( (cpx.reshape(cpx.shape[0],1), cpy.reshape(cpy.shape[0],1)) )
 
 # also returns an inner band for a dual-banded code (not used here)
-(EE,band2) = cp_ops.buildExtensionMatrix(g1, cpxy, degreep=3)
+(EE,band2) = cp_ops.buildExtensionMatrix(g1, cpxy, degreep=p)
 
 E = EE[:,band]
 
