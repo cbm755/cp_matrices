@@ -2,7 +2,7 @@
 Closest point representation of a circle.
 
 A special case of Sphere but implemented differently because this
-version if clearer to understand.
+version is clearer to understand.
 """
 from ClosestPoint import ClosestPoint
 
@@ -22,14 +22,15 @@ class Circle(ClosestPoint):
         self._hasParam = True
 
     def closestPointVectorized(self, x, y):
-        th, r = cart2pol(x, y)
+        th, r = cart2pol(x - self._center[0], y - self._center[1])
         cpx, cpy = pol2cart(th, self._radius)
-        #cp = self._center + a([x,y])
 
         #dist = norm(xx - cp, 2)
         #dist = sqrt( (x-cpx)**2 + (y-cpy)**2 )
         sdist = r - self._radius
-        return cp, sdist, 0, {}
+	cpx = cpx + self._center[0]
+	cpy = cpy + self._center[1]
+        return cpx, cpy, sdist, 0, {}
 
     def closestPointToCartesian(self, xx):
         # TODO: could probably be vectorized
