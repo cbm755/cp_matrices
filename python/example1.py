@@ -1,8 +1,9 @@
 # following the matlab approach of the cp_matrices code
 #
 
-import numpy as np
 #import numpy
+import numpy as np
+from numpy import array as a
 
 # the reload here lets you use this in ipython as:
 #   "run -i newapproach.py"
@@ -12,9 +13,12 @@ reload(surfaces)
 
 # there was already an old cpGrid object...
 import cpGrid_new as cpGrid
-reload(cpGrid_new)
+reload(cpGrid)
 
-x1d,dx = np.linspace(-2,2,11,retstep=True)
+import cp_ops_new as cp_ops
+reload(cp_ops)
+
+x1d,dx = np.linspace(-2,2,41,retstep=True)
 y1d = x1d.copy()   # otherwise, its a pointer
 
 xxg,yyg = np.meshgrid(x1d, y1d)
@@ -76,5 +80,22 @@ g1.xy = xy
 # a grid nows how to convert subscripts to linear indices and vice-versa
 g1.ij = g1.ind2sub(band)
 
+# double check
+#band_check = g1.sub2ind(g1.ij)
+#print g1.band - band_check
 
 #q.viztest()
+
+# two codes for the cartesian laplacian
+L  = cp_ops.buildDiffMatrix(g1)
+L2  = cp_ops.buildDiffMatrixFast(g1)
+L - L2
+
+# make it square
+LL = L[:,band]
+
+cpxy = np.hstack( (cpx.reshape(cpx.shape[0],1), cpy.reshape(cpy.shape[0],1)) )
+
+
+# also returns an inner band for a dual-banded code (not used here)
+(E,band2) = cp_ops.buildExtensionMatrix(g1, cpxy, degreep=3)

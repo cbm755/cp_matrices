@@ -290,29 +290,38 @@ def _buildExtensionMatrix_depreciated(Grid, level):
 
 
 
-def findGridInterpBasePt(x,dx,relpt,EXTSTENP):
+def findGridInterpBasePt(x,dx,relpt,p):
     """
-    find the basepoint for x, need this feature in various parts of
-    the code
+    Find the "base grid point" for a point x.  This is best explained
+    in the diagram below.
+
+    x: is the interpolation point, must lie inside the === signs below
+    p: degree interpolation (N-1 point interp)
+    relpt: a reference point, corresponding to (0,0) in your grid (can be a vector)
+    dx: grid spacing (can be a vector)
+    B: index to the "basepoint", the lower left corner of an interpolation
+stencil hypercube.  It is a 2D/3D/etc index, measured relative to
+'relpt'
+
+    p=0: ==B==
+    p=1:   B====x
+    p=2:   B  ==x==  x
+    p=3:   B    x====x    x
+    p=4:   B    x  ==x==  x    x
+    p=5:   B    x    x====x    x    x
+    etc
+    This index is base 0 (i.e., B=(0,0,...) is the bottom left of the
+    whole grid)
+
+    TODO: processes one point: should except an array for x (maybe it already works?)
     """
-    # p=0: ==B==
-    # p=1:   B====x
-    # p=2:   B  ==x==  x
-    # p=3:   B    x====x    x
-    # p=4:   B    x  ==x==  x    x
-    # p=5:   B    x    x====x    x    x
-    # etc
-    # This index is base 0 (i.e., B=(0,0,...) is the bottom left of
-    # the whole grid)
     from numpy import floor,round
-    if EXTSTENP % 2 == 0:  # even
-        #I = round( (PAR.NPOINTS-1)/ (PAR.DomB-PAR.DomA) * (x-PAR.DomA)  ) + 1;
+    if p % 2 == 0:  # even
         I = round( (x-relpt) / dx ).astype(int) + 1
-        B = I - (EXTSTENP)/2 - 1
+        B = I - p/2 - 1
     else:  # odd
-        #I = floor( (PAR.NPOINTS-1) * (x-PAR.DomA) / (PAR.DomB-PAR.DomA) ) + 1;
         I = floor( (x-relpt) / dx ).astype(int) + 1
-        B = I - (EXTSTENP - 1)/2 - 1
+        B = I - (p - 1)/2 - 1
     return B
 
 
