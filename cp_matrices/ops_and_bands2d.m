@@ -10,6 +10,11 @@ function [L, E, R, innerband, outerband, innerbandfull, outerbandfull] = ...
 % onto the points cpx cpy.
 disp('Constructing interpolation matrix');
 % various alternatives, here we use the "full" E matrix...
+% TODO: some subtly here: some entries of Etemp may be zero not by
+% structure but just due to the particular interpolate weights.
+% Maybe its safer to extract this information during construction
+% of E (see python code).  OTOH, that might effect the numerical
+% rank of the M...
 Etemp = interp2_matrix(x1d, y1d, cpxinit, cpyinit, p);
 [i,j,S] = find(Etemp);
 innerbandfull = unique(j);
