@@ -65,7 +65,7 @@ xg = xx(band); yg = yy(band); zg = zz(band);
 
 % assign some initial value (using initial value of cos (8*theta))
 [th, phi, r] = cart2sph(xx,yy,zz);
-u = cos(4*th);
+u = cos(phi + pi/2);
 
 % this makes u into a vector, containing only points in the band
 u = u(band);
@@ -96,6 +96,7 @@ L = laplacian_3d_matrix(x1d,y1d,z1d, order, band, band);
 % plotting grid on sphere, based on parameterization
 [xp,yp,zp] = sphere(64);
 xp1 = xp(:); yp1 = yp(:); zp1 = zp(:);
+[th_plot, phi_plot, r] = cart2sph(xp1,yp1,zp1);
 % Eplot is a matrix which interpolations data onto the plotting grid
 Eplot = interp3_matrix_band(x1d, y1d, z1d, xp1, yp1, zp1, p, band);
 
@@ -104,12 +105,12 @@ figure(2); set(gcf,'Position', [410 700 800 800]);
 
 %% Time-stepping for the heat equation
 
-Tf = 0.1;
+Tf = 2;
 dt = 0.1*dx^2;
 numtimesteps = ceil(Tf/dt)
 % adjust for integer number of steps
 dt = Tf / numtimesteps
-
+tic
 for kt = 1:numtimesteps
     % explicit Euler timestepping
     unew = u + dt*L*u;
@@ -123,15 +124,20 @@ for kt = 1:numtimesteps
     if (mod(kt,100) == 0) || (kt < 10) || (kt == numtimesteps)
       figure(2);
       sphplot = Eplot*u;
+      
+	  err = norm(exp(-2*t)*cos(phi_plot + pi/2)-sphplot,inf) / norm(exp(-2*t)*cos(phi_plot + pi/2),inf);
+      [t dt dx err]
+      
       sphplot = reshape(sphplot, size(xp));
       surf(xp, yp, zp, sphplot);
       title( ['soln at time ' num2str(t) ', kt= ' num2str(kt)] );
       xlabel('x'); ylabel('y'); zlabel('z');
       %caxis([-1.05 1.05]);   % lock color axis
       axis equal; shading interp;
-      if ~exist OCTAVE_VERSION camlight left;
+%      if ~exist OCTAVE_VERSION camlight left;
       colorbar;
       pause(0.001);
-      end
+%      end
     end
 end
+t_explicit = toc
