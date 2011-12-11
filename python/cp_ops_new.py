@@ -58,7 +58,8 @@ def buildDiffMatrix(g):
     #print (max(aij), max(ii), max(jj))
     #print (min(aij), min(ii), min(jj))
 
-    D = coo_matrix( (aij,(ii,jj)), shape=(len(g.band), g.nx*g.ny), dtype=type(g.dx) )
+    # TODO: support float96?  dtype=
+    D = coo_matrix( (aij,(ii,jj)), shape=(len(g.band), g.nx*g.ny) )
     print "  D row " + str(len(g.band))
     if warn1 > 0:
         print "  warning: periodic BC applied on left %d times" % warn1
@@ -128,7 +129,9 @@ def buildDiffMatrixFast(g):
     #print (len(g.band), g.nx*g.ny)
     #print (max(aij), max(ii), max(jj))
     #print (min(aij), min(ii), min(jj))
-    D = coo_matrix( (aij,(ii,jj)), shape=(len(g.band), g.nx*g.ny), dtype=type(g.dx) )
+
+    # TODO: support float96?  dtype=
+    D = coo_matrix( (aij,(ii,jj)), shape=(len(g.band), g.nx*g.ny) )
     if BCwarn > 0:
         print "  warning: periodic BC applied at least once"
     print "  elapsed time = " + str(time()-st)
@@ -147,11 +150,15 @@ def buildExtensionMatrix(g, xy, degreep=3):
     from math import ceil,log10
     from scipy.sparse import coo_matrix
     from time import time
-    from numpy import zeros
+    from numpy import zeros, isscalar
 
     # TODO: dim hardcoded to 2 in some places in this function
     dim = xy.shape[1]
     dx = g.dx
+    if (isscalar(dx)):
+        mytype = type(dx)
+    else:
+        mytype = type(dx[0])
 
     relpt = a((g.x1d[0], g.y1d[0]))
     #stencilsize = len(Levolve[0].interppts)
@@ -190,7 +197,7 @@ def buildExtensionMatrix(g, xy, degreep=3):
         jj.extend(interppts)
         aij.extend(interpweights)
     #TODO: does this work with float96?
-    E = coo_matrix( (aij,(ii,jj)), shape=(len(g.band),g.nx*g.ny), dtype=type(dx) )
+    E = coo_matrix( (aij,(ii,jj)), shape=(len(g.band),g.nx*g.ny), dtype=mytype )
 
     # TODO: return this info as well:
     from numpy import unique

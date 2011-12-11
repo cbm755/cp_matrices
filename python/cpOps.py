@@ -403,21 +403,27 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
 
     TODO: clean up EXTSTENWIDTH and/or document (its degree+1)
     """
-    from numpy import finfo, zeros
+    from numpy import finfo, zeros, isscalar
 
     dim = len(X)
 
     EXTSTENSZ = EXTSTENWIDTH**dim
 
-    xweights = LagrangeWeights1D(Xgrid[0], X[0], dx, EXTSTENWIDTH)
-    yweights = LagrangeWeights1D(Xgrid[1], X[1], dx, EXTSTENWIDTH)
+    if (isscalar(dx)):
+        dxv = [dx]*3
+    else:
+        dxv = dx
+
+    xweights = LagrangeWeights1D(Xgrid[0], X[0], dxv[0], EXTSTENWIDTH)
+    yweights = LagrangeWeights1D(Xgrid[1], X[1], dxv[1], EXTSTENWIDTH)
     if (dim == 3):
-        zweights = LagrangeWeights1D(Xgrid[2], X[2], dx, EXTSTENWIDTH)
+        zweights = LagrangeWeights1D(Xgrid[2], X[2], dxv[2], EXTSTENWIDTH)
 
     s = 0
-    sum1 = 0.0*dx
+    sum1 = 0.0*dxv[0]
     # need a type here because of float96
-    extWeights = zeros( EXTSTENSZ, dtype=type(dx) )
+    extWeights = zeros( EXTSTENSZ, dtype=type(dxv[0]) )
+    #print extWeights.dtype, xweights.dtype, yweights.dtype
     if (dim == 2):
         # loop in the same order as elsewhere and compute weights as
         # products of above
@@ -442,7 +448,7 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
 
     # check here depends on what type of float
     # TODO: is this sanity check expensive?
-    eps = finfo(type(dx)).eps
+    eps = finfo(type(dxv[0])).eps
     if abs(sum1 - 1.0) > 50*eps:
         print 'weight problem'
         print extWeights

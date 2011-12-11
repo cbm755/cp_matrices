@@ -3,6 +3,7 @@ Spatial differentiation operator stencils for Closest Point Method
 codes
 """
 from numpy import array as a
+from numpy import isscalar
 
 def Laplacian_2nd(dim):
     """
@@ -12,8 +13,13 @@ def Laplacian_2nd(dim):
     if (dim == 2):
         def f(dx):
             """Weights for second-order approx to Laplacian"""
-            dx2 = dx*dx
-            return [-4/dx2, 1/dx2, 1/dx2, 1/dx2, 1/dx2]
+            if (isscalar(dx)):
+                dx2 = dx*dx
+                return [-4/dx2, 1/dx2, 1/dx2, 1/dx2, 1/dx2]
+            else:
+                dx2 = dx[0]*dx[0]
+                dy2 = dx[1]*dx[1]
+                return [-2/dx2-2/dy2, 1/dx2, 1/dx2, 1/dy2, 1/dy2]
         # a function of dx for the weights
         DiffWeightsFcn = f
         # the points in the stencil
@@ -27,8 +33,14 @@ def Laplacian_2nd(dim):
         DiffLongestArm = 1
     elif (dim == 3):
         def f(dx):
-            dx2 = dx*dx
-            return [-6/dx2, 1/dx2, 1/dx2, 1/dx2, 1/dx2, 1/dx2, 1/dx2]
+            if (isscalar(dx)):
+                dx2 = dx*dx
+                return [-6/dx2, 1/dx2, 1/dx2, 1/dx2, 1/dx2, 1/dx2, 1/dx2]
+            else:
+                dx2 = dx[0]*dx[0]
+                dy2 = dx[1]*dx[1]
+                dz2 = dx[2]*dx[2]
+                return [-2/dx2-2/dy2-2/dz2, 1/dx2, 1/dx2, 1/dy2, 1/dy2, 1/dz2, 1/dz2]
         DiffWeightsFcn = f
         DiffStencil = [ a([ 0,  0,  0]), \
                         a([ 1,  0,  0]), \
