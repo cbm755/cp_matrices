@@ -13,7 +13,7 @@ function M = lapsharp(L, E, delta)
     %delta = 2*dim/eps^2 = 2*dim/dx^2
     warning('not really tested');
     I = speye(size(L,1),size(E,2));
-    M = L*E - myeps*(I - R*E);
+    M = L*E - delta*(I - E);
 
   else
     %% Diagonal splitting (default)

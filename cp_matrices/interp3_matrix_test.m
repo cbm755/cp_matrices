@@ -64,7 +64,7 @@ function E = interp3_matrix_test(x, y, z, xi, yi, zi, p)
   stencil(3,:) = kkg(:)';
   
   
-  tic
+  %tic
   
   Ei = repmat((1:length(xi))',1,EXTSTENSZ);
   weights = zeros(size(Ei));
@@ -97,6 +97,6 @@ function E = interp3_matrix_test(x, y, z, xi, yi, zi, p)
   E = sparse(Ei(:), Ej(:), weights(:), length(xi), Nx*Ny*Nz);
   clear Ei Ej weights xweights yweights zweights
 
-  Etime = toc
+  %Etime = toc
   %profile viewer
 end

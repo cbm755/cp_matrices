@@ -38,6 +38,8 @@ function L = laplacian_2d_matrix_test(x,y, order, band1, band2)
   if (order == 2)
     weights = [-4 1 1 1 1] / dx^2;
     stencil = [0  Ny -Ny 1 -1];
+    %weights = [1 1 -4 1 1] / dx^2;
+    %stencil = [-Ny -1 0 1 Ny];
      
   elseif (order == 4)
     weights = [-5.0 ...

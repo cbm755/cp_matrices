@@ -65,7 +65,8 @@ function [E Ei Ej] = interp2_matrix_test(x, y, xi, yi, p)
   
   Ei = repmat((1:length(xi))',1,EXTSTENSZ);
   weights = zeros(size(Ei));
-    
+  
+  
   X = [xi yi];
   [out1, out2] = buildInterpWeights_test(X,ptL,ddx,p,stencil);
   xweights = out1{1};
@@ -73,7 +74,8 @@ function [E Ei Ej] = interp2_matrix_test(x, y, xi, yi, p)
   gii = out2{1};
   gjj = out2{2};
   % meshgrid ordering
-  Ej = sub2ind([Ny,Nx], gjj, gii);
+  Ej = sub2ind([Ny,Nx], gjj, gii); 
+  
   
   for i = 1:N
       for j = 1:N

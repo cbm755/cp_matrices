@@ -1,5 +1,5 @@
-function [L, E, R, innerband, outerband, innerbandfull, outerbandfull, innerInOuter] = ...
-      ops_and_bands3d_test(x1d,y1d,z1d, xinit,yinit,zinit, cpxinit,cpyinit,cpzinit, band_init, p, order)
+function [L, E, R, innerband, outerband, innerbandfull, outerbandfull, cpx,cpy,cpz, xg,yg,zg, innerInOuter] = ...
+      ops_and_bands3d_test(x1d,y1d,z1d, cpxinit,cpyinit,cpzinit, xinit, yinit, zinit, band_init, p, order)
 % innerband/outerband: indices of the inner/outer band w.r.t. the initial
 %              grid.
 % innerbandfull/outerbandfull: indices of the inner/outer band w.r.t. the
@@ -42,23 +42,36 @@ tic; outerband = unique(j); toc;
 outerbandfull = band_init(outerband);
 disp('done')
 
+disp('returning final L & E')
+tic;
+L = Ltemp(:, outerband);
+E = Etemp(outerband, innerbandfull);
+clear Etemp
+toc;
+disp('done')
 %% Restriction Operator
 % constructing the innerband w.r.t. the outerband: innerInOuter, and then
 % construct R used to extract inner values from an outer band vector.
 disp('finding innerInOuter')
 tic; Etemp2 = Etemp1(:,outerband); toc;
 tic; [i2,j2,S2] = find(Etemp2); toc;
-innerInOuter = unique(j2);
+tic; innerInOuter = unique(j2);toc;
+tic; clear Etemp1 Etemp2; toc;
 disp('done')
 
-disp('building up the final returning operators')
+
+disp('building up the Restriction operators')
 tic;
 li = length(innerband);
 R = sparse((1:li)',innerInOuter,ones(li,1),li,length(outerband),li);
-
-L = Ltemp(:, outerband);
-E = Etemp(outerband, innerbandfull);
 toc;
 disp('done')
+
+xg = xinit(innerband);
+yg = yinit(innerband);
+zg = zinit(innerband);
+cpx = cpxinit(innerband);
+cpy = cpyinit(innerband);
+cpz = cpzinit(innerband);
 
 end

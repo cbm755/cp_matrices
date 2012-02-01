@@ -38,7 +38,7 @@ order = 2;  % laplacian order, griddata hardcoded for 2.
 PlyFile = 'pig_loop2.ply';
 % griddata: processed from ply file by tri2cp (C code).  Contains
 % only points in the narrow band.
-GD = load( ['pig_loop2_griddata_p' num2str(p) ...
+GD = load( ['~/svn/closestpoint/surfaces/tri_pig/pig_loop2_griddata_p' num2str(p) ...
            '_dx' num2str(dx) '.txt'] );
 % plus one b/c they're C indices
 i = GD(:,1) + 1;
@@ -75,8 +75,13 @@ build_matrices = true;
 if (build_matrices)
   %% discrete operators
   disp('building laplacian and interp matrices');
-  L = laplacian_3d_matrix(x1d,y1d,z1d, order, band,band);
-  E = interp3_matrix_band(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
+  tic;
+  L = laplacian_3d_matrix_test(x1d,y1d,z1d, order, band,band);
+  toc;
+  tic;
+  E = interp3_matrix_test(x1d,y1d,z1d, cpxg, cpyg, cpzg, p);
+  E = E(:,band);
+  toc;
   % iCPM matrix
   M = lapsharp(L,E);
 
@@ -85,8 +90,10 @@ if (build_matrices)
   xp = Vertices(:,1);
   yp = Vertices(:,2);
   zp = Vertices(:,3);
-  Eplot = interp3_matrix_band(x1d,y1d,z1d, xp,yp,zp, 3, band);
-  Eplot1 = interp3_matrix_band(x1d,y1d,z1d, xp,yp,zp, 1, band);
+  Eplot = interp3_matrix_test(x1d,y1d,z1d, xp,yp,zp, 3);
+  Eplot = Eplot(:,band);
+  Eplot1 = interp3_matrix_test(x1d,y1d,z1d, xp,yp,zp, 1);
+  Eplot1 = Eplot1(:,band);
   %Eplot0 = interp3_matrix_band(x1d,y1d,z1d, xp,yp,zp, 0, band);
 end
 

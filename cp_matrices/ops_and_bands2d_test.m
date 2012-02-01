@@ -1,5 +1,5 @@
-function [L, E, R, innerband, outerband, innerbandfull, outerbandfull, innerInOuter] = ...
-      ops_and_bands2d_test(x1d,y1d, xinit,yinit, cpxinit,cpyinit, band_init, p, order)
+function [L, E, R, innerband, outerband, innerbandfull, outerbandfull, cpx, cpy, xg, yg, innerInOuter] = ...
+      ops_and_bands2d_test(x1d,y1d, cpxinit,cpyinit, xginit,yginit, band_init, p, order)
 % innerband/outerband: indices of the inner/outer band w.r.t. the initial
 %              grid.
 % innerbandfull/outerbandfull: indices of the inner/outer band w.r.t. the
@@ -10,17 +10,28 @@ function [L, E, R, innerband, outerband, innerbandfull, outerbandfull, innerInOu
 % onto the points cpx cpy.
 disp('Constructing interpolation matrix')
 tic;
-Etemp = interp2_matrix_test(x1d, y1d, cpxinit, cpyinit, p);
+[Etemp Ei Ej] = interp2_matrix_test(x1d, y1d, cpxinit, cpyinit, p);
 toc;
 disp('done')
 
+%tic; [Y I] = sort(Ej(:,1)); toc;
+%tic; [tmp I1] = unique(Ej(I,1)); toc;
+%tic; M = Ej(I,:); toc;
+%tic; iband_test = unique(M(I1,:)); toc;
+
+%tic; iband_test2 = unique(Ej(:)); toc;
+
 disp('finding innerband')
-Etemp1 = Etemp(:,band_init);
+tic; Etemp1 = Etemp(:,band_init); toc;
 tic; [i1,j1,S1] = find(Etemp1); toc;
 tic; innerband = unique(j1); toc;
 innerbandfull = band_init(innerband);
 disp('done')
 
+cpx = cpxinit(innerband);
+cpy = cpyinit(innerband);
+xg = xginit(innerband);
+yg = yginit(innerband);
 
 %% Create Laplacian matrix for heat equation
 % in general, want the biggest finite difference stencil here so the
@@ -48,7 +59,7 @@ disp('done')
 disp('finding innerInOuter')
 tic; Etemp2 = Etemp1(:,outerband); toc;
 tic; [i2,j2,S2] = find(Etemp2); toc;
-innerInOuter = unique(j2);
+tic; innerInOuter = unique(j2);toc;
 disp('done')
 
 disp('building up the final returning operators')

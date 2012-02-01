@@ -69,4 +69,4 @@ function L = laplacian_3d_matrix_test(x,y,z, order, band1, band2, time_dependent
       weights(1) = weights(1) + 1;
   end
 
-  tic; L = helper_diff_matrix3d_test(x, y, z, band1, band2, weights, stencil); Ltime = toc
+  L = helper_diff_matrix3d_test(x, y, z, band1, band2, weights, stencil);
