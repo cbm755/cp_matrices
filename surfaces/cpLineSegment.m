@@ -7,21 +7,31 @@ function [varargout] = cpLineSegment(varargin)
 %   'pt1' and 'pt2'
 %
 %   (outputs 'dist' and 'bdy' are optional)
+%
+%   TODO: This code is a bit scary: perhaps better to divide it
+%   into separate 2D/3D codes.
 
-  %% last input is a vector, use it determine dimension
-  vec = varargin{nargin};
-  dim = length(vec);
+  if nargin == 2
+    dim = 2;
+    x = {varargin{1}, varargin{2}};
+    p = [0 0];
+    q = [1 0];
+  else
+    % last input is a vector, use it determine dimension
+    vec = varargin{nargin};
+    dim = length(vec);
 
-  if (nargin ~= dim + 2)
-    error('wrong number of input arguments');
+    if (nargin ~= dim + 2)
+      error('wrong number of input arguments');
+    end
+
+    x = {};
+    for j=1:dim
+      x{j} = varargin{j};
+    end
+    p = varargin{dim+1};
+    q = varargin{dim+2};
   end
-
-  x = {};
-  for j=1:dim
-    x{j} = varargin{j};
-  end
-  p = varargin{dim+1};
-  q = varargin{dim+2};
 
   %% annoyingly dimensional dependent
   % not really, I just don't know how to return the output in a

@@ -15,9 +15,10 @@ function [x,y] = paramEllipse(n, aa, bb, cen)
     bb = 0.75;
   end
   if (nargin < 4)
-    cen = [0,0];
+    cen = [0 0];
   end
 
-  th = 0:2*pi/n:2*pi-2*pi/n;
+  %th = ( 0:(2*pi/n):(2*pi-2*pi/n) )';
+  th = ( 0:(2*pi/n):(2*pi) )';
   x = aa*cos(th) + cen(1);
   y = bb*sin(th) + cen(2);

@@ -5,7 +5,7 @@ function [x, y] = paramPolygon(n, poly)
 
   % defaults
   if (nargin < 2)
-    poly = default_poly();
+    poly = makePolyDefault();
   end
 
   N = size(poly,1);
@@ -22,18 +22,18 @@ function [x, y] = paramPolygon(n, poly)
   [x,y] = priv_paramLineSegment(m(1), poly(1,:), poly(2,:));
   for j=2:(N-1)
     [x2,y2] = priv_paramLineSegment(m(j), poly(j,:), poly(j+1,:));
-    x = [x x2(2:end)];
-    y = [y y2(2:end)];
+    x = [x; x2(2:end)];
+    y = [y; y2(2:end)];
   end
   [x2,y2] = priv_paramLineSegment(m(end), poly(N,:), poly(1,:));
-  x = [x x2(2:end)];
-  y = [y y2(2:end)];
+  x = [x; x2(2:end)];
+  y = [y; y2(2:end)];
 
 
   % private function for the linesegment
   function [x,y] = priv_paramLineSegment(n, p, q)
-    x = linspace(p(1), q(1), max(n,2));
-    y = linspace(p(2), q(2), max(n,2));
+    x = linspace(p(1), q(1), max(n,2))';
+    y = linspace(p(2), q(2), max(n,2))';
   end
 
 end

@@ -37,7 +37,7 @@ function [x, y, th] = paramArc(n, R, cen, angle1, angle2)
   end
 
   dth = ((a2-a1)/(n-1));
-  th = a1:dth:a2;
+  th = (a1:dth:a2)';
   th = angle(exp(i*th));
 
   x = cos(th);

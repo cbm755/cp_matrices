@@ -1,5 +1,5 @@
 function [cpx, cpy, sdist] = cpPolygon(x, y, poly)
-%CPPOLYGON  Closest Point function for a polgyon
+%CPPOLYGON  Closest Point function for a polygon
 %   The polygon does not need to be convex.
 %
 %   [cpx, cpy] = cpPolygon(x, y, poly)
@@ -14,10 +14,12 @@ function [cpx, cpy, sdist] = cpPolygon(x, y, poly)
 %   Note: returns signed distance (with negative inside).
 %   TODO: currently sign of signed distance seems to depend on
 %   orientation of the bdy: should fix that!
+%
+%   Uses code by Tom Maerz.
 
   % defaults
   if (nargin < 3)
-    poly = default_poly();
+    poly = makePolyDefault();
   end
 
   [cpx,cpy] = helper_CPopPoly(x, y, poly);

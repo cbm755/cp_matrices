@@ -30,14 +30,14 @@ function [pass, str] = test_cpCircle()
   c = c + 1;
   pass(c) = assertAlmostEqual(cpx^2+cpy^2, 1);
   c = c + 1;
-  pass(c) = assertAlmostEqual(dist, 1);
+  pass(c) = assertAlmostEqual(dist, -1);
 
   % origin again with radius 10
-  [cpx,cpy,dist] = cpCircle(0,0,10);
+  [cpx,cpy,sdist] = cpCircle(0,0,10);
   c = c + 1;
   pass(c) = assertAlmostEqual(sqrt(cpx^2+cpy^2), 10);
   c = c + 1;
-  pass(c) = assertAlmostEqual(dist, 10);
+  pass(c) = assertAlmostEqual(sdist, -10);
 
 
 
@@ -49,10 +49,10 @@ function [pass, str] = test_cpCircle()
   c = c + 1;
   pass(c) = assertAlmostEqual([cpx,cpy], [3*sqrt(2)/2,3*sqrt(2)/2]);
 
-  [cpx,cpy] = cpCircle(2,2,3,2,2);
+  [cpx,cpy] = cpCircle(2,2,3,[2,2]);
   c = c + 1;
   pass(c) = assertAlmostEqual([cpx,cpy], [2+3, 2]);
 
-  [cpx,cpy] = cpCircle(10,10,3,2,2);
+  [cpx,cpy] = cpCircle(10,10,3,[2,2]);
   c = c + 1;
   pass(c) = assertAlmostEqual([cpx,cpy], [2+3*sqrt(2)/2,2+3*sqrt(2)/2]);

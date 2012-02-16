@@ -50,8 +50,8 @@ function [x, y] = paramRoundedSquare(n, radii, cen)
   [x,y] = paramfs{1}(m(1));
   for j=2:length(paramfs)
     [x2,y2] = paramfs{j}(m(j));
-    x = [x x2(2:end)];
-    y = [y y2(2:end)];
+    x = [x; x2(2:end)];
+    y = [y; y2(2:end)];
   end
 
   x = x + cen(1);

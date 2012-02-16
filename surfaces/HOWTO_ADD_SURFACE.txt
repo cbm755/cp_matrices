@@ -1,0 +1,30 @@
+How to add a new surface:
+
+1)  make a cpFoobar file
+
+* [cpx,cpy] = cpFoobar(x,y)
+
+* should return dist or signed distance as appropriate/possible:
+  [cpx,cpy,dist] = cpFoobar(x,y)
+  [cpx,cpy,sdist] = cpFoobar(x,y)
+
+* should return a boundary indication if possible:
+  [cpx,cpy,dist,bdy] = cpFoobar(x,y)
+
+* must be vectorized (but could fake it internally of course).
+
+
+2)  make a paramFoobar file
+
+* [x,y] = paramFoobar(n)
+
+* all other inputs should take default values except n (this is useful
+  for unit tests).
+
+* This is optional (cpLine doesn't have one for example).
+
+* default inputs should match those of your cpFoobar function.
+
+* If the surface is 1D (a curve or filament) then x and y (and z etc)
+  should be column vectors.
+

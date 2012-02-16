@@ -4,7 +4,7 @@ function [cpx,cpy,cpz, sdist] = cpSphere(x,y,z, R, cen)
 %   closest point and distance to (x,y,z).  If R is omitted it
 %   defaults to a unit sphere, centered at the origin.
 %
-%   [cpx,cpy,cpz, sdist] = cpSphere(x,y,z, R, xc,yc,zc) is a sphere
+%   [cpx,cpy,cpz, sdist] = cpSphere(x,y,z, R, [xc,yc,zc]) is a sphere
 %   of radius R, centered at (xc,yc,zc)
 %
 %   Note: returns signed distance (with negative inside).

@@ -1,4 +1,6 @@
-addpath(pwd);
+%addpath(pwd);
+% TODO: will it work on windows?
+addpath(pwd, [pwd '/cpPolygon']);
 tests = dir('tests');
 cd('tests');
 

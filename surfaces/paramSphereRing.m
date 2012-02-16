@@ -14,7 +14,7 @@ function [x,y,z] = paramSphereRing(n, zlim, R, cen)
     R = 1;
   end
   if (nargin < 4)
-    cen = [0,0,0];
+    cen = [0 0 0];
   end
   if (nargin < 2)
     % default is a fishbowl

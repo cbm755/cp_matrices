@@ -1,5 +1,5 @@
 function [cpx, cpy, dist, bdy] = cpPolygonInterior(x, y, poly, inOutToggle)
-%CPPOLYGON  Closest Point function for a polgyon
+%CPPOLYGONINTERIOR  Closest Point function for a solid polygon
 %   The polygon does not need to be convex.
 %
 %   [cpx, cpy] = cpPolygon(x, y, poly)
@@ -13,8 +13,13 @@ function [cpx, cpy, dist, bdy] = cpPolygonInterior(x, y, poly, inOutToggle)
 %
 %   Note: returns signed distance (with negative inside).
 %
+%   Uses code by Tom Maerz.
+%
 %   TODO: BUG BUG BUG: sign seems to depend on orientation, talk to
-%   Tom, in the meantime, you can pass inOutToggle to swap the sign.
+%   Tom, in the meantime, you can pass inOutToggle to swap the
+%   sign.
+%
+%   TODO: what should paramPolygonInterior do?
 
   % defaults
   if (nargin < 3)
