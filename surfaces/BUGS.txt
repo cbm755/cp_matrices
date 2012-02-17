@@ -1,0 +1,10 @@
+bug #1:
+  we need an issue tracker
+
+bug #2:
+  Tom's cpPolygon code returns incorrect signdist (sometimes 0 off the surface)
+  There is a unit test that shows this failing.
+
+bug #3:
+  There is no torus CP function.  Jeff Springer is supposed to be working on this.
+
