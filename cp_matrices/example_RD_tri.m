@@ -31,13 +31,12 @@ nz=length(z1d);
 %PlyFile = 'bunny.ply';
 PlyFile = 'pig_loop2.ply';
 %PlyFile = 'annies_pig.ply';
-%PlyFile = 'annies_pig.ply';
 %PlyFile = 'bumpy_torus_scaled.ply';
 disp( ['reading triangulation from "' PlyFile '"'] );
 [Faces, Vertices] = plyread(PlyFile, 'tri');
 
 disp('converting to closest point representation');
-[IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, -2);
+[IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, x1d(1));
 i = IJK(:,1);
 j = IJK(:,2);
 k = IJK(:,3);
