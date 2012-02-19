@@ -8,12 +8,14 @@ function w = LagrangeWeights1D_test(xg, x, dx, N)
 %   dx is the grid spacing (uniform)
 %   N is the number of points in the stencil (degree + 1)
 
+  warning('depreciated!, use _vec instead');
+
   w = zeros(size(x,1),N);
   flag = true(size(x,1),1);
   vec = (0:N-1);
   dif = x(:,ones(N,1)) - (xg(:,ones(N,1)) + vec(ones(size(x)),:)*dx);
   [i j] = find( dif == 0 );
-  w(i,j+1) = 1;
+  w(i,j) = 1;
   flag(i) = false;
   % Is exactly on a grid point, then return binary weights
 %   for j=0:(N-1)
