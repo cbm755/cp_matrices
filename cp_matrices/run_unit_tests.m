@@ -2,6 +2,7 @@ addpath(pwd);
 tests = dir('tests_unit');
 cd('tests_unit');
 
+totaltime = tic;
 num_tests = 0;
 num_failed = 0;
 for i=1:length(tests)
@@ -9,26 +10,26 @@ for i=1:length(tests)
   % detect tests b/c directory contains other stuff (e.g., surdirs and
   % helper files)
   if ( (~tests(i).isdir) && strncmp(test, 'test', 4) )
-    tic
+    testtime = tic;
     f = str2func(test(1:end-2));
     num_tests = num_tests + 1;
     disp(['** Running test(s) in: ' test ]);
     [pass,str] = f();
+    testtime = toc(testtime);
     if all(pass)
-      disp(['** PASS: ' str]);
+      fprintf('** PASS: %s  [%g sec]\n', str, testtime);
     else
-      disp(['** FAIL: ' str]);
+      fprintf('** FAIL: %s  [%g sec]\n', str, testtime);
       num_failed = num_failed + 1;
       pass
     end
-    toc
   end
 end
 
+totaltime = toc(totaltime);
+fprintf('\n***** Passed %d/%d tests passed (%g seconds) *****\n', ...
+        num_tests-num_failed, num_tests, totaltime);
 if (num_failed > 0)
-  disp(['***** WARNING: ' num2str(num_failed) ...
-        ' of ' num2str(num_tests) ' tests failed *****']);
-else
-  disp(['***** All ' num2str(num_tests) ' tests passed *****']);
+  disp('***** WARNING: some tests failed *****');
 end
 cd('..')

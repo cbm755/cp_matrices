@@ -9,7 +9,7 @@ end
 
 function pass = helper(N)
 %N = 4;   % test N = degree + 1 interp
-m = 10000;
+m = 5000;
 n = m/10;  % this many are off-grid (non-pathelogical)
 
 dx = rand(m,1);
@@ -21,28 +21,28 @@ x(1:n) = xg(1:n) + N*( 1.2*(rand(n,1))-0.1 ) .* dx(1:n);
 
 
 
-T = tic;
+T1 = tic;
 w1 = LagrangeWeights1D_vec(xg,x,dx,N);
-T = toc(T);
-fprintf('  vector code      (N=%d) elapsed time=%g seconds\n', N, T);
+T1 = toc(T1);
+%fprintf('  vector code      (N=%d) elapsed time=%g seconds\n', N, T);
 
 
-T = tic;
+T2 = tic;
 w2 = zeros(size(w1));
 for i=1:m
   w2(i,:) = LagrangeWeights1D(xg(i), x(i), dx(i), N);
 end
-T = toc(T);
-fprintf('  loop code        (N=%d) elapsed time=%g seconds\n', N, T);
+T2 = toc(T2);
+%fprintf('  loop code        (N=%d) elapsed time=%g seconds\n', N, T);
 
 
-T = tic;
+T3 = tic;
 w3 = zeros(size(w1));
 for i=1:m
   w3(i,:) = LagrangeWeights1D_vec(xg(i), x(i), dx(i), N);
 end
-T = toc(T);
-fprintf('  vec-code-in-loop (N=%d) elapsed time=%g seconds\n', N, T);
+T3 = toc(T3);
+fprintf('  N=%d: [vec,loop,loop-w-vec-code] elapsed times=[%5.3g,%5.3g,%5.3g] seconds\n', N, T1,T2,T3);
 
 pass = (max(max(abs(w1-w2))) == 0) & ...
        (max(max(abs(w1-w3))) == 0);
