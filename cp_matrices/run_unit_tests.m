@@ -1,4 +1,5 @@
 addpath(pwd);
+addpath([pwd '/../surfaces']);
 tests = dir('tests_unit');
 cd('tests_unit');
 

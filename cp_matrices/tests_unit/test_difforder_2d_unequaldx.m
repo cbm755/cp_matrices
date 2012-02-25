@@ -25,14 +25,14 @@ pass = all(passvec);
 function [maxerrx,maxerry] = helper1(ds)
 pad = 4;
 
-R=1; %Radius of the circle
+R=1;  % Radius
 x1d=(-R-pad*ds):ds:(R+pad*ds)';
 y1d=(-R-pad*2*ds):(ds*1.5):(R+pad*2*ds)';
 nx=length(x1d);
 ny=length(y1d);
 [x2d,y2d] = meshgrid(x1d,y1d);
 
-[cpx,cpy,dist] = cpcircle(x2d,y2d,R);
+[cpx,cpy,dist] = cpCircle(x2d,y2d,R);
 
 dim = 2;
 p = 3;  % degree interp

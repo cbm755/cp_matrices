@@ -26,7 +26,7 @@ pass = all(passvec);
 function [maxerrx,maxerry,maxerrz] = helper1(ds)
 pad = 5;
 
-R=1; %Radius of the circle
+R=1;  % Radius
 x1d=(-R-pad*ds):ds:(R+pad*ds)';
 y1d=(-R-pad*ds):ds:(R+pad*ds)';
 z1d=(-R-pad*ds):ds:(R+pad*ds)';
@@ -34,7 +34,7 @@ nx=length(x1d);
 ny=length(y1d);
 [x3d,y3d,z3d]=meshgrid(x1d,y1d,z1d);
 
-[cpx,cpy,cpz,dist] = cpsphere(x3d,y3d,z3d,R);
+[cpx,cpy,cpz,dist] = cpSphere(x3d,y3d,z3d,R);
 
 dim = 3;
 p = 3;  % degree interp

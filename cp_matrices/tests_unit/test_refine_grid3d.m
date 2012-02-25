@@ -1,12 +1,6 @@
 function [pass, str] = test_refine_grid3d()
   str = 'refinement test: compare band from fine grid with refined grid';
 
-  % Include the cp_matrices folder (edit as appropriate)
-  addpath('../../cp_matrices');
-
-  % add functions for finding the closest points
-  addpath('../../surfaces');
-
   xlim = [-2.2 2.2];
   ylim = [-2.2 2.2];
   zlim = [-1.2 2.2];
