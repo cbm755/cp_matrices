@@ -15,17 +15,17 @@ function [varargout1, varargout2] = buildInterpWeights_test(X, relpt, dx, p, ste
   N = p+1;
 
   if (dim == 2)
-    xweights = LagrangeWeights1D_test(Xgrid(:,1), X(:,1), dx(1), N);
-    yweights = LagrangeWeights1D_test(Xgrid(:,2), X(:,2), dx(2), N);
+    xweights = LagrangeWeights1D_vec(Xgrid(:,1), X(:,1), dx(1), N);
+    yweights = LagrangeWeights1D_vec(Xgrid(:,2), X(:,2), dx(2), N);
     iig = repmat(I(:,1),1,N^2) + repmat(stencil(1,:),npt,1);
     jjg = repmat(I(:,2),1,N^2) + repmat(stencil(2,:),npt,1);
     varargout1 = {xweights, yweights};
     varargout2 = {iig, jjg};
 
   elseif (dim == 3)
-    xw = LagrangeWeights1D_test(Xgrid(:,1), X(:,1), dx(1), N);
-    yw = LagrangeWeights1D_test(Xgrid(:,2), X(:,2), dx(2), N);
-    zw = LagrangeWeights1D_test(Xgrid(:,3), X(:,3), dx(3), N);
+    xw = LagrangeWeights1D_vec(Xgrid(:,1), X(:,1), dx(1), N);
+    yw = LagrangeWeights1D_vec(Xgrid(:,2), X(:,2), dx(2), N);
+    zw = LagrangeWeights1D_vec(Xgrid(:,3), X(:,3), dx(3), N);
     iig = repmat(I(:,1),1,N^3) + repmat(stencil(1,:),npt,1);
     jjg = repmat(I(:,2),1,N^3) + repmat(stencil(2,:),npt,1);
     kkg = repmat(I(:,3),1,N^3) + repmat(stencil(3,:),npt,1);

@@ -1,21 +1,32 @@
-function E = interp3_matrix(x, y, z, xi, yi, zi, p, use_ndgrid)
-%INTERP3_MATRIX  Return a interpolation matrix
-%   E = INTERP3_MATRIX(X,Y,Z,XI,YI,ZI,P)
-%   Build a matrix which interpolates the grid data u onto the
-%   points x and y using degree P barycentric Lagrange
-%   interpolation.
+function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band)
+%INTERP3_MATRIX  Return a 3D interpolation matrix
+%   E = INTERP3_MATRIX(X,Y,Z, XI,YI,ZI, P)
+%   Build a matrix which interpolates grid data on a grid defined by
+%   the product of the lists X, Y and Z onto the points specified by
+%   the lists XI, YI, ZI.  Interpolation is done using degree P
+%   barycentric Lagrange interpolation.  E will be a length(XI) times
+%   length(X)*length(Y)*length(Z) sparse matrix.
 %
-%   E = INTERP2_MATRIX(X,Y,XI,YI,DEGREEP,true)
-%   Same as above but assumes ndgrid rather than meshgrid ordering
+%   E = INTERP3_MATRIX(X,Y,Z, XI,YI,ZI, P, BAND)
+%   BAND is a list of linear indices into a (possibly fictious) 3D
+%   array of points constructed with meshgrid.  Here the columns of E
+%   that are not in BAND are discarded.  This is done by first
+%   constructing E as above.  E will be a length(XI) times
+%   length(BAND) sparse matrix.
 %
-%   Does very little error checking up the equispaced nature of x,y,z
+%   [Ei,Ej,Es] = INTERP3_MATRIX(X,Y,Z, XI,YI,ZI, P)
+%   [Ei,Ej,Es] = INTERP3_MATRIX(X,Y,Z, XI,YI,ZI, P, BAND)
+%   Here the entries of the matrix are returned as three vectors
+%   (like in FEM).  This is efficient and avoids the overhead of
+%   constructing the matrix.  If BAND is passed or not determines
+%   the column space of the result (i.e., effects Ej).
+%   (TODO: with BAND currently not implemented).
+%
+%   Does no error checking up the equispaced nature of x,y,z
+%
+%   Notes: this is faster replacement for INTERP3_MATRIX and
+%   INTERP3_MATRIX_BAND.
 
-  % todo: assumes xi is a vector, could relax this to return a
-  % matrix sized based on the linear index (numels??).
-
-  if (nargin < 8)
-    use_ndgrid = false;
-  end
 
   % input checking
   [temp1, temp2] = size(x);
@@ -30,81 +41,161 @@ function E = interp3_matrix(x, y, z, xi, yi, zi, p, use_ndgrid)
   if ~(  (ndims(z) == 2) && (temp1 == 1 || temp2 == 1)  )
     error('z must be a vector, not e.g., meshgrid output');
   end
-  [temp1, temp2] = size(xi);
-  if ~(  (ndims(xi) == 2) && (temp1 == 1 || temp2 == 1)  )
-    error('xi must be a vector, not e.g., meshgrid output');
+  if ~(  (ndims(xi) == 2) && (size(xi,2) == 1)  )
+    error('xi must be a column vector');
   end
-  [temp1, temp2] = size(yi);
-  if ~(  (ndims(yi) == 2) && (temp1 == 1 || temp2 == 1)  )
-    error('yi must be a vector, not e.g., meshgrid output');
+  if ~(  (ndims(yi) == 2) && (size(yi,2) == 1)  )
+    error('yi must be a column vector');
   end
-  [temp1, temp2] = size(zi);
-  if ~(  (ndims(zi) == 2) && (temp1 == 1 || temp2 == 1)  )
-    error('zi must be a vector, not e.g., meshgrid output');
+  if ~(  (ndims(zi) == 2) && (size(zi,2) == 1)  )
+    error('zi must be a column vector');
   end
 
-  dx = x(2)-x(1);
-  dy = y(2)-y(1);
-  dz = z(2)-z(1);
+  if (nargin == 6)
+    p = 3
+    makeBanded = false;
+  elseif (nargin == 7)
+    makeBanded = false;
+  elseif (nargin == 8)
+    makeBanded = true;
+  else
+    error('unexpected inputs');
+  end
+
+  if (nargout > 1)
+    makeListOutput = true;
+  else
+    makeListOutput = false;
+  end
+
+  if makeBanded && makeListOutput
+    error('currently cannot make both Banded and Ei,Ej,Es output');
+  end
+
+  T = tic;
+  dx = x(2)-x(1);   Nx = length(x);
+  dy = y(2)-y(1);   Ny = length(y);
+  dz = z(2)-z(1);   Nz = length(z);
   ddx = [dx  dy  dz];
-  Nx = round( (x(end)-x(1)) / dx ) + 1;
-  Ny = round( (y(end)-y(1)) / dy ) + 1;
-  Nz = round( (z(end)-z(1)) / dz ) + 1;
+  ptL = [x(1) y(1) z(1)];
 
   if (Nx * Ny * Nz > 1e15)
     error('too big to use doubles as indicies: implement int64 indexing')
   end
 
-  ptL = [x(1) y(1) z(1)];
-  ptH = [x(end) y(end) z(end)];
+  dim = 3;
+  N = p+1;
+  EXTSTENSZ = N^dim;
 
-  dim = length(ddx);
-  % 3D stencil size, p+1 points in each dimension
-  StencilSize = (p+1)^dim;
-
-  tic
-  % old slow way is to allocate it first:
-  %Eold = spalloc(usz+gsz, usz, StencilSize*(usz+gsz));
-
-  % newer idea is like a finite element code, find all the entries
-  % in 3 lists, then insert them all at once while creating the
-  % sparse matrix
-  Ei = zeros((length(xi))*StencilSize, 1);
+  %tic
+  Ei = repmat((1:length(xi))',1,EXTSTENSZ);
   Ej = zeros(size(Ei));
-  Es = zeros(size(Ei));
-  Ec = 0;
+  weights = zeros(size(Ei));
+  % todo: integers seem slower(!), although use less memory.
+  %Ei = repmat(uint32((1:length(xi))'),1,EXTSTENSZ);
+  %Ej = zeros(size(Ei), 'uint32');
+  %weights = zeros(size(Ei), 'double');
+  %toc
 
-  % good candidate for parfor?
-  for i = 1:length(xi)
-    X = [xi(i)  yi(i)  zi(i)];
-    [weights,gii,gjj,gkk] = buildInterpWeights(X,ptL,ddx,p);
+  %tic
+  % this used to be a call to buildInterpWeights but now most of
+  % that is done here
+  [Ibpt, Xgrid] = findGridInterpBasePt_test([xi yi zi], p, ptL, ddx);
+  xw = LagrangeWeights1D_vec(Xgrid(:,1), xi, ddx(1), N);
+  yw = LagrangeWeights1D_vec(Xgrid(:,2), yi, ddx(2), N);
+  zw = LagrangeWeights1D_vec(Xgrid(:,3), zi, ddx(3), N);
+  %toc
 
-    if use_ndgrid
-      % ndgrid ordering
-      % TODO: warning: maybe needs changes to buildInterpWeights?
-      warning('not tested with ndgrid');
-      ind = sub2ind([Nx,Ny,Nz], gii, gjj, gkk);
-    else
-      % meshgrid ordering
-      % (funny ordering of y and x)
-      ind = sub2ind([Ny,Nx,Nz], gjj, gii, gkk);
-      %ind = round((gkk-1)*(Nx*Ny) + (gii-1)*(Ny) + gjj-1 + 1);
+  %tic
+  % this is a good order for memory access: ijk just counts up
+  for k=1:N
+    for i=1:N
+      for j=1:N
+        gi = (Ibpt(:,1) + i - 1);
+        gj = (Ibpt(:,2) + j - 1);
+        gk = (Ibpt(:,3) + k - 1);
+        ijk = sub2ind([N,N,N], j, i, k);
+        weights(:,ijk) = xw(:,i) .* yw(:,j) .* zw(:,k);
+
+        % all these do the same, but last one is fastest.  Although sub2ind
+        % presumably has safety checks...
+        %ind = (gk-1)*(Nx*Ny) + (gi-1)*Ny + gj;
+        %ind = sub2ind([Ny,Nx,Nz], gj, gi, gk);
+        %ind = round((gk-1)*(Nx*Ny) + (gi-1)*(Ny) + gj-1 + 1);
+        Ej(:,ijk) = (gk-1)*(Nx*Ny) + (gi-1)*Ny + gj;
+      end
     end
+  end
+  %toc
+  T1 = toc(T);
+  %fprintf('done new Ei,Ej,weights, total time: %g\n', T1);
 
-    %Eold(i,jj) = extWeights;
-    % its faster to track all entries and put them all in at once
-    Ej( (Ec+1):(Ec+StencilSize) ) = ind;
-    Ei( (Ec+1):(Ec+StencilSize) ) = i*ones(size(ind));
-    Es( (Ec+1):(Ec+StencilSize) ) = weights;
-    Ec = Ec + StencilSize;
+
+  % TODO: is there any advantage to keeping Ei as matrices?  Then each
+  % column corresponds to the same point in the stencil...
+  if ~makeListOutput
+    tic
+    E = sparse(Ei(:), Ej(:), weights(:), length(xi), Nx*Ny*Nz);
+    T2 = toc;
+    %fprintf('call to "sparse" time: %g\n', toc);
+  end
+  % Straightening them first doesn't make it faster
+  %tic
+  %Ei = Ei(:);
+  %Ej = Ej(:);
+  %weights = weights(:);
+  %toc
+  %tic
+  %E = sparse(Ei, Ej, weights, length(xi), Nx*Ny*Nz);
+  %toc
+
+  if (makeBanded)
+    %disp('band the large matrix:');
+    if (1==1)
+      %tic
+      E = E(:,band);
+      %toc
+    else
+      % sanity check: the columns outside of band should all be zero
+      tic
+      Esparse = E(:,band);
+      Eout = E(:,setdiff(1:(Nx*Ny*Nz),band));
+      if (nnz(Eout) > 0)
+        nnz(Eout)
+        warning('Lost some non-zero coefficients (from outside the innerband)');
+      end
+      E = Esparse;
+      toc
+    end
   end
 
-  if ( Ec ~= (length(xi)*StencilSize) )
-    error('wrong number of elements');
+  if (1==0)
+    disp('[testing] get back components:');
+    tic; [I,J,V] = find(Es); toc
+
+    disp('call "sparse" on smaller system:');
+    tic; Es2 = sparse(I, J, V, length(xi), length(band)); toc
+    E-Es2
   end
 
-  E = sparse(Ei, Ej, Es, length(xi), Nx*Ny*Nz);
+  if (1==0)
+    % TODO: do this outside in another function
+    disp('banding 2: this way finds innerband');
+    %tic
+    %innerband = unique(Ej(:));
+    %toc
+    tic
+    [innerband,I,J] = unique(Ej(:));
+    toc
+    tic
+    Es3 = sparse(Ei(:), J, weights(:), length(xi),length(innerband));
+    toc
+    %keyboard
+  end
 
-  Etime = toc
+  if (makeListOutput)
+    E = Ei(:);   % first output is called E
+    Ej = Ej(:);
+    Es = weights(:);
+  end
 end
-

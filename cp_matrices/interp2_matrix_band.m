@@ -21,7 +21,9 @@ function E = interp2_matrix_band(x, y, xi, yi, p, band, use_ndgrid)
     use_ndgrid = false;
   end
 
-  E = interp2_matrix(x, y, xi, yi, p, use_ndgrid);
+  warning('this code is depreciated, call interp3_matrix directly');
+
+  E = interp2_matrix_oldloop(x, y, xi, yi, p, use_ndgrid);
 
   % sanity check: the columns outside of band should all be zero
   Nx = length(x);

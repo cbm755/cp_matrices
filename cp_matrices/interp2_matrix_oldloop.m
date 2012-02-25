@@ -1,4 +1,4 @@
-function E = interp2_matrix(x, y, xi, yi, p, use_ndgrid)
+function E = interp2_matrix_oldloop(x, y, xi, yi, p, use_ndgrid)
 %INTERP2_MATRIX  Return a interpolation matrix
 %   E = INTERP2_MATRIX(X,Y,XI,YI,DEGREEP)
 %   Build a matrix which interpolates the grid data u onto the

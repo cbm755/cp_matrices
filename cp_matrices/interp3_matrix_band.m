@@ -18,7 +18,9 @@ function E = interp3_matrix_band(x, y, z, xi, yi, zi, p, band, use_ndgrid)
     use_ndgrid = false;
   end
 
-  E = interp3_matrix(x, y, z, xi, yi, zi, p, use_ndgrid);
+  warning('this code is depreciated, call interp3_matrix directly');
+
+  E = interp3_matrix_oldloop(x, y, z, xi, yi, zi, p, use_ndgrid);
 
   % sanity check: the columns outside of band should all be zero
   Nx = length(x);

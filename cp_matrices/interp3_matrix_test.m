@@ -66,10 +66,12 @@ function E = interp3_matrix_test(x, y, z, xi, yi, zi, p)
   
   %tic
   
+  tic
   Ei = repmat((1:length(xi))',1,EXTSTENSZ);
   weights = zeros(size(Ei));
-    
+
   X = [xi yi zi];
+  
   [out1, out2] = buildInterpWeights_test(X,ptL,ddx,p,stencil);
   xweights = out1{1};
   yweights = out1{2};
@@ -81,8 +83,9 @@ function E = interp3_matrix_test(x, y, z, xi, yi, zi, p)
 
   % meshgrid ordering
   Ej = sub2ind([Ny,Nx,Nz], gjj, gii, gkk);
-  clear gii gjj gkk
-  
+  %clear gii gjj gkk
+
+
   for i = 1:N
       for j = 1:N
           for k = 1:N
@@ -90,13 +93,52 @@ function E = interp3_matrix_test(x, y, z, xi, yi, zi, p)
           end
       end
   end
+  toc
+
+  disp('new');
+  T = tic;
+  tic
+  %[weights2 Ej2] = buildInterpWeights_vec(X,ptL,ddx,p,stencil,Nx,Ny,Nz);
+  [xw,yw,zw,Ibpt] = buildInterpWeights_vec2(X,ptL,ddx,p,stencil,Nx,Ny,Nz);
+  toc
+  tic
+    weights2 = zeros(size(Ei));
+    Ej2 = zeros(size(Ei));
+    toc
+    tic
+    for k=1:N
+      for i=1:N
+        for j=1:N  % todo:  a good order for mem
+          
+    %for i = 1:N
+    %for j = 1:N
+    %for k = 1:N
+          gi = (Ibpt(:,1) + i - 1);
+          gj = (Ibpt(:,2) + j - 1);
+          gk = (Ibpt(:,3) + k - 1);
+          %Nx = N; Ny = N; Nz = N;
+          ijk = sub2ind([N,N,N], j, i, k);
+          weights2(:,ijk) = xw(:,i) .* yw(:,j) .* zw(:,k);
+          Ej2(:,ijk) = sub2ind([Ny,Nx,Nz], gj, gi, gk);
+          end
+      end
+  end
+
+  toc
+  disp('done new, total time:');
+  toc(T);
+  max(max(Ej2-Ej))
+  max(max(weights2-weights))
   
   %Ei = reshape(Ei,1,length(xi)*EXTSTENSZ);
   %Ej = reshape(Ej,1,length(xi)*EXTSTENSZ);
   %Es = reshape(weights, 1, length(xi)*EXTSTENSZ);
   E = sparse(Ei(:), Ej(:), weights(:), length(xi), Nx*Ny*Nz);
+  
+  %keyboard
   clear Ei Ej weights xweights yweights zweights
 
   %Etime = toc
   %profile viewer
+
 end

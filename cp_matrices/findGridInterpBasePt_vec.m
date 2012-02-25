@@ -1,18 +1,17 @@
-function [I,X] = findGridInterpBasePt_test(x, p, relpt, dx)
-%FINDGRIDINTERPBASEPT   Find the "base point" for an interpolation
+function [I,X] = findGridInterpBasePt_vec(x, p, relpt, dx)
+%FINDGRIDINTERPBASEPT_VEC   Find the "base point" for an interpolation
 % This is best explained in the diagram below.
 %
 % [I,X] = findGridInterpBasePt(x, p, relpt, dx)
-% x: is the interpolation point, must lie inside the === signs below
-% p: degree interpolation (N-1 point interp)
-% relpt: a reference point, corresponding to (1,1) in your grid
-% dx: grid spacing (can be a vector)
-% X: is the "basepoint", B below, the lower left corner of an interpolation
-% stencil hypercube
-% I: 2D/3D/etc index of X, measured relative to 'relpt'
-%
-% x, relpt and x can be vectors (i.e., the code works in R^n).  But
-% just for one point at a time.
+%   x: is the interpolation point, must lie inside the === signs
+%      below.  (x should be Nx3 matrix).
+%   p: degree interpolation (N-1 point interp), a scalar.
+%   relpt: a reference point, corresponding to (1,1) in your grid (a
+%          1x3 row vector).
+%   dx: grid spacing (a 1x3 row vector).
+%   X: is the "basepoint", B below, the lower left corner of an interpolation
+%      stencil hypercube
+%   I: 2D/3D/etc index of X, measured relative to 'relpt'
 %
 % picture:
 % p=0: ==B==
@@ -35,6 +34,7 @@ function [I,X] = findGridInterpBasePt_test(x, p, relpt, dx)
 %   actually used in the Closest Point Method scales like 2D (for a 2D
 %   surface).  For now I'll add a warning to the 3D code.
 
+  % TODO: could simplify, if isscalar(dx)
 
   if (mod(p,2) == 0)  % even
     I = round( ( x - repmat(relpt,size(x,1),1) ) ./ repmat(dx,size(x,1),1) ) + 1  -  p/2;
