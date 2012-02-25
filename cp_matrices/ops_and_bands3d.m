@@ -49,7 +49,7 @@ E = Etemp(oband, ibandfull);
 %% Could instead regenerate everything, now that we have the two bands
 %cpxin3 = cpx(ibandfull); cpyin3 = cpy(ibandfull); cpzin3 = cpz(ibandfull);
 %cpxout3 = cpx(obandfull); cpyout3 = cpy(obandfull); cpzout3 = cpz(obandfull);
-%E3 = interp3_matrix_band(x1d,y1d,z1d, cpxout3,cpyout3,cpzout3, p, ibandfull);
+%E3 = interp3_matrix(x1d,y1d,z1d, cpxout3,cpyout3,cpzout3, p, ibandfull);
 %L3 = laplacian_3d_matrix(x1d,y1d,z1d, order, ibandfull, obandfull);
 
 

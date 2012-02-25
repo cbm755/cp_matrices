@@ -97,7 +97,7 @@ if (build_matrices)
   %% discrete operators
   disp('building laplacian and interp matrices');
   L = laplacian_3d_matrix(x1d,y1d,z1d, order, band,band);
-  E = interp3_matrix_band(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
+  E = interp3_matrix(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
   % iCPM matrix
   M = lapsharp(L,E);
 
@@ -105,9 +105,9 @@ if (build_matrices)
   xp = Vertices(:,1);
   yp = Vertices(:,2);
   zp = Vertices(:,3);
-  Eplot = interp3_matrix_band(x1d,y1d,z1d, xp,yp,zp, 3, band);
-  %Eplot1 = interp3_matrix_band(x1d,y1d,z1d, xp,yp,zp, 1, band);
-  %Eplot0 = interp3_matrix_band(x1d,y1d,z1d, xp,yp,zp, 0, band);
+  Eplot = interp3_matrix(x1d,y1d,z1d, xp,yp,zp, 3, band);
+  %Eplot1 = interp3_matrix(x1d,y1d,z1d, xp,yp,zp, 1, band);
+  %Eplot0 = interp3_matrix(x1d,y1d,z1d, xp,yp,zp, 0, band);
 end
 
 end

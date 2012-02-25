@@ -102,7 +102,7 @@ xlabel('x'); ylabel('y');
 
 disp('Constructing interpolation and laplacian matrices');
 
-E = interp2_matrix_band(x1d, y1d, cpxg, cpyg, p, band);
+E = interp2_matrix(x1d, y1d, cpxg, cpyg, p, band);
 
 % e.g., closest point extension:
 %u = E*u;
@@ -121,7 +121,7 @@ r = ones(size(thetas));
 % plotting grid in Cartesian coords
 [xp,yp] = pol2cart(thetas,r);
 xp = xp(:); yp = yp(:);
-Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, band);
+Eplot = interp2_matrix(x1d, y1d, xp, yp, p, band);
 
 figure(2); set(gcf,'Position', [410 700 800 800]);
 

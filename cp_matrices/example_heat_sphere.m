@@ -80,7 +80,7 @@ initialu = u;       % store initial value
 
 disp('Constructing interpolation and laplacian matrices');
 
-E = interp3_matrix_band(x1d, y1d, z1d, cpxg, cpyg, cpzg, p, band);
+E = interp3_matrix(x1d, y1d, z1d, cpxg, cpyg, cpzg, p, band);
 
 % e.g., closest point extension:
 %u = E*u;
@@ -98,7 +98,7 @@ L = laplacian_3d_matrix(x1d,y1d,z1d, order, band, band);
 xp1 = xp(:); yp1 = yp(:); zp1 = zp(:);
 [th_plot, phi_plot, r] = cart2sph(xp1,yp1,zp1);
 % Eplot is a matrix which interpolations data onto the plotting grid
-Eplot = interp3_matrix_band(x1d, y1d, z1d, xp1, yp1, zp1, p, band);
+Eplot = interp3_matrix(x1d, y1d, z1d, xp1, yp1, zp1, p, band);
 
 figure(2); set(gcf,'Position', [410 700 800 800]);
 

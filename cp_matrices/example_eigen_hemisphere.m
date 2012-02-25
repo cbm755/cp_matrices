@@ -56,7 +56,7 @@ bdyg = bdy(band);
 %% discrete operators
 disp('building laplacian and interp matrices');
 L = laplacian_3d_matrix(x1d,y1d,z1d, order, band,band);
-E = interp3_matrix_band(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
+E = interp3_matrix(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
 
 % Dirichlet BCs: mirror for ghost points outside of surface edges.
 % Comment this out for Neumann BCs.
@@ -71,8 +71,8 @@ M = lapsharp(L,E);
 %[xp,yp,zp] = paramSphere(32, R);
 xp1 = xp(:);  yp1 = yp(:);  zp1 = zp(:);
 disp('building plotting matrices');
-Eplot = interp3_matrix_band(x1d,y1d,z1d, xp1,yp1,zp1, p, band);
-Eplot0 = interp3_matrix_band(x1d,y1d,z1d, xp1,yp1,zp1, 0, band);
+Eplot = interp3_matrix(x1d,y1d,z1d, xp1,yp1,zp1, p, band);
+Eplot0 = interp3_matrix(x1d,y1d,z1d, xp1,yp1,zp1, 0, band);
 
 
 
