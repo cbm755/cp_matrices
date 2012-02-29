@@ -1,4 +1,4 @@
-function L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, ndgrid)
+function L = helper_diff_matrix3d_oldloop(x, y, z, band1, band2, weights, PTS, ndgrid)
 %HELPER function: not intended for external use
 %
 % use_ndgrid: false for meshgrid, true for ndgrid
@@ -13,11 +13,6 @@ function L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, ndgrid)
   % TODO: a global variable is probably not a good way to do this.
   global ICPM2009BANDINGCHECKS
 
-  if (ndgrid)
-    error('ndgrid not implemented in new vector code');
-    % TODO: fix this, or remove this option
-  end
-
   Nx = length(x);
   Ny = length(y);
   Nz = length(z);
@@ -27,27 +22,48 @@ function L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, ndgrid)
   tic
   % Like a finite element code, find all the entries in 3 lists, then
   % insert them all at once while creating the sparse matrix
-  %  Li = zeros((length(band1))*StencilSize, 1);
-  %Li = zeros((length(band1)),StencilSize);
-  Li = repmat((1:length(band1))',1,StencilSize);
+  Li = zeros((length(band1))*StencilSize, 1);
   Lj = zeros(size(Li));
   Ls = zeros(size(Li));
   Lc = 0;
 
-  [j,i,k] = ind2sub([Ny,Nx,Nz], band1);
-  for c = 1:StencilSize
-    ii = i + PTS(c,1);
-    jj = j + PTS(c,2);
-    kk = k + PTS(c,3);
-    %ind = sub2ind([Ny,Nx,Nz],jj,ii,kk);
-    %ind = (kk-1)*(Nx*Ny) + (ii-1)*Ny + jj;
-    Lj(:,c) = (kk-1)*(Nx*Ny) + (ii-1)*Ny + jj;
-    Ls(:,c) = weights(c);
+  % main loop, good candidate for parfor?
+  for c = 1:length(band1)
+    I = band1(c);
+
+    if ndgrid
+      % TODO: ndgrid ordering, not tested
+      [i,j,k] = ind2sub([Nx,Ny,Nz], I);
+    else
+      % meshgrid ordering
+      [j,i,k] = ind2sub([Ny,Nx,Nz], I);
+    end
+
+    ii = i + PTS(:,1);
+    jj = j + PTS(:,2);
+    kk = k + PTS(:,3);
+
+    if ndgrid
+      % TODO: ndgrid ordering: not tested!
+      ind = sub2ind([Nx,Ny,Nz],ii,jj,kk);
+    else
+      % meshgrid ordering
+      % used to round() here, could also think about using some integer type
+      ind = sub2ind([Ny,Nx,Nz],jj,ii,kk);
+    end
+
+    Lj( (Lc+1):(Lc+StencilSize) ) = ind;
+    Li( (Lc+1):(Lc+StencilSize) ) = c*ones(size(ind));
+    Ls( (Lc+1):(Lc+StencilSize) ) = weights;
+    Lc = Lc + StencilSize;
   end
 
-  L = sparse(Li(:), Lj(:), Ls(:), length(band1), Nx*Ny*Nz);
+  if ( Lc ~= (length(band1)*StencilSize) )
+    error('wrong number of elements');
+  end
 
-  % TODO: these sorts of checks could move to the ops and bands replacement
+  L = sparse(Li, Lj, Ls, length(band1), Nx*Ny*Nz);
+
   % If we're using careful banding a la iCPM2009 then as a sanity
   % check all of the columns outside of band2 should be zero.
   if (~isempty(ICPM2009BANDINGCHECKS)) && (ICPM2009BANDINGCHECKS)

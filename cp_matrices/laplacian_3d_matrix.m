@@ -1,12 +1,28 @@
-function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid)
+function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid, use_loop)
 %LAPLACIAN_3D_MATRIX  Build a 3D discrete Laplacian
 %   ORDER: 2 or 4 for 2nd or 4th-order
 %   Does no error checking up the equispaced nature of x,y,z
 %
-%   TODO: explain the roles of band1 and band2
+%   L = laplacian_3d_matrix(x,y,z, order, band)
+%      'L' is a discrete laplacian over a grid.
+%      'order' can be 2 or 4.
+%      x,y,z are 1d vectors which form a meshgrid, 'band' is a
+%      subset of this meshgrid given as linear indices.
+%      TODO: this will have a dirichlet boundary condition at the
+%      edge of the band, at least for order 2.
 %
-%   To use ndgrid ordering pass "true" as the final argument
+%   L = laplacian_3d_matrix(x,y,z, order, band1, band2)
+%      dual-banded version of above, a rectangular matrix.
+%      TODO: explain this
+%
+%   To use ndgrid ordering pass "true" as an extra argument.
+%
+%   Pass "true" as a further argument to use the (slower)
+%   looping-based code.
 
+  if (nargin <= 7)
+    use_loop = false;
+  end
   if (nargin <= 6)
     use_ndgrid = false;
   end
@@ -74,4 +90,8 @@ function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid)
     error(['order ' num2str(order) ' not implemented']);
   end
 
-  L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, use_ndgrid);
+  if (use_loop)
+    L = helper_diff_matrix3d_oldloop(x, y, z, band1, band2, weights, PTS, use_ndgrid);
+  else
+    L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, use_ndgrid);
+  end
