@@ -21,28 +21,52 @@ function L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, ndgrid)
   tic
   % Like a finite element code, find all the entries in 3 lists, then
   % insert them all at once while creating the sparse matrix
-  Li = repmat((1:length(band1))', 1, StencilSize);
+  Li = zeros((length(band1))*StencilSize, 1);
   Lj = zeros(size(Li));
   Ls = zeros(size(Li));
   Lc = 0;
 
-  [j,i] = ind2sub([Ny,Nx], band1);
-  for c = 1:StencilSize
-    ii = i + PTS(c,1);
-    jj = j + PTS(c,2);
-    % TODO: this is faster but no satefy checks, perhaps we need a
-    % "safety" option...
-    %Lj(:,c) = (ii-1)*Ny + jj;
-    Lj(:,c) = sub2ind([Ny,Nx],jj,ii);
-    Ls(:,c) = weights(c);
-  end
-  L = sparse(Li(:), Lj(:), Ls(:), length(band1), Nx*Ny);
+  % main loop, a good candidate for parfor?
+  for c = 1:length(band1)
+    I = band1(c);
 
-  % TODO: these sorts of checks could move to the ops and bands replacement
+    if ndgrid
+      % TODO: ndgrid ordering: not tested!
+      [i,j] = ind2sub([Nx,Ny], I);
+    else
+      % meshgrid ordering
+      [j,i] = ind2sub([Ny,Nx], I);
+    end
+
+    ii = i + PTS(:,1);
+    jj = j + PTS(:,2);
+
+    if ndgrid
+      % TODO: ndgrid ordering: not tested!
+      ind = sub2ind([Nx,Ny], ii, jj);
+    else
+      % meshgrid ordering
+      ind = sub2ind([Ny,Nx], jj, ii);
+    end
+
+    Lj( (Lc+1):(Lc+StencilSize) ) = ind;
+    Li( (Lc+1):(Lc+StencilSize) ) = c*ones(size(ind));
+    Ls( (Lc+1):(Lc+StencilSize) ) = weights;
+    Lc = Lc + StencilSize;
+  end
+
+  if ( Lc ~= (length(band1)*StencilSize) )
+    error('wrong number of elements');
+  end
+
+  L = sparse(Li, Lj, Ls, length(band1), Nx*Ny);
+
   % If we're using careful banding a la iCPM2009 then as a sanity
   % check all of the columns outside of band2 should be zero.
+  % (This won't be true when using just one band and its probably
+  % not true in the dual-band but using bandwidth estimates)
   if (~isempty(ICPM2009BANDINGCHECKS)) && (ICPM2009BANDINGCHECKS)
-    Lout = L(:, setdiff(1:(Nx*Ny),band2));
+    Lout = L(:,setdiff(1:(Nx*Ny),band2));
     if (nnz(Lout) > 0)
       nnz(Lout)
       error('Lost some non-zero coefficients (from outside the outerband)');
@@ -50,7 +74,8 @@ function L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, ndgrid)
   end
 
   % remove columns not in band2 (the outerband)
-  L = L(:, band2);
+  L = L(:,band2);
+
 
   Ltime = toc;
 end

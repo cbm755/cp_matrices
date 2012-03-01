@@ -39,9 +39,10 @@ function L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, ndgrid)
     ii = i + PTS(c,1);
     jj = j + PTS(c,2);
     kk = k + PTS(c,3);
-    %ind = sub2ind([Ny,Nx,Nz],jj,ii,kk);
-    %ind = (kk-1)*(Nx*Ny) + (ii-1)*Ny + jj;
-    Lj(:,c) = (kk-1)*(Nx*Ny) + (ii-1)*Ny + jj;
+    % TODO: this is faster but no satefy checks, perhaps we need a
+    % "safety" option...
+    %Lj(:,c) = (kk-1)*(Nx*Ny) + (ii-1)*Ny + jj;
+    Lj(:,c) = sub2ind([Ny,Nx,Nz],jj,ii,kk);
     Ls(:,c) = weights(c);
   end
 

@@ -1,4 +1,4 @@
-function L = laplacian_2d_matrix(x,y, order, band1, band2, use_ndgrid)
+function L = laplacian_2d_matrix(x,y, order, band1, band2, use_ndgrid, use_loop)
 %LAPLACIAN_2D_MATRIX  Build a 2D discrete Laplacian
 %   ORDER: 2 or 4 for 2nd or 4th-order
 %   Does no error checking up the equispaced nature of x,y,z
@@ -12,6 +12,9 @@ function L = laplacian_2d_matrix(x,y, order, band1, band2, use_ndgrid)
 %
 %   To use ndgrid ordering pass "true" as the final argument
 
+  if (nargin <= 6)
+    use_loop = false;
+  end
   if (nargin <= 5)
     use_ndgrid = false;
   end
@@ -67,4 +70,10 @@ function L = laplacian_2d_matrix(x,y, order, band1, band2, use_ndgrid)
     error(['order ' num2str(order) ' not implemented']);
   end
 
-  L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);
+  if (use_loop)
+    L = helper_diff_matrix2d_oldloop(x, y, band1, band2, weights, PTS, use_ndgrid);
+  else
+    L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, use_ndgrid);
+  end
+
+
