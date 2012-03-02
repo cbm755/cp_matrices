@@ -1,25 +1,104 @@
-function w = weno6_interp(cp, f, x)
+function w = weno6_interp(cp, f, x, onlyMakeCache, opt)
 %WENO6_INTERP  nonlinear WENO interpolation in 2D/3D
-%   TODO, following weno4_interp(), not implemented completely/
+%   At each point, WENO6 considers a convex combination of three
+%   cubic interpolants, achieving a (bi,tri)-quintic interpolant in
+%   smooth regions.  This uses the same stencil as a tri-quintic
+%   interpolant, but with nonlinear weights.
+%
+%   w = weno6_interp(cpgrid, f, x)
+%   Interpolates the data "f" on the grid given by "cpgrid" onto
+%   the points "x".  There are certain assumptions about "x" and
+%   the grid, namely that the band of the grid contains the stencil
+%   needed for WENO6.
+%
+%   In the closest point method, the call would typically be:
+%   w = weno6_interp(cpgrid, f, [cpx cpy cpz])
+%
+%   The dimension is determined from the number of columns of x.
+%
+%   "cpgrid" must contain fields cpgrid.x1d, .y1d, .band (and .z1d
+%   in 3D)
+%
+%   For multiple calls wih the same "x" (e.g., in the closest point
+%   method) caching can be used to make each call about twice as
+%   fast:
+%   wenoCache = weno6_interp(cpgrid, f, x, 'cache')
+%   u1 = weno4_interp(wenoCache, f1)
+%   u2 = weno4_interp(wenoCache, f2)
+%   On the other hand, if you just do one interpolation, a faster
+%   implementation is possible (not done for weno6).
+%
+%   The scheme implemented here is derived in [Macdonald & Ruuth
+%   2008, Level Set Equations on Surfaces...].
+%
+%   Can pass an opt structure as 5th argument:
+%      opt.wenoeps = 1e-6
+%      opt.forceWeights = {-10,-1,0,1}
+%
+%   TODO: support calling without a "cpgrid"?
+%   TODO: dual-band support.
 
-  warning('***not fully implemented, not tested at all***');
+  if (nargin < 5)
+    opt = [];
+    % TODO: right now you have to pass all or none of these
+    opt.wenoeps = 1e-6;
+    opt.forceWeights = -10;
+  end
+
+  if (nargin == 2)
+    % have previous cached computations, stored in "cp"
+    dim = cp.dim;
+    if (dim == 2)
+      w = weno6_interp2d(cp, f, opt);
+    else
+      w = weno6_interp3d(cp, f, opt);
+    end
+    return
+  end
+
+
+  if (nargin >= 4)
+    if (onlyMakeCache)
+      % noop
+    elseif (strcmpi(onlyMakeCache, 'cache'))
+      onlyMakeCache = true;
+    else
+      onlyMakeCache = false;
+    end
+    %disp('weno6: building cache');
+    % if its nargin == 3 we don't want to say this message even
+    % though we do build the cache (and discard it later)
+  else
+    onlyMakeCache = false;
+  end
 
   [n1,dim] = size(x);
   if dim == 2
     Cache = weno6_interp2d_makecache(cp, f, x);
-    w = weno6_interp2d(Cache, f);
+    %w = weno6_interp2d(Cache, f, opt);
   elseif dim == 3
     Cache = weno6_interp3d_makecache(cp, f, x);
-    w = weno6_interp3d(Cache, f);
+    %w = weno6_interp3d(Cache, f, opt);
   else
     error('dim not implemented');
   end
+
+  if ~onlyMakeCache
+    if dim == 2
+      w = weno6_interp2d(Cache, f, opt);
+    else
+      w = weno6_interp3d(Cache, f, opt);
+    end
+  else
+    w = Cache;
+  end
+
 end
 
 
 
 
-function w = weno6_interp2d(Cache, f)
+function w = weno6_interp2d(Cache, f, opt)
 %WENO6_INTERP2D  nonlinear WENO interpolation 2D
 
   C = Cache.C;
@@ -28,22 +107,23 @@ function w = weno6_interp2d(Cache, f)
   x = Cache.x;
   y = Cache.y;
   dx = Cache.dx;
+  dy = Cache.dy;
 
   tic
   u = {};
   for j=1:6
     u{j} = helper1d( ...
         {C{1,j}*f, C{2,j}*f, C{3,j}*f, C{4,j}*f, C{5,j}*f, C{6,j}*f}, ...
-        xi, dx, x);
+        xi, dx, x, opt);
   end
-  w = helper1d({u{1}, u{2}, u{3}, u{4}, u{5}, u{6}}, yi, dx, y);
+  w = helper1d({u{1}, u{2}, u{3}, u{4}, u{5}, u{6}}, yi, dy, y, opt);
   toc
 end
 
 
 
 
-function w = weno6_interp3d(Cache, f)
+function w = weno6_interp3d(Cache, f, opt)
 %WENO6_INTERP3D  nonlinear WENO interpolation 3D
 
   C = Cache.C;
@@ -54,6 +134,8 @@ function w = weno6_interp3d(Cache, f)
   y = Cache.y;
   z = Cache.z;
   dx = Cache.dx;
+  dy = Cache.dy;
+  dz = Cache.dz;
 
   tic
   u = {};
@@ -62,17 +144,17 @@ function w = weno6_interp3d(Cache, f)
     for j=1:6
       u{j} = helper1d( ...
           {C{1,j,k}*f, C{2,j,k}*f, C{3,j,k}*f, C{4,j,k}*f, C{5,j,k}*f, C{6,j,k}*f}, ...
-          xi, dx, x);
+          xi, dx, x, opt);
     end
-    v{k} = helper1d({u{1}, u{2}, u{3}, u{4}, u{5}, u{6}}, yi, dx, y);
+    v{k} = helper1d({u{1}, u{2}, u{3}, u{4}, u{5}, u{6}}, yi, dy, y, opt);
   end
-  w = helper1d({v{1}, v{2}, v{3}, v{4}, v{5}, v{6}}, zi, dx, z);
+  w = helper1d({v{1}, v{2}, v{3}, v{4}, v{5}, v{6}}, zi, dz, z, opt);
   toc
 end
 
 
 
-function u = helper1d(f, xi, dx, y)
+function u = helper1d(f, xi, dx, y, opt)
 %1D interpolation helper function.
 %
 %Interpolate using WENO3 (3 cubic ENO interpolants)
@@ -81,11 +163,11 @@ function u = helper1d(f, xi, dx, y)
 %
 %There is a maple worksheet that was used to construct this.
 
-  WENOEPS = 1e-6;  % the WENO parameter to prevent div-by-zero
+  WENOEPS = opt.wenoeps;  % the WENO parameter to prevent div-by-zero
 
   i = 3;   % was 2 in C code, range below is [i-2,i+3] = [1,6]
 
-  forceChoice = -10;
+  forceChoice = opt.forceWeights;
 
   % ideal, smooth weights
   C1 = (y-xi-2*dx) .* (-3*dx+y-xi) / (20*dx^2);
@@ -171,21 +253,24 @@ function Cache = weno6_interp3d_makecache(cp, f, xyz)
   Nx = length(x1d);
   Ny = length(y1d);
   Nz = length(z1d);
+  dx = x1d(2) - x1d(1);
+  dy = y1d(2) - y1d(1);
+  dz = z1d(2) - z1d(1);
 
-  dx = x1d(2) - x1d(1);  % assumed constant and same in x,y,z
+  %relpt = cp.x1d(1);  % TODO
+  %[ijk,X] = findGridInterpBasePt(xyz, 5, relpt, dx);
 
-  relpt = cp.x1d(1);  % TODO
+  relpt = [cp.x1d(1)  cp.y1d(1)  cp.z1d(1)];
 
   x = xyz(:,1);
   y = xyz(:,2);
   z = xyz(:,3);
 
-  tic
   % determine the basepoint
-  [ijk,X] = findGridInterpBasePt(xyz, 5, relpt, dx);
+  [ijk,X] = findGridInterpBasePt_vec(xyz, 5, relpt, [dx dy dz]);
   xi = X(:,1) + 2*dx;
-  yi = X(:,2) + 2*dx;
-  zi = X(:,3) + 2*dx;
+  yi = X(:,2) + 2*dy;
+  zi = X(:,3) + 2*dz;
   ijk = ijk + 2;
 
   I = sub2ind([Ny Nx Nz], ijk(:,2), ijk(:,1), ijk(:,3));
@@ -193,7 +278,6 @@ function Cache = weno6_interp3d_makecache(cp, f, xyz)
   B = findInBand(I, cp.band, Nx*Ny*Nz);
 
   [E W N S U D] = neighbourMatrices(cp, cp.band, cp.band);
-  toc
 
   tic
   C = {};
@@ -218,6 +302,8 @@ function Cache = weno6_interp3d_makecache(cp, f, xyz)
   Cache.y = y;
   Cache.z = z;
   Cache.dx = dx;
+  Cache.dy = dy;
+  Cache.dz = dz;
   Cache.dim = 3;
 end
 
@@ -231,26 +317,24 @@ function Cache = weno6_interp2d_makecache(cp, f, xy)
   y1d = cp.y1d;
   Nx = length(x1d);
   Ny = length(y1d);
+  dx = x1d(2) - x1d(1);
+  dy = y1d(2) - y1d(1);
 
-  dx = x1d(2) - x1d(1);  % assumed constant and same in x,y
+  relpt = [cp.x1d(1)  cp.y1d(1)];
 
-  relpt = cp.x1d(1);  % TODO
+  x = xyz(:,1);
+  y = xyz(:,2);
 
-  x = xy(:,1);
-  y = xy(:,2);
-
-  tic
   % determine the basepoint
-  [ijk,X] = findGridInterpBasePt(xy, 5, relpt, dx);
+  [ijk,X] = findGridInterpBasePt_vec(xyz, 5, relpt, [dx dy]);
   xi = X(:,1) + 2*dx;
-  yi = X(:,2) + 2*dx;
+  yi = X(:,2) + 2*dy;
   ijk = ijk + 2;
   I = sub2ind([Ny Nx], ijk(:,2), ijk(:,1));
 
   B = findInBand(I, cp.band, Nx*Ny*Nz);
 
   [E W N S] = neighbourMatrices(cp, cp.band, cp.band);
-  toc
 
   tic
   C = {};
@@ -270,6 +354,7 @@ function Cache = weno6_interp2d_makecache(cp, f, xy)
   Cache.x = x;
   Cache.y = y;
   Cache.dx = dx;
+  Cache.dy = dy;
   Cache.dim = 2;
 end
 

@@ -1,36 +1,21 @@
 function w = weno4_interp_caching(cp, f, x, makeCache)
-%WENO4_INTERP  nonlinear WENO interpolation in 2D/3D
-%   At each point, WENO4 considers a convex combination of two
-%   quadratic interpolants, achieving a (bi,tri)-cubic interpolant in
-%   smooth regions.  This uses the same stencil as a tri-cubic
-%   interpolant.
+%WENO4_INTERP_CACHING  nonlinear WENO interpolation in 2D/3D
 %
-%   u = weno4_interp(cpgrid, f, x)
-%   Interpolates the data "f" on the grid given by "cpgrid" onto the
-%   points "x".  There are certain assumptions about "x" and the grid,
-%   namely that the band of the grid contains the stencil needed for
-%   WENO4.  In the closest point method, x might be [cpx cpy cpz].
-%
-%   The dimension is determined from the number of columns of x.
-%
-%   "cpgrid" must contain fields cpgrid.x1d, .y1d, .band (and .z1d
-%   in 3D)
+%   (See help for weno4_interp for basic help)
 %
 %   For a large system in 3D, this will be very slow.  But assuming
 %   interpolation onto the same points will be repeated (as in the
 %   closest point method), significant savings are possible by
-%   cachine:
-%   wenoCache = weno4_interp(cpgrid, f, x, 'cache')
-%   u1 = weno4_interp(wenoCache, f1)
-%   u2 = weno4_interp(wenoCache, f2)
+%   caching:
+%   wenoCache = weno4_interp_caching(cpgrid, f, x, 'cache')
+%   u1 = weno4_interp_caching(wenoCache, f1)
+%   u2 = weno4_interp_caching(wenoCache, f2)
 %   ...
-%
-%   The scheme implemented here is derived in [Macdonald & Ruuth
-%   2008, Level Set Equations on Surfaces...].
 %
 %   TODO: support nonvector relpt
 %   TODO: support calling without a "cpgrid"?
 %   TODO: dual-band support.
+%   TODO: does not support non-equal dx
 
   if (nargin == 2)
     % have previous cached computations, stored in "cp"
@@ -44,7 +29,9 @@ function w = weno4_interp_caching(cp, f, x, makeCache)
   end
 
   if (nargin == 4)
-    disp('weno4: bulding cache');
+    disp('weno4: building cache');
+    % if its nargin == 3 we don't want to say this message even
+    % though we do build the cache (and discard it later)
   end
 
   [n1,dim] = size(x);
@@ -58,9 +45,9 @@ function w = weno4_interp_caching(cp, f, x, makeCache)
 
   if (nargin == 3)
     if dim == 2
-      w = weno4_interp2d(f, Cache);
+      w = weno4_interp2d(Cache, f);
     else
-      w = weno4_interp3d(f, Cache);
+      w = weno4_interp3d(Cache, f);
     end
   else
     w = Cache;

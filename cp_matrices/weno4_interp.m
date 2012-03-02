@@ -19,6 +19,10 @@ function w = weno4_interp(cp, f, x)
 %   "cpgrid" must contain fields cpgrid.x1d, .y1d, .band (and .z1d
 %   in 3D)
 %
+%   For multiple calls wih the same "x" (e.g., in the closest point
+%   method) WENO4_INTERP_CACHING should be about twice as fast.  On
+%   the other hand, if you just do one interpolation, than this is
+%   probably faster.
 %
 %   The scheme implemented here is derived in [Macdonald & Ruuth
 %   2008, Level Set Equations on Surfaces...].
@@ -26,6 +30,7 @@ function w = weno4_interp(cp, f, x)
 %   TODO: support vector relpt
 %   TODO: support calling without a "cpgrid"?
 %   TODO: dual-band support.
+%   TODO: assumes dx = dy = dx
 
   [n1,dim] = size(x);
   if dim == 2

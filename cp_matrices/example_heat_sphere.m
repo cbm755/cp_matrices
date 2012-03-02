@@ -23,7 +23,7 @@ addpath('../surfaces');
 dx = 0.1;                   % grid size
 
 % make vectors of x, y, positions of the grid
-x1d = -2.0:dx:2.0';
+x1d = (-2.0:dx:2.0)';
 y1d = x1d;
 z1d = x1d;
 
