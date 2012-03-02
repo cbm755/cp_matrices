@@ -105,6 +105,6 @@ function E = interp3_matrix_oldloop(x, y, z, xi, yi, zi, p, use_ndgrid)
 
   E = sparse(Ei, Ej, Es, length(xi), Nx*Ny*Nz);
 
-  Etime = toc
+  Etime = toc;
 end
 

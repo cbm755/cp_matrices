@@ -8,9 +8,9 @@ function [pass, str] = test_difforder_bulk2d()
   dx = dx/2;  dy = dy/2;
   errs2 = helper1(dx,dy);
 
-  orders = errs1 ./ errs2
+  orders = errs1 ./ errs2;
 
-  design_ord = [2,2,2,2,1,1,1,1,2]
+  design_ord = [2,2,2,2,1,1,1,1,2];
   fuzz = 0.9;
 
   pass = orders > (fuzz * 2.^design_ord);

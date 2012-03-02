@@ -7,9 +7,9 @@ ds = 0.25;
 ds = ds / 2;
 [errx2,erry2,errz2] = helper1(ds);
 
-ordersx = errx1 ./ errx2
-ordersy = erry1 ./ erry2
-ordersz = errz1 ./ errz2
+ordersx = errx1 ./ errx2;
+ordersy = erry1 ./ erry2;
+ordersz = errz1 ./ errz2;
 
 fuzz = 0.9;
 

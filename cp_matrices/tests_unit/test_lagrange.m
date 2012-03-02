@@ -38,7 +38,7 @@ function [pass, str] = test_lagrange()
 
   % nearest neighbour
   xg = 0;  x = 0.5;  dx = 1;  N = 1;  w = 1;
-  w1 = LagrangeWeights1D_vec(xg,x,dx,N)
+  w1 = LagrangeWeights1D_vec(xg,x,dx,N);
   c = c + 1;
   pass(c) = assertAlmostEqual(w1, w);
 

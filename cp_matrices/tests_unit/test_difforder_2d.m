@@ -7,9 +7,9 @@ ds = 0.05;
 ds = ds / 2;
 [maxerrx2,maxerry2,maxerrmix2] = helper1(ds);
 
-ordersx = maxerrx1 ./ maxerrx2
-ordersy = maxerry1 ./ maxerry2
-ordersmix = maxerrmix1 ./ maxerrmix2
+ordersx = maxerrx1 ./ maxerrx2;
+ordersy = maxerry1 ./ maxerry2;
+ordersmix = maxerrmix1 ./ maxerrmix2;
 
 fuzz = 0.95;
 

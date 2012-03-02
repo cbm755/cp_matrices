@@ -7,7 +7,7 @@ ds = 0.25;
 ds = ds / 2;
 [err2] = helper1(ds);
 
-orders = err1 ./ err2
+orders = err1 ./ err2;
 
 fuzz = 0.9;
 

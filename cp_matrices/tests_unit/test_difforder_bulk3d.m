@@ -4,14 +4,14 @@ function [pass, str] = test_difforder_bulk3d()
   dx = 1/8*pi;
   dy = 1/9*pi;
   dz = 1/10*pi;
-  errs1 = helper1(dx,dy,dz)
+  errs1 = helper1(dx,dy,dz);
 
   dx = dx/2;  dy = dy/2;  dz = dz/2;
   errs2 = helper1(dx,dy,dz);
 
   orders = errs1 ./ errs2;
 
-  design_ord = [2,2,2, 2,2,2, 1,1,1, 1,1,1, 2,2,2]
+  design_ord = [2,2,2, 2,2,2, 1,1,1, 1,1,1, 2,2,2];
   fuzz = 0.7;
 
   pass = orders > (fuzz * 2.^design_ord);
