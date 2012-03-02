@@ -1,17 +1,18 @@
 function L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, ndgrid)
 %HELPER function: not intended for external use
 %
-% use_ndgrid: false for meshgrid, true for ndgrid
-%
 %   TODO: explain the roles of band1 and band2
 %
-%   TODO: this should work with dx != dy
-%
 %   TODO: issue with two bands: currently need extra padding in
-%   wherever we call this from: should fix this
+%   wherever we call this from
+%
+%   TODO: maybe pass an opt structure ndgrid, safety etc.
 
   % TODO: global variable may not be the best way to do this
   global ICPM2009BANDINGCHECKS
+
+  % less checks (e.g., negative indices)
+  speedOverSafety = false;
 
   Nx = length(x);
   Ny = length(y);
@@ -24,17 +25,30 @@ function L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, ndgrid)
   Li = repmat((1:length(band1))', 1, StencilSize);
   Lj = zeros(size(Li));
   Ls = zeros(size(Li));
-  Lc = 0;
 
-  [j,i] = ind2sub([Ny,Nx], band1);
+  if (ndgrid)
+    [i,j] = ind2sub([Nx,Ny], band1);
+  else
+    [j,i] = ind2sub([Ny,Nx], band1);
+  end
+
   for c = 1:StencilSize
     ii = i + PTS(c,1);
     jj = j + PTS(c,2);
-    % TODO: this is faster but no satefy checks, perhaps we need a
-    % "safety" option...
-    %Lj(:,c) = (ii-1)*Ny + jj;
-    Lj(:,c) = sub2ind([Ny,Nx],jj,ii);
     Ls(:,c) = weights(c);
+    if (ndgrid)
+      if (speedOverSafety)
+        Lj(:,c) = (jj-1)*Nx + ii;
+      else
+        Lj(:,c) = sub2ind([Nx,Ny],ii,jj);
+      end
+    else % meshgrid
+      if (speedOverSafety)
+        Lj(:,c) = (ii-1)*Ny + jj;
+      else
+        Lj(:,c) = sub2ind([Ny,Nx],jj,ii);
+      end
+    end
   end
   L = sparse(Li(:), Lj(:), Ls(:), length(band1), Nx*Ny);
 
