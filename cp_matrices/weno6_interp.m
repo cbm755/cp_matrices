@@ -322,17 +322,17 @@ function Cache = weno6_interp2d_makecache(cp, f, xy)
 
   relpt = [cp.x1d(1)  cp.y1d(1)];
 
-  x = xyz(:,1);
-  y = xyz(:,2);
+  x = xy(:,1);
+  y = xy(:,2);
 
   % determine the basepoint
-  [ijk,X] = findGridInterpBasePt_vec(xyz, 5, relpt, [dx dy]);
+  [ijk,X] = findGridInterpBasePt_vec(xy, 5, relpt, [dx dy]);
   xi = X(:,1) + 2*dx;
   yi = X(:,2) + 2*dy;
   ijk = ijk + 2;
   I = sub2ind([Ny Nx], ijk(:,2), ijk(:,1));
 
-  B = findInBand(I, cp.band, Nx*Ny*Nz);
+  B = findInBand(I, cp.band, Nx*Ny);
 
   [E W N S] = neighbourMatrices(cp, cp.band, cp.band);
 
