@@ -1,19 +1,19 @@
 function [pass, str] = test_weno4()
-  str = 'test weno4 interpolation routines';
+  str = 'test weno4 interpolation routines (3D)';
 
   c = 0;
   pass = [];
 
   warning('TODO: fix the weno4 code to use different dx,dy,dz, relpt')
   dx = 0.1;
-  dy = 0.1;
-  dz = 0.1;
+  dy = 0.12;
+  dz = 0.14;
   maxdx = max([dx dy dz]);
 
   % make vectors of x, y, positions of the grid
-  x1d = (-1-5*dx:dx:1+5*dx)';
-  y1d = (-1-5*dy:dy:1+5*dy)';
-  z1d = (-1-5*dz:dz:1+5*dz)';
+  x1d = (-1-6*dx:dx:1+6*dx)';
+  y1d = (-1-7*dy:dy:1+7*dy)';
+  z1d = (-1-8*dz:dz:1+8*dz)';
 
   nx = length(x1d);
   ny = length(y1d);
@@ -48,26 +48,46 @@ function [pass, str] = test_weno4()
   cp.band = band;
 
   disp('*** weno4 call');
-  %T = tic;
-  w1 = weno4_interp(cp, u, [cp.cpx cp.cpy cp.cpz]);
-  %toc(T)
+  % do it twice as first one might not give good timing
+  w1 = weno4_interp_caching(cp, u, [cp.cpx cp.cpy cp.cpz]);
+  T1 = tic;
+  w1 = weno4_interp_caching(cp, u, [cp.cpx cp.cpy cp.cpz]);
+  T1 = toc(T1);
 
-  disp('*** weno4_caching call but without caching');
-  %T = tic;
-  w2 = weno4_interp_caching(cp, u, [cp.cpx cp.cpy cp.cpz]);
-  %toc(T)
-
-  c = c + 1;
-  pass(c) = max(abs(w1-w2)) == 0;
-
-
-  %disp('*** weno4_caching: calling build cache');
+  disp('*** weno4_caching: calling build cache');
   WenoCache = weno4_interp_caching(cp, u, [cp.cpx cp.cpy cp.cpz], 'cache');
+  T2 = tic;
+  WenoCache = weno4_interp_caching(cp, u, [cp.cpx cp.cpy cp.cpz], 'cache');
+  T2 = toc(T2);
 
-  %disp('*** cache built, now interpolating');
+  disp('*** cache built, now interpolating');
   w3 = weno4_interp_caching(WenoCache, u);
-  w4 = weno4_interp_caching(WenoCache, 1.1*u);
-  w5 = weno4_interp_caching(WenoCache, 1.2*u);
+  T3 = tic;
+  w3 = weno4_interp_caching(WenoCache, u);
+  T3 = toc(T3);
+  %w4 = weno4_interp_caching(WenoCache, 1.1*u);
+  %w5 = weno4_interp_caching(WenoCache, 1.2*u);
+
+  %disp('*** weno4_caching call but without caching');
+  %T2 = tic;
+  %w2 = weno4_interp_caching(cp, u, [cp.cpx cp.cpy cp.cpz]);
+  %T2 = toc(T2);
+
+  %% with or without caching gives same result
+  c = c + 1;
+  pass(c) = max(abs(w1-w3)) == 0;
+
+  %% one call without caching should be faster
+  % this is dangerous b/c non-deterministic
+  c = c + 1;
+  pass(c) = (T1/(T2+T3) < 0.75);
+
+
+  %% subsequent calls should be faster because of caching
+  % another non-deterministic
+  c = c + 1;
+  pass(c) = (T3/T1 < 0.8);
+
 
   c = c + 1;
   pass(c) = max(abs(w1-w3)) == 0;

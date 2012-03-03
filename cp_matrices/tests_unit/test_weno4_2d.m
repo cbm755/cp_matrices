@@ -1,73 +1,86 @@
-function [pass, str] = test_weno4()
-  str = 'test weno4 interpolation routines';
+function [pass, str] = test_weno4_2d()
+  str = 'test weno4 interpolation routines (2D)';
 
   c = 0;
   pass = [];
 
-  warning('TODO: fix the weno4 code to use different dx,dy,dz, relpt')
-  dx = 0.1;
-  dy = 0.1;
-  dz = 0.1;
-  maxdx = max([dx dy dz]);
+  dx = 0.02;
+  dy = 0.018;
+  maxdx = max([dx dy]);
 
   % make vectors of x, y, positions of the grid
-  x1d = (-1-5*dx:dx:1+5*dx)';
-  y1d = (-1-5*dy:dy:1+5*dy)';
-  z1d = (-1-5*dz:dz:1+5*dz)';
+  x1d = (-1-6*dx:dx:1+6*dx)';
+  y1d = (-1-7*dy:dy:1+7*dy)';
 
   nx = length(x1d);
   ny = length(y1d);
-  nz = length(z1d);
 
-  [xx yy zz] = meshgrid(x1d, y1d, z1d);
-  [cpx, cpy, cpz, dist] = cpSphere(xx,yy,zz);
-  cpxg = cpx(:); cpyg = cpy(:); cpzg = cpz(:);
+  [xx yy] = meshgrid(x1d, y1d);
+  [cpx, cpy, dist] = cpCircle(xx,yy);
+  cpxg = cpx(:); cpyg = cpy(:);
 
 
   %% Banding
-  dim = 3;  % dimension
+  dim = 2;  % dimension
   p = 3;    % interpolation order
   bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
   band = find(abs(dist) <= bw*maxdx);
   % store closest points in the band;
-  cpxg = cpxg(band); cpyg = cpyg(band); cpzg = cpzg(band);
-  xg = xx(band); yg = yy(band); zg = zz(band);
+  cpxg = cpxg(band); cpyg = cpyg(band);
+  xg = xx(band); yg = yy(band);
 
   % some smooth function on the surface
-  [th, phi, r] = cart2sph(xg,yg,zg);
-  u = (cos(phi + pi/2)).^2;
+  [th, r] = cart2pol(xg,yg);
+  u = (cos(th + pi/2)).^2;
 
   % grid object
   cp.x1d = x1d;
   cp.y1d = y1d;
-  cp.z1d = z1d;
   cp.cpx = cpxg;
   cp.cpy = cpyg;
-  cp.cpz = cpzg;
-  cp.dim = 3;
+  cp.dim = 2;
   cp.band = band;
 
   disp('*** weno4 call');
-  %T = tic;
-  w1 = weno4_interp(cp, u, [cp.cpx cp.cpy cp.cpz]);
-  %toc(T)
+  % do it twice as first one might not give good timing
+  w1 = weno4_interp_caching(cp, u, [cp.cpx cp.cpy]);
+  T1 = tic;
+  w1 = weno4_interp_caching(cp, u, [cp.cpx cp.cpy]);
+  T1 = toc(T1);
 
-  disp('*** weno4_caching call but without caching');
-  %T = tic;
-  w2 = weno4_interp_caching(cp, u, [cp.cpx cp.cpy cp.cpz]);
-  %toc(T)
+  disp('*** weno4_caching: calling build cache');
+  WenoCache = weno4_interp_caching(cp, u, [cp.cpx cp.cpy], 'cache');
+  T2 = tic;
+  WenoCache = weno4_interp_caching(cp, u, [cp.cpx cp.cpy], 'cache');
+  T2 = toc(T2);
 
-  c = c + 1;
-  pass(c) = max(abs(w1-w2)) == 0;
-
-
-  %disp('*** weno4_caching: calling build cache');
-  WenoCache = weno4_interp_caching(cp, u, [cp.cpx cp.cpy cp.cpz], 'cache');
-
-  %disp('*** cache built, now interpolating');
+  disp('*** cache built, now interpolating');
   w3 = weno4_interp_caching(WenoCache, u);
-  w4 = weno4_interp_caching(WenoCache, 1.1*u);
-  w5 = weno4_interp_caching(WenoCache, 1.2*u);
+  T3 = tic;
+  w3 = weno4_interp_caching(WenoCache, u);
+  T3 = toc(T3);
+  %w4 = weno4_interp_caching(WenoCache, 1.1*u);
+  %w5 = weno4_interp_caching(WenoCache, 1.2*u);
+
+  %% with or without caching gives same result
+  c = c + 1;
+  pass(c) = max(abs(w1-w3)) == 0;
+
+  %% one call without caching should be faster
+  % this is dangerous b/c non-deterministic
+  %T1
+  %T2
+  %T3
+  %T1/(T2+T3)
+  c = c + 1;
+  pass(c) = (T1/(T2+T3) < 0.95);
+
+
+  %% subsequent calls should be faster because of caching
+  % another non-deterministic
+  %T3/T1
+  c = c + 1;
+  pass(c) = (T3/T1 < 0.75);
 
   c = c + 1;
   pass(c) = max(abs(w1-w3)) == 0;

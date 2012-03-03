@@ -23,8 +23,8 @@ function w = weno6_interp(cp, f, x, onlyMakeCache, opt)
 %   method) caching can be used to make each call about twice as
 %   fast:
 %   wenoCache = weno6_interp(cpgrid, f, x, 'cache')
-%   u1 = weno4_interp(wenoCache, f1)
-%   u2 = weno4_interp(wenoCache, f2)
+%   u1 = weno6_interp(wenoCache, f1)
+%   u2 = weno6_interp(wenoCache, f2)
 %   On the other hand, if you just do one interpolation, a faster
 %   implementation is possible (not done for weno6).
 %
@@ -56,7 +56,6 @@ function w = weno6_interp(cp, f, x, onlyMakeCache, opt)
     return
   end
 
-
   if (nargin >= 4)
     if (onlyMakeCache)
       % noop
@@ -65,9 +64,6 @@ function w = weno6_interp(cp, f, x, onlyMakeCache, opt)
     else
       onlyMakeCache = false;
     end
-    %disp('weno6: building cache');
-    % if its nargin == 3 we don't want to say this message even
-    % though we do build the cache (and discard it later)
   else
     onlyMakeCache = false;
   end
@@ -257,14 +253,7 @@ function Cache = weno6_interp3d_makecache(cp, f, xyz)
   dy = y1d(2) - y1d(1);
   dz = z1d(2) - z1d(1);
 
-  %relpt = cp.x1d(1);  % TODO
-  %[ijk,X] = findGridInterpBasePt(xyz, 5, relpt, dx);
-
   relpt = [cp.x1d(1)  cp.y1d(1)  cp.z1d(1)];
-
-  x = xyz(:,1);
-  y = xyz(:,2);
-  z = xyz(:,3);
 
   % determine the basepoint
   [ijk,X] = findGridInterpBasePt_vec(xyz, 5, relpt, [dx dy dz]);
@@ -298,9 +287,9 @@ function Cache = weno6_interp3d_makecache(cp, f, xyz)
   Cache.xi = xi;
   Cache.yi = yi;
   Cache.zi = zi;
-  Cache.x = x;
-  Cache.y = y;
-  Cache.z = z;
+  Cache.x = xyz(:,1);
+  Cache.y = xyz(:,2);
+  Cache.z = xyz(:,3);
   Cache.dx = dx;
   Cache.dy = dy;
   Cache.dz = dz;
@@ -310,7 +299,7 @@ end
 
 
 
-function Cache = weno6_interp2d_makecache(cp, f, xy)
+function Cache = weno6_interp2d_makecache(cp, f, xyz)
 %WENO6_INTERP2D_MAKE_CACHE  pre-computation for WENO interpolation 2D
 
   x1d = cp.x1d;
@@ -322,11 +311,8 @@ function Cache = weno6_interp2d_makecache(cp, f, xy)
 
   relpt = [cp.x1d(1)  cp.y1d(1)];
 
-  x = xy(:,1);
-  y = xy(:,2);
-
   % determine the basepoint
-  [ijk,X] = findGridInterpBasePt_vec(xy, 5, relpt, [dx dy]);
+  [ijk,X] = findGridInterpBasePt_vec(xyz, 5, relpt, [dx dy]);
   xi = X(:,1) + 2*dx;
   yi = X(:,2) + 2*dy;
   ijk = ijk + 2;
@@ -351,8 +337,8 @@ function Cache = weno6_interp2d_makecache(cp, f, xy)
   Cache.C = C;
   Cache.xi = xi;
   Cache.yi = yi;
-  Cache.x = x;
-  Cache.y = y;
+  Cache.x = xyz(:,1);
+  Cache.y = xyz(:,2);
   Cache.dx = dx;
   Cache.dy = dy;
   Cache.dim = 2;
