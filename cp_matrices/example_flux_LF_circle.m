@@ -101,12 +101,18 @@ Eplot = interp2_matrix(x1d, y1d, xp, yp, p, band);
 
 figure(1); clf;
 figure(2); clf;
-figure(3); clf;
+
+cp.dim = 2;
+cp.x1d = x1d;
+cp.y1d = y1d;
+cp.band = band;
+% notation: Neighbour East = "NE", etc
+[NE NW NN NS] = neighbourMatrices(cp, cp.band, cp.band);
 
 
 %% Time-stepping for the heat equation
 
-Tf = 1;
+Tf = 2;
 dt = 0.25*dx;
 numtimesteps = ceil(Tf/dt)
 % adjust for integer number of steps
@@ -119,10 +125,42 @@ for kt = 1:numtimesteps
   % w2 = ...
   % w1 = E*w1;
   % w2 = E*w2;
+
+  scalar_flux = u.^2/2;  % burgers
+  f = scalar_flux.*w1;  % find the components
+  g = scalar_flux.*w2;
+
+  % Lax-Friedrichs flux splitting
+  % TODO: here f' = u so say 1 for now but should search, GLF, LLF, SLLF
+  alphax = 1;
+  alphay = 1;
+  % split intp f^{+} and f^{-}
+  fp = 1/2*(f + alphax*u);
+  fm = 1/2*(f - alphax*u);
+  gp = 1/2*(g + alphay*u);
+  gm = 1/2*(g - alphay*u);
+
+
+  % 1st-order upwinding
+  % notation: f^{p}_{i+1/2} = fp_iph
+  % (upwinding normally lookts like this, but the wind always blows
+  % rightward for fp.  The wind is (u*w1,u*w2).)
+  %fp_iph = (u*w1 >= 0) .* fp + (u*w1 < 0) .* E*fp;
+  %fp_iph = (u*w1 >= 0) .* fp + (u*w1 < 0) .* E*fp;
+  fp_iph = fp;
+  fm_iph = NE*fm;
+  gp_jph = gp;
+  gm_jph = NN*gm;
+  % TODO: drop in WENO for these...
+
   rhs = - ( ...
-      (w1 < 0) .* (Dxf*(u.*w1)) + (w1 >= 0) .* (Dxb*(u.*w1)) + ...
-      (w2 < 0) .* (Dyf*(u.*w2)) + (w2 >= 0) .* (Dyb*(u.*w2)) ...
+      Dxb*fp_iph + Dxb*fm_iph + ...
+      Dyb*gp_jph + Dyb*gm_jph ...
       );
+  %rhs = - ( ...
+  %    (w1 < 0) .* (Dxf*(u.*w1)) + (w1 >= 0) .* (Dxb*(u.*w1)) + ...
+  %    (w2 < 0) .* (Dyf*(u.*w2)) + (w2 >= 0) .* (Dyb*(u.*w2)) ...
+  %    );
   unew = u + dt*rhs;
 
   % closest point extension
@@ -144,23 +182,10 @@ for kt = 1:numtimesteps
     set(0, 'CurrentFigure', 2);
     clf;
     circplot = Eplot*u;
-    exactplot = cos(thetas-t);
     plot(thetas, circplot);
     title( ['soln at time ' num2str(t) ', on circle'] );
     xlabel('theta'); ylabel('u');
     hold on;
-    % plot analytic result
-    plot(thetas, exactplot, 'r--');
-    legend('explicit Euler', 'exact answer', 'Location', 'SouthEast');
-    error_circ_inf = max(abs( exactplot - circplot ))
-
-    set(0, 'CurrentFigure', 3);
-    clf;
-    plot(thetas, circplot - exactplot);
-    title( ['error at time ' num2str(t) ', on circle'] );
-    xlabel('theta'); ylabel('error');
-
-    %pause(0);
     drawnow();
   end
 end
