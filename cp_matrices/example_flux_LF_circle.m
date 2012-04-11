@@ -1,11 +1,6 @@
-%% Advection equation on a circle
-% cp_matrices is a folder of useful functions to make implementing the
-% closest point method easier. These include closest point extension
-% matrices, and differentiation matrices.
-
-% This example solves the advection equation on a 2D circle, with
-% initial conditions u = cos(theta), using a specified velocity
-% field tangent to the circle.
+%% HCL on a circle
+% This example solves the Burgers' equation on a 2D circle, using a
+% specified velocity field tangent to the circle.
 
 
 %% Using cp_matrices
@@ -46,12 +41,15 @@ cpxg = cpx(:); cpyg = cpy(:);
 
 
 %% Banding: do calculation in a narrow band around the circle
-dim = 2;  % dimension
-p = 3;    % interpolation order
+dim = 2;
+p = 5;          % interp degree (5 for WENO6 interp, 3 for WENO4 interp)
+opStenRad = 3;  % the stencil radius of the spatial disc scheme
+
 % "band" is a vector of the indices of the points in the computation
 % band.  The formula for bw is found in [Ruuth & Merriman 2008] and
 % the 1.0001 is a safety factor.
-bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
+% For weno, see the figure in [Macdonald & Ruuth 2008]
+bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((spatialStencilRad+(p+1)/2)^2));
 band = find(abs(dist) <= bw*dx);
 
 % store closest points in the band;
@@ -62,7 +60,8 @@ xg = xx(band); yg = yy(band);
 %% Function u in the embedding space
 % u is a function defined on the grid
 [th, r] = cart2pol(xg,yg);
-u = cos(th);
+u = 0.45*cos(th) + 0.55;
+%u = cos(th);
 initialu = u;       % store initial value
 
 w1 = -sin(th);
@@ -106,14 +105,17 @@ cp.dim = 2;
 cp.x1d = x1d;
 cp.y1d = y1d;
 cp.band = band;
+cp.cpx = cpxg;
+cp.cpy = cpyg;
 % notation: Neighbour East = "NE", etc
 [NE NW NN NS] = neighbourMatrices(cp, cp.band, cp.band);
-
+% weno interpolation can cache data for better performance:
+Weno6Cache = weno6_interp(cp, u, [cp.cpx cp.cpy], true);
 
 %% Time-stepping for the heat equation
 
-Tf = 2;
-dt = 0.25*dx;
+Tf = 10;
+dt = 0.1*dx;  % TODO: what is CFL for this?
 numtimesteps = ceil(Tf/dt)
 % adjust for integer number of steps
 dt = Tf / numtimesteps
@@ -141,30 +143,31 @@ for kt = 1:numtimesteps
   gm = 1/2*(g - alphay*u);
 
 
-  % 1st-order upwinding
+  %% Reconstruction of cell-edge values
   % notation: f^{p}_{i+1/2} = fp_iph
-  % (upwinding normally lookts like this, but the wind always blows
-  % rightward for fp.  The wind is (u*w1,u*w2).)
-  %fp_iph = (u*w1 >= 0) .* fp + (u*w1 < 0) .* E*fp;
-  %fp_iph = (u*w1 >= 0) .* fp + (u*w1 < 0) .* E*fp;
-  fp_iph = fp;
-  fm_iph = NE*fm;
-  gp_jph = gp;
-  gm_jph = NN*gm;
-  % TODO: drop in WENO for these...
 
+  % HCL WENO5
+  fp_iph = fd_weno5_1d( [NW*(NW*fp)  NW*fp  fp  NE*fp  NE*(NE*fp)] );
+  fm_iph = fd_weno5_1d( [NE*(NE*(NE*fm))  NE*(NE*fm)  NE*fm  fm  NW*fm] );
+  gp_jph = fd_weno5_1d( [NS*(NS*gp)  NS*gp  gp  NN*gp  NN*(NN*gp)] );
+  gm_jph = fd_weno5_1d( [NN*(NN*(NN*gm))  NN*(NN*gm)  NN*gm  gm  NS*gm] );
+  % first-order upwinding
+  %fp_iph = fp;
+  %fm_iph = NE*fm;
+  %gp_jph = gp;
+  %gm_jph = NN*gm;
+
+  % numerical flux differencing
   rhs = - ( ...
       Dxb*fp_iph + Dxb*fm_iph + ...
       Dyb*gp_jph + Dyb*gm_jph ...
       );
-  %rhs = - ( ...
-  %    (w1 < 0) .* (Dxf*(u.*w1)) + (w1 >= 0) .* (Dxb*(u.*w1)) + ...
-  %    (w2 < 0) .* (Dyf*(u.*w2)) + (w2 >= 0) .* (Dyb*(u.*w2)) ...
-  %    );
   unew = u + dt*rhs;
 
-  % closest point extension
-  u = E*unew;
+  % closest point extension, linear-in-data
+  %u = E*unew;
+  % closest point extension with weno interp
+  u = weno6_interp(Weno6Cache, unew);
 
   t = kt*dt;
 
@@ -182,10 +185,11 @@ for kt = 1:numtimesteps
     set(0, 'CurrentFigure', 2);
     clf;
     circplot = Eplot*u;
-    plot(thetas, circplot);
+    plot(thetas, circplot, 'b-+');
     title( ['soln at time ' num2str(t) ', on circle'] );
     xlabel('theta'); ylabel('u');
     hold on;
+    grid on
     drawnow();
   end
 end
