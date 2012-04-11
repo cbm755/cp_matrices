@@ -50,6 +50,16 @@ end
 function u = helper1d(fim1, fi, fip1, fip2, xi, dx, x, opt)
 %HELPER1D
 
+  % this would return a matrix: each interpolant evaluated at each CP.
+  % Anyway, this doesn't work either.  One approach is to implement a
+  % vectorized version from scr
+  U = pchip([-dx  0  dx  2*dx], [fim1 fi fip1 fip2], x-xi);
+  u = diag(U);
+end
+
+function u = helper1d_slow(fim1, fi, fip1, fip2, xi, dx, x, opt)
+%HELPER1D
+
   u = zeros(size(x));
   for i=1:length(x)
     u(i) = pchip(xi(i)+[-1 0 1 2]*dx, [fim1(i) fi(i) fip1(i) fip2(i)], x(i));
