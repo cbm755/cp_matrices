@@ -37,6 +37,7 @@ function w = weno6_interp(cp, f, x, onlyMakeCache, opt)
 %
 %   TODO: support calling without a "cpgrid"?
 %   TODO: dual-band support.
+%   TODO: support ndgrid.
 
   if (nargin < 5)
     opt = [];
