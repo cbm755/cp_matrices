@@ -49,7 +49,7 @@ opStenRad = 3;  % the stencil radius of the spatial disc scheme
 % band.  The formula for bw is found in [Ruuth & Merriman 2008] and
 % the 1.0001 is a safety factor.
 % For weno, see the figure in [Macdonald & Ruuth 2008]
-bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((spatialStencilRad+(p+1)/2)^2));
+bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((opStenRad+(p+1)/2)^2));
 band = find(abs(dist) <= bw*dx);
 
 % store closest points in the band;
