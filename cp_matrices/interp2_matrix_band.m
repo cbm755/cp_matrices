@@ -21,7 +21,7 @@ function E = interp2_matrix_band(x, y, xi, yi, p, band, use_ndgrid)
     use_ndgrid = false;
   end
 
-  warning('this code is depreciated, call interp3_matrix directly');
+  warning('this code is depreciated, call interp2_matrix directly');
 
   E = interp2_matrix_oldloop(x, y, xi, yi, p, use_ndgrid);
 
