@@ -1,4 +1,4 @@
-function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band)
+function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
 %INTERP3_MATRIX  Return a 3D interpolation matrix
 %   E = INTERP3_MATRIX(X,Y,Z, XI,YI,ZI, P)
 %   Build a matrix which interpolates grid data on a grid defined by
@@ -53,9 +53,14 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band)
   if (nargin == 6)
     p = 3
     makeBanded = false;
+    use_ndgrid = false
   elseif (nargin == 7)
     makeBanded = false;
+    use_ndgrid = false
   elseif (nargin == 8)
+    makeBanded = true;
+    use_ndgrid = false
+  elseif (nargin == 9)
     makeBanded = true;
   else
     error('unexpected inputs');
@@ -116,12 +121,17 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band)
         ijk = sub2ind([N,N,N], j, i, k);
         weights(:,ijk) = xw(:,i) .* yw(:,j) .* zw(:,k);
 
-        % all these do the same, but last one is fastest.  Although sub2ind
-        % presumably has safety checks...
-        %ind = (gk-1)*(Nx*Ny) + (gi-1)*Ny + gj;
-        %ind = sub2ind([Ny,Nx,Nz], gj, gi, gk);
-        %ind = round((gk-1)*(Nx*Ny) + (gi-1)*(Ny) + gj-1 + 1);
-        Ej(:,ijk) = (gk-1)*(Nx*Ny) + (gi-1)*Ny + gj;
+        if (use_ndgrid)
+          Ej(:,ijk) = sub2ind([Nx,Ny,Nz], gi, gj, gk);
+          %Ej(:,ijk) = (gk-1)*(Nx*Ny) + (gj-1)*Nx + gi;
+        else
+          % all these do the same, but last one is fastest.  Although sub2ind
+          % presumably has safety checks...
+          %ind = (gk-1)*(Nx*Ny) + (gi-1)*Ny + gj;
+          %ind = sub2ind([Ny,Nx,Nz], gj, gi, gk);
+          %ind = round((gk-1)*(Nx*Ny) + (gi-1)*(Ny) + gj-1 + 1);
+          Ej(:,ijk) = (gk-1)*(Nx*Ny) + (gi-1)*Ny + gj;
+        end
       end
     end
   end

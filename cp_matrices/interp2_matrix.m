@@ -1,4 +1,4 @@
-function [E,Ej,Es] = interp2_matrix(x, y, xi, yi, p, band)
+function [E,Ej,Es] = interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
 %INTERP2_MATRIX  Return a 2D interpolation matrix
 %   E = INTERP2_MATRIX(X, Y, XI, YI, P)
 %   Build a matrix which interpolates grid data on a grid defined by
@@ -45,9 +45,14 @@ function [E,Ej,Es] = interp2_matrix(x, y, xi, yi, p, band)
   if (nargin == 4)
     p = 3
     makeBanded = false;
+    use_ndgrid = false;
   elseif (nargin == 5)
     makeBanded = false;
+    use_ndgrid = false;
   elseif (nargin == 6)
+    makeBanded = true;
+    use_ndgrid = false;
+  elseif (nargin == 7)
     makeBanded = true;
   else
     error('unexpected inputs');
@@ -104,8 +109,12 @@ function [E,Ej,Es] = interp2_matrix(x, y, xi, yi, p, band)
       ijk = sub2ind([N,N], j, i);
       weights(:,ijk) = xw(:,i) .* yw(:,j);
 
-      %Ej(:,ijk) = sub2ind([Ny,Nx], gj, gi);
-      Ej(:,ijk) = (gi-1)*Ny + gj;
+      if (use_ndgrid)
+        Ej(:,ijk) = sub2ind([Nx,Ny], gi, gj);
+      else
+        %Ej(:,ijk) = sub2ind([Ny,Nx], gj, gi);
+        Ej(:,ijk) = (gi-1)*Ny + gj;
+      end
     end
   end
   %toc
