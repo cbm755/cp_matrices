@@ -35,7 +35,7 @@ function L = laplacian_2d_matrix(x,y, order, band1, band2, use_ndgrid, use_loop)
   dx = x(2)-x(1);
   dy = y(2)-y(1);
   if ~assertAlmostEqual(dx, dy, 100*eps)
-    error('this routine requires dx == dy');
+    error('this particular routine requires dx == dy');
   end
   %ddx = [dx  dy];
   %dim = length(ddx);

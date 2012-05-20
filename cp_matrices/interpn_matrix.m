@@ -210,7 +210,6 @@ end
 function A = myind2sub(siz, ndx)
 % ndx is the linear index
   n = length(siz);
-  n = length(siz);
   k = [1 cumprod(siz(1:end-1))];
   for i = n:-1:1,
     vi = rem(ndx-1, k(i)) + 1;

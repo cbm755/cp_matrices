@@ -21,6 +21,12 @@ function porcupine_plot2d(x, y, cpx, cpy, fignum, bdy)
       col = 'r';
     elseif (bdy(i) == 2)
       col = 'b';
+    elseif (bdy(i) == 3)
+      col = 'g';
+    elseif (bdy(i) == 4)
+      col = 'c';
+    elseif (bdy(i) == 5)
+      col = 'm';
     else
       col = 'y';
     end

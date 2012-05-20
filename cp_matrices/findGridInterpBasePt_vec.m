@@ -35,6 +35,7 @@ function [I,X] = findGridInterpBasePt_vec(x, p, relpt, dx)
 %   surface).  For now I'll add a warning to the 3D code.
 
   % TODO: could simplify, if isscalar(dx)
+  % TODO: is "fix" useful here instead of round?
 
   if (mod(p,2) == 0)  % even
     I = round( ( x - repmat(relpt,size(x,1),1) ) ./ repmat(dx,size(x,1),1) ) + 1  -  p/2;

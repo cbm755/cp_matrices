@@ -48,7 +48,7 @@ function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid, use_loo
   dy = y(2)-y(1);
   dz = z(2)-z(1);
   if ~assertAlmostEqual([dx dx], [dy dz], 100*eps)
-    error('this routine requires dx == dy == dz');
+    error('this particular routine requires dx == dy == dz');
   end
   %ddx = [dx  dy  dz];
   %dim = length(ddx);
