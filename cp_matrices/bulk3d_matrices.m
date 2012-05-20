@@ -1,15 +1,11 @@
 function [Dxx,Dyy,Dzz, Dxc,Dyc,Dzc, Dxb,Dyb,Dzb, Dxf,Dyf,Dzf, ...
           Dxyc,Dxzc,Dyzc] = bulk3d_matrices(x, y, z, use_ndgrid)
-%BULK£D_MATRICES  Build discrete derivative matrices
+%BULK3D_MATRICES  Build discrete derivative matrices
 %
 %   To use ndgrid ordering pass "true" as the final argument
 
   if (nargin <= 3)
     use_ndgrid = false;
-  end
-
-  if use_ndgrid
-    error('not implemented');
   end
 
   dx = x(2)-x(1);
@@ -28,28 +24,48 @@ function [Dxx,Dyy,Dzz, Dxc,Dyc,Dzc, Dxb,Dyb,Dzb, Dxf,Dyf,Dzf, ...
 
 
   % Use kronecker products to build 3D operators
-  Dxx = kron(Iz, kron(D1xx, Iy));
-  Dyy = kron(Iz, kron(Ix, D1yy));
-  Dzz = kron(D1zz, kron(Ix, Iy));
-  % ok too:
-  %Dzz = kron(D1zz, kron(Ix, Iy));
+  if (use_ndgrid)
+    % note those with kron(Iy,Ix) are indep of meshgrid/ndgrid ordering
+    Dxx = kron(Iz, kron(Iy, D1xx));
+    Dyy = kron(Iz, kron(D1yy, Ix));
+    Dzz = kron(D1zz, kron(Iy, Ix));%
 
-  % laplacian
-  %L = Dxx + Dyy + Dzz;
+    Dxc = kron(Iz, kron(Iy, D1xc));
+    Dyc = kron(Iz, kron(D1yc, Ix));
+    Dzc = kron(D1zc, kron(Iy, Ix));%
 
-  Dxc = kron(Iz, kron(D1xc, Iy));
-  Dyc = kron(Iz, kron(Ix, D1yc));
-  Dzc = kron(D1zc, kron(Ix, Iy));
+    Dxb = kron(Iz, kron(Iy, D1xb));
+    Dyb = kron(Iz, kron(D1yb, Ix));
+    Dzb = kron(D1zb, kron(Iy, Ix));%
 
-  Dxb = kron(Iz, kron(D1xb, Iy));
-  Dyb = kron(Iz, kron(Ix, D1yb));
-  Dzb = kron(D1zb, kron(Ix, Iy));
+    Dxf = kron(Iz, kron(Iy, D1xf));
+    Dyf = kron(Iz, kron(D1yf, Ix));
+    Dzf = kron(D1zf, kron(Iy, Ix));%
 
-  Dxf = kron(Iz, kron(D1xf, Iy));
-  Dyf = kron(Iz, kron(Ix, D1yf));
-  Dzf = kron(D1zf, kron(Ix, Iy));
+    Dxyc = kron(Iz, kron(D1yc, D1xc));
+    Dxzc = kron(D1zc, kron(Iy, D1xc));
+    Dyzc = kron(D1zc, kron(D1yc, Ix));
 
-  Dxyc = kron(Iz, kron(D1xc, D1yc));
-  Dxzc = kron(D1zc, kron(D1xc, Iy));
-  Dyzc = kron(D1zc, kron(Ix, D1yc));
+  else
+    Dxx = kron(Iz, kron(D1xx, Iy));
+    Dyy = kron(Iz, kron(Ix, D1yy));
+    Dzz = kron(D1zz, kron(Ix, Iy));
+    % laplacian
+    %L = Dxx + Dyy + Dzz;
 
+    Dxc = kron(Iz, kron(D1xc, Iy));
+    Dyc = kron(Iz, kron(Ix, D1yc));
+    Dzc = kron(D1zc, kron(Ix, Iy));
+
+    Dxb = kron(Iz, kron(D1xb, Iy));
+    Dyb = kron(Iz, kron(Ix, D1yb));
+    Dzb = kron(D1zb, kron(Ix, Iy));
+
+    Dxf = kron(Iz, kron(D1xf, Iy));
+    Dyf = kron(Iz, kron(Ix, D1yf));
+    Dzf = kron(D1zf, kron(Ix, Iy));
+
+    Dxyc = kron(Iz, kron(D1xc, D1yc));
+    Dxzc = kron(D1zc, kron(D1xc, Iy));
+    Dyzc = kron(D1zc, kron(Ix, D1yc));
+  end

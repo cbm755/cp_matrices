@@ -7,10 +7,6 @@ function [Dxx,Dyy,Dxc,Dyc,Dxb,Dyb,Dxf,Dyf,Dxyc] = bulk2d_matrices(x, y, use_ndgr
     use_ndgrid = false;
   end
 
-  if use_ndgrid
-    error('not implemented');
-  end
-
   dx = x(2)-x(1);
   dy = y(2)-y(1);
 
@@ -22,20 +18,34 @@ function [Dxx,Dyy,Dxc,Dyc,Dxb,Dyb,Dxf,Dyf,Dxyc] = bulk2d_matrices(x, y, use_ndgr
   [Iy,D1yy,D1yc,D1yb,D1yf] = diff_matrices1d(ny, dy);
 
   % Use kronecker products to build 2D operators
-  Dxx = kron(D1xx, Iy);
-  Dyy = kron(Ix, D1yy);
+  if (use_ndgrid)
+    Dxx = kron(Iy, D1xx);
+    Dyy = kron(D1yy, Ix);
+    % laplacian
+    %L = Dxx + Dyy;
 
-  % laplacian
-  %L = Dxx + Dyy;
+    Dxyc = kron(D1yc, D1xc);
 
-  Dxyc = kron(D1xc, D1yc);
+    Dxc = kron(Iy, D1xc);
+    Dyc = kron(D1yc, Ix);
 
-  Dxc = kron(D1xc, Iy);
-  Dyc = kron(Ix, D1yc);
+    Dxb = kron(Iy, D1xb);
+    Dyb = kron(D1yb, Ix);
 
-  Dxb = kron(D1xb, Iy);
-  Dyb = kron(Ix, D1yb);
+    Dxf = kron(Iy, D1xf);
+    Dyf = kron(D1yf, Ix);
+  else % meshgrid ordering
+    Dxx = kron(D1xx, Iy);
+    Dyy = kron(Ix, D1yy);
 
-  Dxf = kron(D1xf, Iy);
-  Dyf = kron(Ix, D1yf);
+    Dxyc = kron(D1xc, D1yc);
 
+    Dxc = kron(D1xc, Iy);
+    Dyc = kron(Ix, D1yc);
+
+    Dxb = kron(D1xb, Iy);
+    Dyb = kron(Ix, D1yb);
+
+    Dxf = kron(D1xf, Iy);
+    Dyf = kron(Ix, D1yf);
+  end
