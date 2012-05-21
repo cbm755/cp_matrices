@@ -1,10 +1,10 @@
-function [cpx, cpy, d, bdy, ls] = cpYingYang(x, y, R, cen)
-%CPYINGYANG  Closest Point function for a mixed-codim YingYang.
-%   [cpx, cpy, dist, bdy, levelset] = cpYangYang(x, y)
-%      A unit yingyang centered at the origin
+function [cpx, cpy, d, bdy, ls] = cpYinYang(x, y, R, cen)
+%CPYINYANG  Closest Point function for a mixed-codim Yin Yang.
+%   [cpx, cpy, dist, bdy, levelset] = cpYinYang(x, y)
+%      A unit yin yang centered at the origin
 %   [...] = cpCircle(x, y, R)
 %   [...] = cpCircle(x, y, R, Cen)
-%      A ying yang with radius R centered at Cen = [xc,yc].
+%      A yin yang with radius R centered at Cen = [xc,yc].
 %
 %   Outputs:
 %     `dist' is unsigned distance.  Note zero in the "solid" part.
@@ -45,7 +45,7 @@ function [cpx, cpy, d, bdy, ls] = cpYingYang(x, y, R, cen)
   bdy(I) = 1;
   bdy(I & (y <= 0)) = 3;
 
-  % next two are inside the black ying
+  % next two are inside the black yin
   I = (sd1 < 0) & (sd3 <= 0) & (y < 0);
   cpx(I) = x(I);
   cpy(I) = y(I);
@@ -70,7 +70,7 @@ function [cpx, cpy, d, bdy, ls] = cpYingYang(x, y, R, cen)
   ls(I) = -sd2(I);
   bdy(I) = 2;
 
-  % inside the yang, bottom half-plane and closest to the ying
+  % inside the yang, bottom half-plane and closest to the yin
   I = (sd1 < 0) & (y < 0) & (sd3 > 0) & (sd3 <= -sd1);
   cpx(I) = cpx3(I);
   cpy(I) = cpy3(I);
