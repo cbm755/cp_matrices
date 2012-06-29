@@ -27,9 +27,9 @@ function [cpx cpy cpz dist] = cpSurfOfRevolution(x, y, z, cpf, whichaxis, cpfdat
   end
 
   if (isempty(cpfdata))
-    [cpr,cpzz,dist] = cpf(zz, r);
+    [cpzz cpr dist] = cpf(zz, r);
   else
-    [cpr,cpzz,dist] = cpf(zz, r, cpfdata{:});
+    [cpzz cpr dist] = cpf(zz, r, cpfdata{:});
   end
 
   switch whichaxis
@@ -38,13 +38,9 @@ function [cpx cpy cpz dist] = cpSurfOfRevolution(x, y, z, cpf, whichaxis, cpfdat
     case 'y'
       [cpz,cpx,cpy] = pol2cart(th, cpr, cpzz);
     case 'z'
-      size(th)
-      size(cpr)
-      size(cpzz)
       [cpx,cpy,cpz] = pol2cart(th, cpr, cpzz);
     otherwise
       error('axis not implemented');
   end
-
 
 

@@ -23,7 +23,7 @@ function [x,y,z] = paramEllipsoid(N, AB, cen, ax)
 
   % TODO: not visually pleasing when the ratio a/b is small
   if (a > b)
-    M = ceil(b/a*N*2)
+    M = ceil(b/a*N*2);
   else
     M = N;
     N = ceil(a/b*M/2);
