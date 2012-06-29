@@ -22,7 +22,7 @@ function [cpx, cpy, d, bdy, ls] = cpYinYang(x, y, R, cen)
     cen = [0,0];
   end
 
-  % shift to the originsd
+  % shift to the origins
   x = x - cen(1);
   y = y - cen(2);
 
@@ -30,6 +30,9 @@ function [cpx, cpy, d, bdy, ls] = cpYinYang(x, y, R, cen)
   [cpx2,cpy2,sd2] = cpCircle(x, y, R/2, [R/2 0]);
   [cpx3,cpy3,sd3] = cpCircle(x, y, R/2, [-R/2 0]);
 
+  cpx = zeros(size(x));
+  cpy = zeros(size(x));
+  cpz = zeros(size(x));
   % for debugging
   d = -1000*ones(size(x));
   ls = -1000*ones(size(x));
