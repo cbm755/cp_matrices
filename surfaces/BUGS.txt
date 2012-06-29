@@ -8,3 +8,8 @@ bug #2:
 bug #3:
   There is no torus CP function.  Jeff Springer is supposed to be working on this.
 
+bug #4:
+  cpParamCurveOpen.m has been renamed (pending vectorization).  So use cpParamCurveOpen_oldloop() for now.
+
+bug #5:
+  cpSurfOfRevolution not working yet
