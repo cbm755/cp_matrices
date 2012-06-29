@@ -5,6 +5,8 @@ function [cpx, cpy, dist, varargout] = cpSpline2D(x, y, sp, isclosed, DEBUG)
 %
 %   Depends on the spline toolbox
 %   Internally, uses cpParamCurve_2D with Newton solves to find cp
+%
+%   TODO: the open case still uses loops
 
   if (nargin <= 4)
     DEBUG = 0;
@@ -16,6 +18,9 @@ function [cpx, cpy, dist, varargout] = cpSpline2D(x, y, sp, isclosed, DEBUG)
   %splx = cscvn(pts(:,1)');
   %sply = cscvn(pts(:,1)');
 
+  % TODO: functions with handle references are easier to
+  % understand, work for different input sizes and are even
+  % slightly faster, so these function handles are depreciated
   S1.type='()';
   S1.subs = {1,':'};
   S2.type='()';
@@ -37,37 +42,54 @@ function [cpx, cpy, dist, varargout] = cpSpline2D(x, y, sp, isclosed, DEBUG)
   endpt1 = sp.breaks(1);
   endpt2 = sp.breaks(end);
 
+  xv = x(:); yv = y(:);
 
-  %% now loop and find the CPs
-  x1d = x(:); y1d = y(:);
+  if (isclosed)
+    useVectorCode = 1;
+  else
+    useVectorCode = 0;
+  end
 
-  nx = length(x1d);     % number of points
 
-  cpx = zeros(nx,1);
-  cpy = zeros(nx,1);
-  dist = zeros(nx,1);
-  bdy = zeros(nx,1);
-
-  for pt = 1:nx
+  if (useVectorCode)
     if (isclosed)
-      [cpx(pt), cpy(pt), dist(pt), bdy(pt)] = ...
-          cpParamCurveClosed(x1d(pt),y1d(pt), ...
-                             xs,ys,xp,yp,xpp,ypp, ...
-                             [endpt1 endpt2], DEBUG);
+      [cpx, cpy, dist, fail] = ...
+          cpParamCurveClosed(xv,yv, ...
+              @myxs,@myys,@myxp,@myyp,@myxpp,@myypp, ...
+              [endpt1 endpt2], DEBUG);
     else
-      [cpx(pt), cpy(pt), dist(pt), bdy(pt)] = ...
-          cpParamCurveOpen(x1d(pt),y1d(pt), ...
-                           xs,ys,xp,yp,xpp,ypp, ...
-                           [endpt1 endpt2], DEBUG);
+      error('TODO!')
+    end
+  else
+    % loop and find the CPs
+    nx = length(xv);     % number of points
+
+    cpx = zeros(nx,1);
+    cpy = zeros(nx,1);
+    dist = zeros(nx,1);
+    bdy = zeros(nx,1);
+
+    for pt = 1:nx
+      if (isclosed)
+        [cpx(pt), cpy(pt), dist(pt)] = ...
+            cpParamCurveClosed_oldloop(xv(pt),yv(pt), ...
+                xs,ys,xp,yp,xpp,ypp, ...
+                [endpt1 endpt2], DEBUG);
+      else
+        [cpx(pt), cpy(pt), dist(pt), bdy(pt)] = ...
+            cpParamCurveOpen_oldloop(xv(pt),yv(pt), ...
+                xs,ys,xp,yp,xpp,ypp, ...
+                [endpt1 endpt2], DEBUG);
+      end
     end
   end
 
   cpx = reshape(cpx, size(x));
   cpy = reshape(cpy, size(x));
   dist = reshape(dist, size(x));
-  bdy = reshape(bdy, size(x));
 
   if (~isclosed)
+    bdy = reshape(bdy, size(x));
     varargout = {bdy};
   end
 
@@ -78,3 +100,38 @@ function [cpx, cpy, dist, varargout] = cpSpline2D(x, y, sp, isclosed, DEBUG)
     axis equal;
     plot(x(~~bdy), y(~~bdy), 'rx');
   end
+
+  function r = myxs(t)
+    tt = t(:);
+    A = ppval(sp,t);
+    r = reshape(A(1,:), size(t));
+  end
+  function r = myys(t)
+    tt = t(:);
+    A = ppval(sp,t);
+    r = reshape(A(2,:), size(t));
+  end
+  function r = myxp(t)
+    tt = t(:);
+    A = ppval(sp1,t);
+    r = reshape(A(1,:), size(t));
+  end
+  function r = myyp(t)
+    tt = t(:);
+    A = ppval(sp1,t);
+    r = reshape(A(2,:), size(t));
+  end
+  function r = myxpp(t)
+    tt = t(:);
+    A = ppval(sp2,t);
+    r = reshape(A(1,:), size(t));
+  end
+  function r = myypp(t)
+    tt = t(:);
+    A = ppval(sp2,t);
+    r = reshape(A(2,:), size(t));
+  end
+
+end
+
+

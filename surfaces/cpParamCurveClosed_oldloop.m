@@ -1,4 +1,4 @@
-function [cpx, cpy, dist, varargout] = cpParamCurveClosed(x,y,xs,ys,xp,yp,xpp,ypp,endpt,DEBUG)
+function [cpx, cpy, dist, varargout] = cpParamCurveClosed_oldloop(x,y,xs,ys,xp,yp,xpp,ypp,endpt,DEBUG)
 % matlab version of function in python code ParamCurve
 % Find closest points of parameterised curves using Newton's method
 

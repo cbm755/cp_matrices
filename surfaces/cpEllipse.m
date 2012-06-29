@@ -43,25 +43,34 @@ function [cpx, cpy, sdist] = cpEllipse(x, y, a, b, cen)
   endpt1 = 0;
   endpt2 = 2*pi;
 
-  x1d = x(:); y1d = y(:);
+  xv = x(:); yv = y(:);
 
-  nx = length(x1d);     % number of points
 
-  % find closest points
-  cpx = zeros(nx,1);
-  cpy = zeros(nx,1);
-  dist = zeros(nx,1);
-  fail = zeros(nx,1);
+  useVectorCode = 1;
 
-  for pt = 1:nx
-    [cpx(pt), cpy(pt), dist(pt), fail(pt)] = ...
-        cpParamCurveClosed(x1d(pt),y1d(pt),xs,ys,xp,yp,xpp,ypp, [endpt1 endpt2]);
-    %[t1,t2,t3,t4] = cpParamCurve_2D(x1d(pt),y1d(pt),xs,ys,xp,yp,xpp,ypp,endpt1,endpt2,1);
-    %cpx(pt) = t1;
-    %cpy(pt) = t2;
-    %dist(pt) = t3;
-    %fail(pt) = t4;
+  if (useVectorCode)
+    [cpx, cpy, dist, fail] = ...
+        cpParamCurveClosed(xv,yv, xs,ys,xp,yp,xpp,ypp, [endpt1 endpt2]);
+
+  else
+    warning('this code is very slow');
+
+    nx = length(xv);     % number of points
+    for pt = 1:nx
+      [cpx(pt), cpy(pt), dist(pt), fail(pt)] = ...
+          cpParamCurveClosed_oldloop(xv(pt),yv(pt),xs,ys,xp,yp,xpp,ypp, [endpt1 endpt2]);
+      %[t1,t2,t3,t4] = cpParamCurve_2D(x1d(pt),y1d(pt),xs,ys,xp,yp,xpp,ypp,endpt1,endpt2,1);
+      %cpx(pt) = t1;
+      %cpy(pt) = t2;
+      %dist(pt) = t3;
+      %fail(pt) = t4;
+    end
   end
+
+  %max(abs(cpx-cpx2))
+  %max(abs(cpy-cpy2))
+  %max(abs(dist-dist2))
+  %keyboard
 
   cpx = reshape(cpx, size(x));
   cpy = reshape(cpy, size(x));

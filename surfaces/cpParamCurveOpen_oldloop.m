@@ -1,4 +1,4 @@
-function [cpx, cpy, dist, bdy, varargout] = cpParamCurveOpen(x,y,xs,ys,xp,yp,xpp,ypp,endpt,DEBUG)
+function [cpx, cpy, dist, bdy, varargout] = cpParamCurveOpen_oldloop(x,y,xs,ys,xp,yp,xpp,ypp,endpt,DEBUG)
 % matlab version of function in python code ParamCurve
 % Find closest points of parameterised curves using Newton's method
 
@@ -26,40 +26,10 @@ g = @(t,x,y) 2*(xs(t) - x).*xp(t) + 2*(ys(t) - y).*yp(t);
 % second derivative:
 gp = @(t,x,y) 2*xp(t).*xp(t) + 2*(xs(t) - x).*xpp(t) + 2*yp(t).*yp(t) + 2*(ys(t) - y).*ypp(t);
 
-
-%% Initial guess
-% use M equispaced samples in the parameter space
-M = 100
-tic
-s_guess = zeros(size(x));
-mindd_guess = zeros(size(x));
-ss = linspace(endpt(1), endpt(2), M);
-
-% split the point list into shorter chunks, for each of these we
-% will process M points above, the matrix will be quite large.
-totalN = length(x);
-N = 500
-numchunks = ceil(totalN/N)
-
-SS = repmat(ss, N, 1);
-
-for i=1:numchunks
-  if i < numchunks
-    I = (1+(i-1)*N):i*N;
-  else
-    I = (1+(i-1)*N):totalN;
-    NN = length(I);
-    SS = repmat(ss, NN, 1);
-  end
-  X = repmat(x(I), 1, M);
-  Y = repmat(y(I), 1, M);
-  dd = d2(SS, X, Y);
-  [temp, ii] = min(dd, [], 2);
-  s_guess(I) = ss(ii)';
-  mindd_guess(I) = temp;
-end
-toc
-
+ss = linspace(endpt(1), endpt(2), 500);
+dd = d2(ss, x, y);
+[mindd_guess, i] = min(dd);
+s_guess = ss(i);
 
 if (DEBUG >= 1)
   figure(10); clf; hold on;
@@ -86,44 +56,8 @@ if (DEBUG >= 1)
   %plot([x xs(s)], [y ys(s)],'b-o');
 end
 
-
-tic
-totalN = length(x);
-N = 1000;
-numchunks = ceil(totalN/N)
-
-cpx = zeros(size(x));
-cpy = zeros(size(x));
-dist = zeros(size(x));
-bdy = zeros(size(x));
-gfail = zeros(size(x));
-
-for i=1:numchunks
-  if i < numchunks
-    I = (1+(i-1)*N):i*N;
-  else
-    I = (1+(i-1)*N):totalN;
-  end
-  [cpx(I) cpy(I) dist(I) bdy(I) fail] = newton(g, gp, x(I), y(I), xs, ys, s_guess(I), mindd_guess(I), endpt, d2);
-  if (fail)
-    warning('one chunk failed');
-    warning('TODO: could process in a loop here, or otherwise be more robust');
-    gfail(I) = 1;
-  else
-    gfail(I) = 0;
-  end
-end
-toc
-
-
-end % function
-
-
-function [cpx cpy dist fail] = newton(g, gp, x, y, xs, ys, g_guess, mindd_guess, endpt, d2)
 %%
 % Newton's method
-
-DEBUG = 0;
 
 tol = 1e-14;
 endpttol = 0.5;
@@ -133,23 +67,23 @@ n = 1;
 outsideCounter = 0;
 s = s_guess;
 
-Outsiders = zeros(size(x));
-
 while (true)
-  n = n + 1;
+   n = n + 1;
 
-  % if the second-deriv of some components is close to zero, don't
-  % update s for those ones.  Otherwise do a newton step.
-  snew = s;
-  I = abs(gp(s,x,y)) > tol;
-  snew(I) = s(I) - g(s(I),x(I),y(I)) ./ gp(s(I),x(I),y(I));
-  % don't update ones that have diverged
-  I = (Outsiders > 5)
-  snew(I) = s(I);
+   % Newton's method to find a zero of g
+   if (abs(gp(s,x,y)) > tol)
+       snew = s - g(s,x,y) / gp(s,x,y);
+   else
+     % derivative is zero
+     snew = s;
+   end
 
-  OutSide = (snew - endpt(1) < -endpttol) | (snew - endpt(2) > endpttol);
-
-  Outsiders = Outsiders + Outside;
+  if (DEBUG >= 10)
+    figure(10);
+    plot([xs(s)], [ys(s)],'bo');
+    drawnow();
+    pause
+  end
 
   if ( (snew - endpt(1) < -endpttol) || (snew - endpt(2) > endpttol) )
     outsideCounter = outsideCounter + 1;
