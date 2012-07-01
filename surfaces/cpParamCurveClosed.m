@@ -1,7 +1,7 @@
 function [cpx, cpy, dist, gfail] = cpParamCurveClosed(x,y,xs,ys,xp,yp,xpp,ypp,endpt,DEBUG)
 % matlab version of function in python code ParamCurve
 % Find closest points of parameterised curves using Newton's method
-
+%
 % x,y : point to find closest point for
 % xs,ys : parameterised curve
 % xp,yp : first derivative of curve function
@@ -10,8 +10,11 @@ function [cpx, cpy, dist, gfail] = cpParamCurveClosed(x,y,xs,ys,xp,yp,xpp,ypp,en
 %
 % TODO: this code may produce ominous sounding messages that are
 % actually harmless.  Converse may also be the case :(
-
+%
 % TODO: currently in 2D, generalise to curves in 3D
+%
+% TODO: This code processes data in chunks and there are some
+% tunable parameters about the size of those chunks.
 
 if (nargin < 10)
   DEBUG = 0;
@@ -94,7 +97,7 @@ end
 tic
 totalN = length(x);
 N = 1000;
-numchunks = ceil(totalN/N)
+numchunks = ceil(totalN/N);
 
 cpx = zeros(size(x));
 cpy = zeros(size(x));

@@ -11,5 +11,5 @@ bug #3:
 bug #4:
   cpParamCurveOpen.m has been renamed (pending vectorization).  So use cpParamCurveOpen_oldloop() for now.
 
-bug #5:
+bug #5: FIXED 2012-07-01
   cpSurfOfRevolution not working yet
