@@ -332,7 +332,7 @@ def LagrangeWeights1D(xg, x, dx, N):
     xg is the base grid point
     """
     from numpy import zeros, array as a
-    from scipy import comb
+    #from scipy import comb
     # Is exactly on a grid point, then return binary weights
     # TODO: here they are returned as integers: maybe should be fp,
     # also need to find if its float64 or float96.
@@ -375,7 +375,7 @@ def LagrangeWeights1DSlow(xg, x, dx, N):
     This version is slow: and maybe doesn't work with float96
     """
     from numpy import zeros, array as a
-    from scipy import comb
+    from scipy.misc import comb
     # Is exactly on a grid point, then return binary weights
     # TODO: here they are returned as integers: maybe should be fp,
     # also need to find if its float64 or float96
