@@ -1,0 +1,5 @@
+# compiled python and shared objects
+*.pyc
+*.pyo
+*.so
+
