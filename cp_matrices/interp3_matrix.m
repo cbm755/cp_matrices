@@ -53,13 +53,13 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
   if (nargin == 6)
     p = 3
     makeBanded = false;
-    use_ndgrid = false
+    use_ndgrid = false;
   elseif (nargin == 7)
     makeBanded = false;
-    use_ndgrid = false
+    use_ndgrid = false;
   elseif (nargin == 8)
     makeBanded = true;
-    use_ndgrid = false
+    use_ndgrid = false;
   elseif (nargin == 9)
     makeBanded = true;
   else
