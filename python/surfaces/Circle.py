@@ -7,12 +7,10 @@ version is clearer to understand.
 from Surface import Surface
 
 from coordinate_transform import cart2pol, pol2cart
-import numpy
-from numpy import array as a
-from numpy.linalg import norm
+import numpy as np
 
 class Circle(Surface):
-    def __init__(self, center=a([0.0, 0.0]), radius=1.0):
+    def __init__(self, center=np.array([0.0, 0.0]), radius=1.0):
         # TODO: could make it subclass of sphere and just call:
         # self.super(self, center=center, radius=radius)
         self._center = center
@@ -28,8 +26,8 @@ class Circle(Surface):
         #dist = norm(xx - cp, 2)
         #dist = sqrt( (x-cpx)**2 + (y-cpy)**2 )
         sdist = r - self._radius
-	cpx = cpx + self._center[0]
-	cpy = cpy + self._center[1]
+	cpx += self._center[0]
+	cpy += self._center[1]
         return cpx, cpy, sdist, 0, {}
 
     def closestPointToCartesian(self, xx):
@@ -38,9 +36,9 @@ class Circle(Surface):
 
         th, r = cart2pol(x, y)
         x, y = pol2cart(th, self._radius)
-        cp = self._center + a([x,y])
+        cp = self._center + np.array([x,y])
 
-        dist = norm(xx - cp, 2)
+        dist = np.linalg.norm(xx - cp, 2)
         return cp, dist, 0, {}
 
     cp = closestPointToCartesian
@@ -49,12 +47,10 @@ class Circle(Surface):
         """
         Parameritized form (for plotting)
         """
-        from numpy import linspace,pi,real,imag,exp
-
-        th = linspace(0, 2*pi, num=rez, endpoint=True)
-        circ = self._radius * numpy.exp(1j*th)
-        X = real(circ) + self._center[0]
-        Y = imag(circ) + self._center[1]
+        th = np.linspace(0, 2*np.pi, num=rez, endpoint=True)
+        circ = self._radius * np.exp(1j*th)
+        X = np.real(circ) + self._center[0]
+        Y = np.imag(circ) + self._center[1]
         #plot(real(circ), imag(circ), 'k-');
         #XtraPts = numpy.vstack((real(circ),imag(circ))).transpose()
-        return X,Y
+        return X, Y
