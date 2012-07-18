@@ -54,25 +54,6 @@ dim = 3;
 p = 3;  % degree interp
 order = 2;  % laplacian order, griddata hardcoded for 2.
 
-if (1==0)
-  % DEPRECIATED
-% ply file contains the triangles (for plotting, see below)
-% griddata: processed from ply file by tri2cp (C code).  Contains
-% only points in the narrow band.
-GD = load( ['pig_loop2_griddata_p' num2str(p) ...
-           '_dx' num2str(dx) '.txt'] );
-% plus one b/c they're C indices
-i = GD(:,1) + 1;
-j = GD(:,2) + 1;
-k = GD(:,3) + 1;
-dist = GD(:,4);
-cpxg = GD(:,5);
-cpyg = GD(:,6);
-cpzg = GD(:,7);
-xg = GD(:,8);
-yg = GD(:,9);
-zg = GD(:,10);
-end
 
 %%sanity checks
 xtest = x1d(1) + (i-1)*dx;

@@ -78,7 +78,7 @@ def buildDiffMatrix(Levolve, Lextend):
 def _buildDiffMatrix_lil_slow(Levolve, Lextend):
     """
     generate the matrix D using lil_matrix
-    Depreciated, slower than coo_matrix
+    Deprecated, slower than coo_matrix
     """
     from math import log10,ceil
     from scipy.sparse import lil_matrix
@@ -101,7 +101,7 @@ def _buildDiffMatrix_lil_slow(Levolve, Lextend):
 
 
 
-def _buildDiffMatrix_depreciated(Grid, level):
+def _buildDiffMatrix_deprecated(Grid, level):
     """
     generate the matrix D, old version that needs to know Grid
     internals
@@ -261,7 +261,7 @@ def _buildExtensionMatrix_lil_slow(Levolve, Lextend):
     return E.tocsr()
 
 
-def _buildExtensionMatrix_depreciated(Grid, level):
+def _buildExtensionMatrix_deprecated(Grid, level):
     """
     generate the matrix E, old version that uses Grid directly
     """

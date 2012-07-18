@@ -54,25 +54,6 @@ dim = 3;
 p = 3;  % degree interp
 order = 2;  % laplacian order, griddata hardcoded for 2.
 
-if (1==0)
-  % DEPRECIATED
-% griddata: processed from ply file by tri2cp (C code).  Contains
-% only points in the narrow band.
-GD = load( ['pig_loop2_griddata_p' num2str(p) ...
-           '_dx' num2str(dx) '.txt'] );
-% plus one b/c they're C indices
-i2 = GD(:,1) + 1;
-j2 = GD(:,2) + 1;
-k2 = GD(:,3) + 1;
-dist2 = GD(:,4);
-cpxg2 = GD(:,5);
-cpyg2 = GD(:,6);
-cpzg2 = GD(:,7);
-xg2 = GD(:,8);
-yg2 = GD(:,9);
-zg2 = GD(:,10);
-end
-
 
 %%sanity checks
 xtest = x1d(1) + (i-1)*dx;
