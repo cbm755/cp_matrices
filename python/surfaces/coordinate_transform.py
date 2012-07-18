@@ -1,6 +1,6 @@
 ''' coordinate transforms, cart2pol etc '''
 
-from numpy import cos,sin,arctan2,hypot
+from numpy import cos, sin, arctan2, hypot
 
 def pol2cart(th, r, z=None):
     ''' Transform polar coordinates (th,r) into 2D cartesian coordinates.
@@ -17,7 +17,7 @@ def pol2cart(th, r, z=None):
     optionally z (a copy)
     '''
 
-    if (z==None):
+    if z is None:
         return (r*cos(th), r*sin(th))
     else:
         return (r*cos(th), r*sin(th), z.copy())
@@ -33,7 +33,7 @@ def cart2pol(x, y, z=None):
     optionally z (a copy)
     '''
 
-    if (z==None):
+    if z is None:
         return (arctan2(y, x), hypot(x, y))
     else:
         return (arctan2(y, x), hypot(x, y), z.copy())

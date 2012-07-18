@@ -4,8 +4,6 @@ the closest point hit a bdy.
 """
 from Surface import ShapeWithBdy
 
-import numpy
-from numpy import array as a
 
 class CPBar(ShapeWithBdy):
     def __init__(self, parent):
@@ -15,7 +13,7 @@ class CPBar(ShapeWithBdy):
         #self._bb = self._obj
 
     def ParamGrid(self,rez=None):
-        if rez==None:
+        if rez is None:
             return self._obj.ParamGrid()
         else:
             return self._obj.ParamGrid(rez=rez)
