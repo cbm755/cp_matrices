@@ -347,17 +347,18 @@ def LagrangeWeights1D(xg, x, dx, N):
     # values I think, see prun
     #for i in range(0,N):
     #    w[i] = (-1)**i * comb(N-1,i)
-    # TODO: slightly faster to use some sort of switch statement here?
-    if   (N == 1): ww = [1]
-    elif (N == 2): ww = [1, -1]
-    elif (N == 3): ww = [1, -2, 1]
-    elif (N == 4): ww = [1, -3, 3, -1]
-    elif (N == 5): ww = [1, -4, 6, -4, 1]
-    elif (N == 6): ww = [1, -5, 10, -10, 5, -1]
-    elif (N == 7): ww = [1, -6, 15, -20,  15,  -6,   1]
-    elif (N == 8): ww = [1, -7, 21, -35,  35, -21,   7,  -1]
-    else: raise NameError('need to hardcode more weights')
-
+    try:
+        ww = {1:[1],
+              2:[1, -1],
+              3:[1, -2, 1],
+              4:[1, -3, 3, -1],
+              5:[1, -4, 6, -4, 1],
+              6:[1, -5, 10, -10, 5, -1],
+              7:[1, -6, 15, -20,  15,  -6,   1],
+              8:[1, -7, 21, -35,  35, -21,   7,  -1],
+              }[N]
+    except KeyError:
+        raise NameError('need to hardcode more weights')
     # careful about types here, maybe double sth?
     for j in range(0,N):
         w[j] = ww[j] / ( x - (xg + j*dx) )
