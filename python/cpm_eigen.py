@@ -1,7 +1,11 @@
 """
 Laplacian Eigenvalues and Eigenfunctions of a surface.  Run cpm_load.py first.
 """
-from enthought.mayavi import mlab
+import numpy as np
+try:
+    from mayavi import mlab
+except ImportError:
+    from enthought.mayavi import mlab
 from time import time
 import scipy.linalg
 import scipy.sparse.linalg as splinalg
@@ -11,7 +15,7 @@ import scipy.sparse.linalg as splinalg
 if (1==0):
     Ldense,Xdense = scipy.linalg.eig(M.todense())
     Labs = abs(Ldense)
-    I = numpy.argsort(Labs)
+    I = np.argsort(Labs)
     II = I[0:13]
     Ldensef = Ldense[II]
     for i in II:
@@ -39,13 +43,13 @@ howManyEvals = len(Evals)
 I = np.argsort(Evals)
 Evals2 = Evals[I]
 
-Evals_ex = a([0, 2,2, 6,6,6, 12,12,12,12, 20,20,20,20,20, 30,30,30,30,30,30,42])
+Evals_ex = np.array([0, 2,2, 6,6,6, 12,12,12,12, 20,20,20,20,20, 30,30,30,30,30,30,42])
 errs = Evals2[0:22].real - Evals_ex
 A = "Dx.append(%g); Err.append([" % dx
 B = ",".join(map(str, errs))
 print A + B + "])"
 
-idx = r_[0,1,3,6,10,15,21]
+idx = np.r_[0,1,3,6,10,15,21]
 errs2 = Evals2[idx].real - Evals_ex[idx]
 A = "Dx.append(%g); Err.append([" % dx
 B = ",".join(map(str, errs2))
@@ -98,7 +102,7 @@ for ii in range(9, 15+1):
 
 if (1==0):
     Lr = Evals.real
-    Ls = numpy.flipud(numpy.sort(Lr))
+    Ls = np.flipud(np.sort(Lr))
     #Ls.reverse()
     Lf = Ls[0:13]
     Lex = []

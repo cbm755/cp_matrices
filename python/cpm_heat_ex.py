@@ -8,9 +8,12 @@ $\kappa$ is a scalar coefficient.
 
 Uses explicit forward Euler timestepping.
 """
-
-from enthought.mayavi import mlab
+try:
+    from mayavi import mlab
+except ImportError:
+    from enthought.mayavi import  mlab
 from time import time
+from operator import mod
 
 
 usz = M.shape[0]  # system size
@@ -21,7 +24,7 @@ kappa = 1.0       # diffusion coefficient
 
 
 # setup initial conditions
-u0 = 1*numpy.random.randn(usz)
+u0 = 1*np.random.randn(usz)
 # scale to max abs 1
 u0 = u0 / max(abs(u0.max()), abs(u0.min()))
 u0plot = Eplot*E*u0

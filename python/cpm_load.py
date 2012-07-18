@@ -3,9 +3,8 @@ Makes a grid surrounding a closest point representation and builds the
 implicit Closest Point Method matrix operators on it.
 """
 
-import numpy
+import numpy as np
 
-from numpy import array as a
 import cpGrid
 reload(cpGrid)
 import cpOps
@@ -66,7 +65,7 @@ print 'start'
 #x = numpy.array([f96(-2.0), f96(-2.0), f96(-2.0)])
 #dx = f96(8.0)
 
-x = numpy.array([-2.0, -2.0, -2.0])
+x = np.array([-2.0, -2.0, -2.0])
 initialdx = 4.0
 
 dim = len(x)
@@ -85,7 +84,7 @@ x,y,z = q.ParamGrid(rez=64)
 x2 = x.reshape(x.shape[0]*x.shape[1],)
 y2 = y.reshape(x.shape[0]*x.shape[1],)
 z2 = z.reshape(x.shape[0]*x.shape[1],)
-PlotPts = numpy.vstack((x2,y2,z2)).transpose()
+PlotPts = np.vstack((x2,y2,z2)).transpose()
 
 
 j = maxlev - 0

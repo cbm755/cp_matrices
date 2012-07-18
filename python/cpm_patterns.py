@@ -20,10 +20,14 @@ from scipy.sparse.linalg import gmres as gmres
 #from scipy.linsolve import spsolve
 #import scipy.sparse.linalg.dsolve as spsolve
 from scipy.sparse.linalg import spsolve
-import numpy
+import numpy as np
 
-from enthought.mayavi import mlab
+try:
+    from mayavi import mlab
+except ImportError:
+    from enthought.mayavi import mlab
 from time import time
+from operators import mod
 
 
 # Parameters
@@ -64,8 +68,8 @@ I = identity(usz)
 # Setup initial conditions (random perturbations around the
 # zero-diffusion steady state)
 # TODO: look at the scaling 0.1 here...
-u0 = a*numpy.ones(usz) + 0.1*numpy.random.randn(usz)
-v0 = b/a*numpy.ones(usz) + 0.1*numpy.random.randn(usz)
+u0 = a*np.ones(usz) + 0.1*np.random.randn(usz)
+v0 = b/a*np.ones(usz) + 0.1*np.random.randn(usz)
 if (1==0):  # smooth with one step of heat equation
     A = I - (0.1*dx)*M
     (u0,flag1) = gmres(A, u0, x0=u0, tol=1e-5, restrt=10)

@@ -7,7 +7,7 @@ Levol and Lext?  Still working on the separation of code here...
 TODO: split out barycentric Lagrange interp
 """
 
-
+import numpy as np
 
 
 def buildDiffMatrixNoDX(Levolve, Lextend):
@@ -29,7 +29,8 @@ def buildDiffMatrixNoDX(Levolve, Lextend):
     # make empty lists for i,j and a_{ij}
     ii = [];  jj = [];  aij = []
     for i,n in enumerate(Levolve):
-        if i % progout == 0:  print "  D row " + str(i)
+        if i % progout == 0:
+            print "  D row " + str(i)
         ## Slow approach using lil_matrix
         #for s,j in enumerate(n.diffpts):
         #    D[i,j] = diffWeights[s]
@@ -138,7 +139,6 @@ def buildDiffMatrixTempDxDyTest(Grid, level):
     Hardcoded for 2D
     """
     from math import log10,ceil
-    import numpy
     import scipy.sparse
     from time import time
 
@@ -313,14 +313,13 @@ stencil hypercube.  It is a 2D/3D/etc index, measured relative to
     This index is base 0 (i.e., B=(0,0,...) is the bottom left of the
     whole grid)
 
-    TODO: processes one point: should except an array for x (maybe it already works?)
+    TODO: processes one point: should accept an array for x (maybe it already works?)
     """
-    from numpy import floor,round
     if p % 2 == 0:  # even
-        I = round( (x-relpt) / dx ).astype(int) + 1
+        I = np.round( (x-relpt) / dx ).astype(int) + 1
         B = I - p/2 - 1
     else:  # odd
-        I = floor( (x-relpt) / dx ).astype(int) + 1
+        I = np.floor( (x-relpt) / dx ).astype(int) + 1
         B = I - (p - 1)/2 - 1
     return B
 
@@ -331,7 +330,6 @@ def LagrangeWeights1D(xg, x, dx, N):
     1D Lagrange interpolation weights
     xg is the base grid point
     """
-    from numpy import zeros, array as a
     #from scipy import comb
     # Is exactly on a grid point, then return binary weights
     # TODO: here they are returned as integers: maybe should be fp,
@@ -339,7 +337,7 @@ def LagrangeWeights1D(xg, x, dx, N):
     # TODO: Nick Hale mentioned they just do the calculation and than
     # catch the NaN/Inf exception and return the binary weights; said
     # that was faster.
-    w = zeros(N,dtype=type(dx))
+    w = np.zeros(N,dtype=type(dx))
     for j in range(0, N):
         if x == (xg+j*dx):
             w[j] = 1
@@ -374,12 +372,11 @@ def LagrangeWeights1DSlow(xg, x, dx, N):
 
     This version is slow: and maybe doesn't work with float96
     """
-    from numpy import zeros, array as a
     from scipy.misc import comb
     # Is exactly on a grid point, then return binary weights
     # TODO: here they are returned as integers: maybe should be fp,
     # also need to find if its float64 or float96
-    w = zeros(N)
+    w = np.zeros(N)
     for j in range(0, N):
         if x == (xg+j*dx):
             w[j] = 1
@@ -403,13 +400,11 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
 
     TODO: clean up EXTSTENWIDTH and/or document (its degree+1)
     """
-    from numpy import finfo, zeros, isscalar
-
     dim = len(X)
 
     EXTSTENSZ = EXTSTENWIDTH**dim
 
-    if (isscalar(dx)):
+    if (np.isscalar(dx)):
         dxv = [dx]*3
     else:
         dxv = dx
@@ -422,7 +417,7 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     s = 0
     sum1 = 0.0*dxv[0]
     # need a type here because of float96
-    extWeights = zeros( EXTSTENSZ, dtype=type(dxv[0]) )
+    extWeights = np.zeros( EXTSTENSZ, dtype=type(dxv[0]) )
     #print extWeights.dtype, xweights.dtype, yweights.dtype
     if (dim == 2):
         # loop in the same order as elsewhere and compute weights as
@@ -448,7 +443,7 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
 
     # check here depends on what type of float
     # TODO: is this sanity check expensive?
-    eps = finfo(type(dxv[0])).eps
+    eps = np.finfo(type(dxv[0])).eps
     if abs(sum1 - 1.0) > 50*eps:
         print 'weight problem'
         print extWeights

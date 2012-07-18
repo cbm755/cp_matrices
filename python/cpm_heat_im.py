@@ -15,10 +15,14 @@ from scipy.sparse.linalg import gmres
 #from scipy.linsolve import spsolve
 #import scipy.sparse.linalg.dsolve as spsolve
 from scipy.sparse.linalg import spsolve
-import numpy
+import numpy as np
 
-from enthought.mayavi import mlab
+try:
+    from mayavi import mlab
+except ImportError:
+    from enthought.mayavi import mlab
 from time import time
+from operator import mod
 
 usz = M.shape[0]  # system size
 # Tfinal = 1
@@ -29,7 +33,7 @@ Iterative = True  # using  an iterative solver is faster
 
 
 # setup initial conditions
-u0 = 1*numpy.random.randn(usz)
+u0 = 1*np.random.randn(usz)
 # scale to max abs 1
 u0 = u0 / max(abs(u0.max()), abs(u0.min()))
 u0plot = Eplot*E*u0

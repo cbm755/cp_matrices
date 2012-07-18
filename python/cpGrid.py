@@ -1,6 +1,7 @@
 # make print a function as in python 3
 #from __future__ import print_function
 
+import numpy as np
 from cpOps import findGridInterpBasePt, buildInterpWeights
 
 
@@ -41,15 +42,14 @@ class CPNode:
         right word, its sort of an index.  NOTE: base is 0, so doesn't
         match my older matlab codes.
         """
-        from numpy import finfo
         # base 0, gridindex is 0 at relpt. needs to be consistent with
         # findGridInterpBasePt(), maybe this should be a function too
         self.gridIndex = ((self.gridpt - relpt) / self.dx).round().astype(int)
         # if (level >= 2):
         #     # sanity check, don't check on first level though
         #     # dx/10 is overkill: dx/2 maybe?  (must be larger than mach eps)
-        eps = finfo(float).eps
-        if (abs(self.gridIndex * self.dx + relpt - self.gridpt)).max() >= 10*eps:
+        eps = np.finfo(float).eps
+        if (np.abs(self.gridIndex * self.dx + relpt - self.gridpt)).max() >= 10*eps:
             raise NameError('gridindex failure')
 
 
@@ -180,9 +180,6 @@ class CPGrid:
 
 
     def __init__(self, name, cpfun, dim, lsc, dx, interp_degree=3, diffInfo=None, levels=6):
-        #import numpy
-        #a = numpy.array
-        from numpy import array as a
         from time import time
         import stencils
         global PAR_DIM, PAR_EXTSTENP, PAR_EXTSTENWIDTH, PAR_EXTSTENSZ, \
@@ -208,10 +205,12 @@ class CPGrid:
         PAR_EXTSTENSZ = PAR_EXTSTENWIDTH**dim
 
         if (dim == 2):
-            self.Dirs = [a([0,0]), a([1,0]), a([1,1]), a([0,1])]
+            self.Dirs = [np.array([0,0]), np.array([1,0]), 
+                         np.array([1,1]), np.array([0,1])]
         elif (dim == 3):
-            self.Dirs = [a([0,0,0]), a([1,0,0]), a([1,1,0]), a([0,1,0]), \
-                         a([0,1,1]), a([1,1,1]), a([1,0,1]), a([0,0,1])]
+            self.Dirs = [np.array([0,0,0]), np.array([1,0,0]), np.array([1,1,0]),
+                         np.array([0,1,0]), np.array([0,1,1]), np.array([1,1,1]),
+                         np.array([1,0,1]), np.array([0,0,1])]
         else:
             raise NameError('dim ' + str(dim) + ' not implemented')
 
@@ -257,7 +256,6 @@ class CPGrid:
 
 
     def makeInterpStencil(self):
-        from numpy import array as a
         global PAR_EXTSTENWIDTH
         # TODO: sort out hte global dim with others
         dim = self.Dim
@@ -268,12 +266,12 @@ class CPGrid:
         if dim == 2:
             for j in range(0, PAR_EXTSTENWIDTH):
                 for i in range (0, PAR_EXTSTENWIDTH):
-                    self.InterpStencil.append( a([i,j]) )
+                    self.InterpStencil.append(np.array([i,j]))
         elif dim == 3:
             for k in range(0, PAR_EXTSTENWIDTH):
                 for j in range(0, PAR_EXTSTENWIDTH):
                     for i in range(0, PAR_EXTSTENWIDTH):
-                        self.InterpStencil.append( a([i,j,k]) )
+                        self.InterpStencil.append(np.array([i,j,k]) )
         else:
             raise NameError('dim ' + str(dim) + ' not implemented')
 
@@ -512,9 +510,6 @@ class CPFlatGrid(CPGrid):
     """
 
     def __init__(self, name, cpfun, dim, lsc, dx, interp_degree=3, diffInfo=None):
-        #import numpy
-        #a = numpy.array
-        from numpy import array as a
         from time import time
         import stencils
         global PAR_DIM, PAR_EXTSTENP, PAR_EXTSTENWIDTH, PAR_EXTSTENSZ, \
@@ -541,10 +536,12 @@ class CPFlatGrid(CPGrid):
         PAR_EXTSTENSZ = PAR_EXTSTENWIDTH**dim
 
         if (dim == 2):
-            self.Dirs = [a([0,0]), a([1,0]), a([1,1]), a([0,1])]
+            self.Dirs = [np.array([0,0]), np.array([1,0]),
+                         np.array([1,1]), np.array([0,1])]
         elif (dim == 3):
-            self.Dirs = [a([0,0,0]), a([1,0,0]), a([1,1,0]), a([0,1,0]), \
-                         a([0,1,1]), a([1,1,1]), a([1,0,1]), a([0,0,1])]
+            self.Dirs = [np.array([0,0,0]), np.array([1,0,0]), np.array([1,1,0]),
+                         np.array([0,1,0]), np.array([0,1,1]), np.array([1,1,1]),
+                         np.array([1,0,1]), np.array([0,0,1])]
         else:
             raise NameError('dim ' + str(dim) + ' not implemented')
 
@@ -587,9 +584,7 @@ class CPFlatGrid(CPGrid):
         Load the output from the fast C implementation of Ruuth's
         algorithm.
         """
-        from numpy import array as a
-        from numpy import float96
-        fp = float96
+        fp = np.float96
         f = open(fname, 'r')
         dx = self.dx
         relpt = self.center
@@ -611,12 +606,12 @@ class CPFlatGrid(CPGrid):
             k = int(t[2])
             dd = fp(t[3])
             #cp = a([ fp(t[4]), fp(t[5]), fp(t[6]) ]);
-            cp = fp(a([ t[4], t[5], t[6] ]));
+            cp = fp(np.array([ t[4], t[5], t[6] ]));
             # TODO: issues here about loading float96's from file, see
             # my post to numpy maillist
             #x = fp(a([ t[7], t[8], t[9]]));
-            x = a([ fp(t[7]), fp(t[8]), fp(t[9]) ]);
-            x2 = a([i*dx+relpt[0], j*dx+relpt[1], k*dx+relpt[2]])
+            x = np.array([ fp(t[7]), fp(t[8]), fp(t[9]) ]);
+            x2 = np.array([i*dx+relpt[0], j*dx+relpt[1], k*dx+relpt[2]])
             #print "***", i, j, k, dd, cp, x-x2
             #self.CPdd[(i,j,k)] = dd
             #self.CP[(i,j,k)] = cp
