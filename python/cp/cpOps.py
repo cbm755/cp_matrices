@@ -355,13 +355,6 @@ def LagrangeWeights1D(xg, x, dx, N):
     # Is exactly on a grid point, then return binary weights
     # TODO: here they are returned as integers: maybe should be fp,
     # also need to find if its float64 or float96.
-    # TODO: Nick Hale mentioned they just do the calculation and than
-    # catch the NaN/Inf exception and return the binary weights; said
-    # that was faster.
-    # Here, the current approach is much faster than any vectorization
-    # of this loop I've come up with. Checking for NaN in all cases at
-    # the bottom of the function to replace them by 1 is also slower.
-    # Maybe for several points at once it could be faster.
 
     # To accept an array x, we have to catch NaNs (else, it needs
     # quite some bookkeeping)
