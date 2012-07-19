@@ -9,7 +9,6 @@ TODO: split out barycentric Lagrange interp
 
 import numpy as np
 
-
 def buildDiffMatrixNoDX(Levolve, Lextend):
     """
     generate the matrix D
@@ -383,6 +382,9 @@ def LagrangeWeights1D(xg, x, dx, N):
     w = ww / (x[:, np.newaxis] - (xg + np.arange(N) * dx))
     w /= np.sum(w, axis=1)[:, np.newaxis]
     w[np.isnan(w)] = 1
+    # 15% faster using bottleneck here:
+    # import bottleneck as bn
+    # bn.replace(w, np.nan, 1.)
     return w
 
 
