@@ -85,11 +85,14 @@ class CPNode:
                 p = PAR_EXTSTENP
                 dim = PAR_DIM
                 arm = PAR_DiffLongestArm  # width of one "arm" of evolution stencil
-                lam = sqrt( (dim-1.0)*((p+1)/2.0)**2 + (arm + (p+1)/2.0)**2)
-                #print lam
-                # safety factor
+                # Formula found on Ruuth & Merriman (for 2nd order centered
+                # difference Laplacian, where arm=1). Beware, the grid spacing
+                # is accounted in the comparison with maxdist, so in fact this
+                # is \frac{\lambda}{\Delta x}
+                lam = sqrt((dim-1.0)*((p+1)/2.0)**2 + (arm + (p+1)/2.0)**2)
+                # Safety factor
                 lam = 1.0001*lam
-                if (maxdist <= lam*dx):
+                if maxdist <= lam*dx:
                     self.addChild(n)
                     n.subdivide(level+1)
 
@@ -242,8 +245,8 @@ class CPGrid:
         n = CPNode(self.basicPt, self._dx, 1, self.basicPt)
         n.computeCP(self.CPfun)
         n.computeGridIndex(self.basicPt)
-        self.addChild(n);
-        n.subdivide(1);
+        self.addChild(n)
+        n.subdivide(1)
 
 
     def makeInterpStencil(self):
