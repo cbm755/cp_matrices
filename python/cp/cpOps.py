@@ -332,14 +332,14 @@ def LagrangeWeights1D(xg, x, dx, N):
     Input
     -----
     xg : base grid point
-    x : array of lenght M
-        Point for which the interpolation weights will be calculated.
+    x : array of lenght M, or scalar
+        Points for which the interpolation weights will be calculated.
     dx : grid spacing
     N : number of interpolation points (interpolation degree + 1)
 
     Output
     ------
-    w : array of shape (M,N)
+    w : array of shape (M,N) if x is an array, else array of shape (N,)
         Barycentric weights.
 
     Usage
@@ -377,15 +377,23 @@ def LagrangeWeights1D(xg, x, dx, N):
     except KeyError:
         raise ValueError('need to hardcode more weights')
 
+    scalar = np.isscalar(x)
+    x = np.atleast_1d(x)
     # Maybe from __future__ import division just to be sure?
     # Barycentric formula (4.2) in Berrut & Trefethen
+    # To avoid getting RuntimeWarning
+    np.seterr(invalid='ignore', divide='ignore')
     w = ww / (x[:, np.newaxis] - (xg + np.arange(N) * dx))
     w /= np.sum(w, axis=1)[:, np.newaxis]
+    np.seterr(invalid='warn', divide='warn')  # back to default settings
     w[np.isnan(w)] = 1
     # 15% faster using bottleneck here:
     # import bottleneck as bn
     # bn.replace(w, np.nan, 1.)
-    return w
+    if scalar:
+        return w[0]
+    else:
+        return w
 
 
 def LagrangeWeights1DSlow(xg, x, dx, N):
@@ -427,7 +435,7 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
 
     EXTSTENSZ = EXTSTENWIDTH**dim
 
-    if (np.isscalar(dx)):
+    if np.isscalar(dx):
         dxv = [dx]*3
     else:
         dxv = dx
