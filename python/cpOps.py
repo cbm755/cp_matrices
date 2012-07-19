@@ -348,21 +348,20 @@ def LagrangeWeights1D(xg, x, dx, N):
     #for i in range(0,N):
     #    w[i] = (-1)**i * comb(N-1,i)
     try:
-        ww = {1:[1],
-              2:[1, -1],
-              3:[1, -2, 1],
-              4:[1, -3, 3, -1],
-              5:[1, -4, 6, -4, 1],
-              6:[1, -5, 10, -10, 5, -1],
-              7:[1, -6, 15, -20,  15,  -6,   1],
-              8:[1, -7, 21, -35,  35, -21,   7,  -1],
+        ww = {1:np.array([1]),
+              2:np.array([1, -1]),
+              3:np.array([1, -2, 1]),
+              4:np.array([1, -3, 3, -1]),
+              5:np.array([1, -4, 6, -4, 1]),
+              6:np.array([1, -5, 10, -10, 5, -1]),
+              7:np.array([1, -6, 15, -20,  15,  -6,   1]),
+              8:np.array([1, -7, 21, -35,  35, -21,   7,  -1]),
               }[N]
     except KeyError:
         raise NameError('need to hardcode more weights')
-    # careful about types here, maybe double sth?
-    for j in range(0,N):
-        w[j] = ww[j] / ( x - (xg + j*dx) )
-    w = w / sum(w);
+    # Maybe from __future__ import division just to be sure?
+    w = ww / (x - (xg + np.arange(N) * dx))
+    w /= np.sum(w)
     return w
 
 
