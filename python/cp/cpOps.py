@@ -333,13 +333,14 @@ def LagrangeWeights1D(xg, x, dx, N):
     Input
     -----
     xg : base grid point
-    x : point for which you'll get the weights
+    x : array of lenght M
+        Point for which the interpolation weights will be calculated.
     dx : grid spacing
-    N : number of points (interpolation degree + 1)
+    N : number of interpolation points (interpolation degree + 1)
 
     Output
     ------
-    w : array of lenght N
+    w : array of shape (M,N)
         Barycentric weights.
 
     Usage
@@ -348,7 +349,7 @@ def LagrangeWeights1D(xg, x, dx, N):
     i \leq N-1
 
     To interpolate in point x, call
-    np.dot(LagrangeWeights1D(xg, x, dx, N), [f_i for i in range(N)])
+    np.dot(LagrangeWeights1D(xg, np.array([x]), dx, N), [f_i for i in range(N)])
     """
     #from scipy import comb
     # Is exactly on a grid point, then return binary weights
@@ -361,12 +362,10 @@ def LagrangeWeights1D(xg, x, dx, N):
     # of this loop I've come up with. Checking for NaN in all cases at
     # the bottom of the function to replace them by 1 is also slower.
     # Maybe for several points at once it could be faster.
-    w = np.zeros(N,dtype=type(dx))
-    for j in range(N):
-        if x == (xg+j*dx):
-            w[j] = 1
-            return w
 
+    # To accept an array x, we have to catch NaNs (else, it needs
+    # quite some bookkeeping)
+    
     # TODO: comb very slow and floating point: better to cache the
     # values I think, see prun
     # These are the weights w_j for equidistant nodes
@@ -386,12 +385,11 @@ def LagrangeWeights1D(xg, x, dx, N):
     except KeyError:
         raise ValueError('need to hardcode more weights')
 
-    # In order to accept an array x, we could do x -> x[:, np.newaxis]
-    # np.sum(w) -> np.sum(w, axis=1)[:, np.newaxis]
     # Maybe from __future__ import division just to be sure?
     # Barycentric formula (4.2) in Berrut & Trefethen
-    w = ww / (x - (xg + np.arange(N) * dx))
-    w /= np.sum(w)
+    w = ww / (x[:, np.newaxis] - (xg + np.arange(N) * dx))
+    w /= np.sum(w, axis=1)[:, np.newaxis]
+    w[np.isnan(w)] = 1
     return w
 
 
