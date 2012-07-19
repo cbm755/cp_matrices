@@ -337,8 +337,12 @@ def LagrangeWeights1D(xg, x, dx, N):
     # TODO: Nick Hale mentioned they just do the calculation and than
     # catch the NaN/Inf exception and return the binary weights; said
     # that was faster.
+    # Here, the current approach is much faster than any other alternative
+    # vectorization I have tried of the loop below. And also than checking
+    # for NaN in all cases at the bottom of the function.
+    # Maybe for several points at once it could be faster.
     w = np.zeros(N,dtype=type(dx))
-    for j in range(0, N):
+    for j in range(N):
         if x == (xg+j*dx):
             w[j] = 1
             return w
