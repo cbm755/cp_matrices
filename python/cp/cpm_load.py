@@ -81,9 +81,9 @@ x,y,z = q.ParamGrid(rez=64)
 #s = mlab.mesh(x, y, z, scalars=z**2)
 #mlab.show()
 
-x2 = x.reshape(x.shape[0]*x.shape[1],)
-y2 = y.reshape(x.shape[0]*x.shape[1],)
-z2 = z.reshape(x.shape[0]*x.shape[1],)
+x2 = x.ravel()
+y2 = y.ravel()
+z2 = z.ravel()
 PlotPts = np.vstack((x2,y2,z2)).transpose()
 
 
