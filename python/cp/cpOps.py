@@ -348,7 +348,7 @@ def LagrangeWeights1D(xg, x, dx, N):
     i \leq N-1
 
     To interpolate in point x, call
-    np.dot(LagrangeWeights1D(xg, np.array([x]), dx, N), [f_i for i in range(N)])
+    np.dot(LagrangeWeights1D(xg, x, dx, N), [f_i for i in range(N)])
     """
     #from scipy import comb
     # Is exactly on a grid point, then return binary weights
