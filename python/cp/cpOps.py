@@ -326,9 +326,29 @@ stencil hypercube.  It is a 2D/3D/etc index, measured relative to
 
 
 def LagrangeWeights1D(xg, x, dx, N):
-    """
-    1D Lagrange interpolation weights
-    xg is the base grid point
+    """1D Lagrange interpolation weights for equidistant points.
+
+    Based on Berrut & Trefethen "Barycentric Lagrange Interpolation".
+
+    Input
+    -----
+    xg : base grid point
+    x : point for which you'll get the weights
+    dx : grid spacing
+    N : number of points (interpolation degree + 1)
+
+    Output
+    ------
+    w : array of lenght N
+        Barycentric weights.
+
+    Usage
+    -----
+    Let f be a function such that f(xg + i \cdot dx) = f_i for 0 \leq
+    i \leq N-1
+
+    To interpolate in point x, call
+    np.dot(LagrangeWeights1D(xg, x, dx, N), [f_i for i in range(N)])
     """
     #from scipy import comb
     # Is exactly on a grid point, then return binary weights
@@ -337,9 +357,9 @@ def LagrangeWeights1D(xg, x, dx, N):
     # TODO: Nick Hale mentioned they just do the calculation and than
     # catch the NaN/Inf exception and return the binary weights; said
     # that was faster.
-    # Here, the current approach is much faster than any other alternative
-    # vectorization I have tried of the loop below. And also than checking
-    # for NaN in all cases at the bottom of the function.
+    # Here, the current approach is much faster than any vectorization
+    # of this loop I've come up with. Checking for NaN in all cases at
+    # the bottom of the function to replace them by 1 is also slower.
     # Maybe for several points at once it could be faster.
     w = np.zeros(N,dtype=type(dx))
     for j in range(N):
@@ -349,6 +369,8 @@ def LagrangeWeights1D(xg, x, dx, N):
 
     # TODO: comb very slow and floating point: better to cache the
     # values I think, see prun
+    # These are the weights w_j for equidistant nodes
+    # (5.1) in Berrut & Trefethen "Barycentric Lagrange Interpolation"
     #for i in range(0,N):
     #    w[i] = (-1)**i * comb(N-1,i)
     try:
@@ -362,8 +384,12 @@ def LagrangeWeights1D(xg, x, dx, N):
               8:np.array([1, -7, 21, -35,  35, -21,   7,  -1]),
               }[N]
     except KeyError:
-        raise NameError('need to hardcode more weights')
+        raise ValueError('need to hardcode more weights')
+
+    # In order to accept an array x, we could do x -> x[:, np.newaxis]
+    # np.sum(w) -> np.sum(w, axis=1)[:, np.newaxis]
     # Maybe from __future__ import division just to be sure?
+    # Barycentric formula (4.2) in Berrut & Trefethen
     w = ww / (x - (xg + np.arange(N) * dx))
     w /= np.sum(w)
     return w
@@ -503,7 +529,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
     """
     from scipy.sparse import coo_matrix
     from time import time
-    from math import log10,ceil
+    from math import log10, ceil
 
     if interp_degree == 0:
         return buildEPlotMatrixNN(G, Levolve, Lextend, Points)
