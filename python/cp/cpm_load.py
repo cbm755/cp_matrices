@@ -74,7 +74,7 @@ TreeGrid = cpGrid.CPGrid('test', cpfun, dim, x, initialdx, interp_degree=3, leve
 
 
 ## a parameterized grid for plotting
-x,y,z = q.ParamGrid(rez=64)
+x, y, z = q.ParamGrid(rez=64)
 
 # this can be used to view like this:
 #from enthought.mayavi import mlab

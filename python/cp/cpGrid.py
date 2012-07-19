@@ -204,45 +204,36 @@ class CPGrid:
         PAR_EXTSTENWIDTH = PAR_EXTSTENP+1
         PAR_EXTSTENSZ = PAR_EXTSTENWIDTH**dim
 
-        if (dim == 2):
+        if dim == 2:
             self.Dirs = [np.array([0,0]), np.array([1,0]), 
                          np.array([1,1]), np.array([0,1])]
-        elif (dim == 3):
+        elif dim == 3:
             self.Dirs = [np.array([0,0,0]), np.array([1,0,0]), np.array([1,1,0]),
                          np.array([0,1,0]), np.array([0,1,1]), np.array([1,1,1]),
                          np.array([1,0,1]), np.array([0,0,1])]
         else:
-            raise NameError('dim ' + str(dim) + ' not implemented')
+            raise NotImplementedError('dim {} not implemented'.format(dim))
 
         # TODO: better way to default to Laplacian?  import stencils
         # outside the function?
         # TODO: want this more abstract, should just need to know the
         # maximum stencil here, might want to construct multiple operators
         # over a single grid.
-        if diffInfo == None:
+        if diffInfo is None:
             diffInfo = stencils.Laplacian_2nd
         (self.DiffWeights, self.DiffStencil, PAR_DiffLongestArm) = diffInfo(dim)
 
         self.makeInterpStencil()
 
-        self.Tree = [];
-        #self.Lists = [[]]*self.Levels   # no, same list many times
-        self.Lists = []
-        for i in range(0, self.Levels):
-            self.Lists.append([])
-        self.Grids = []
-        for i in range(0, self.Levels):
-            self.Grids.append(dict())
+        self.Tree = []
+        #self.Lists = [[]]*self.Levels  # no, same list many times
+        self.Lists = [[] for i in xrange(self.Levels)]
+        self.Grids = [dict() for i in xrange(self.Levels)]
 
-        self.Lextend = []
-        self.Levolve = []
-        self.Lghost = []
-        self.Lnone = []
-        for i in range(0, self.Levels):
-            self.Lextend.append(None)
-            self.Levolve.append(None)
-            self.Lghost.append(None)
-            self.Lnone.append(None)
+        self.Lextend = [None for i in xrange(self.Levels)]
+        self.Levolve = self.Lextend[:]
+        self.Lghost = self.Lextend[:]
+        self.Lnone = self.Lextend[:]
 
         self.populate()
         print "finished the tree grid, time = " + str(time() - st)
