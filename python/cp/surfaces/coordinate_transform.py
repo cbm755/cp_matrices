@@ -1,9 +1,9 @@
-''' coordinate transforms, cart2pol etc '''
+'''Coordinate transforms: cart2pol etc '''
 
-from numpy import cos, sin, arctan2, hypot
+from numpy import cos, sin, arctan2, hypot, sqrt
 
 def pol2cart(th, r, z=None):
-    ''' Transform polar coordinates (th,r) into 2D cartesian coordinates.
+    '''Transform polar coordinates (th,r) into 2D cartesian coordinates.
 
     You can pass in z and it just returns it back.  TODO: should it
     make a copy?  How do deal with scalar case?
@@ -40,11 +40,20 @@ def cart2pol(x, y, z=None):
 
 
 def cart2sph(x, y, z):
-    ''' Stub: TODO implement '''
-    raise NameError('not implemented yet')
+    '''Transform cartesian coordinates to spherical.
+
+    Like the matlab function, returns (azimuth, elevation, radius).'''
+    
+    return (arctan2(y, x),
+            arctan2(z, hypot(x, y)),
+            sqrt(x**2 + y**2 + z**2))
 
 
-def sph2cart(th,phi,r):
-    ''' Stub: TODO implement '''
-    # matlab uses: azimuth TH, elevation PHI, radius R
-    raise NameError('not implemented yet')
+def sph2cart(th, phi, r):
+    '''Transform spherical coordinates to cartesian.
+
+    Like the matlab function (th is azimuth, phi is elevation)'''
+
+    return (r * cos(phi) * cos(th),
+            r * cos(phi) * sin(th),
+            r * sin(phi))
