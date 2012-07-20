@@ -311,7 +311,7 @@ class CPGrid:
         from time import time
         global PAR_EXTSTENP
 
-        print "finding stencil sets at level " + str(level)
+        print "Finding stencil sets at level " + str(level)
         st = time()
         #F = self.Lists[level]
         G = self.Grids[level]
@@ -333,12 +333,12 @@ class CPGrid:
             n.cpbaseptI = basept
             try:
                 G[tuple(basept)].isCPBasePt = True
-            except (KeyError):
+            except KeyError:
                 print basept,relpt,basept*n.dx+relpt
                 print n.dx
                 print n,n.cp
                 G[tuple(basept)]
-                pass
+                pass  #?
 
 
         for n in G.values():
@@ -351,11 +351,11 @@ class CPGrid:
                     except (KeyError):
                         print basept,offset,gridindex
                         G[tuple(basept)]
-                        pass
+                        pass  #?
                     for off2 in self.DiffStencil:
                         gridind2 = basept + offset + off2
                         G[tuple(gridind2)].isExtendPt = True
-        print "found stencil sets in time = " + str(time() - st)
+        print "Found stencil sets in time = " + str(time() - st)
 
 
     def findStencilSetsSlower(self, level, extraPts=[]):
@@ -401,7 +401,7 @@ class CPGrid:
     def buildListsFromStencilSets(self, level):
         """ """
         from time import time
-        print "finding stencil sets at level " + str(level)
+        print "Finding stencil sets at level", level
         st = time()
         Lextend = []
         Levolve = []
@@ -410,14 +410,16 @@ class CPGrid:
         G = self.Grids[level]
         for n in G.values():
             if n.isEvolvePt:
-                if not n.isExtendPt: raise NameError('sanity fail')
+                if not n.isExtendPt:
+                    raise ValueError('sanity fail')
                 ind = len(Levolve)
                 # n.IndexInLevolve = ind   # don't really need this
                 # not a bug, its really Lextend here, see below
                 n.IndexInLextend = ind
                 Levolve.append(n)
             elif n.isExtendPt:
-                if n.isEvolvePt: raise NameError('sanity fail')
+                if n.isEvolvePt:
+                    raise ValueError('sanity fail')
                 Lghost.append(n)
             else:
                 #print "  not in either list"
@@ -436,7 +438,7 @@ class CPGrid:
         self.Levolve[level] = Levolve
         self.Lghost[level] = Lghost
         self.Lnone[level] = Lnone
-        print "found stencil sets in time = " + str(time() - st)
+        print "Found stencil sets in time =", time() - st
 
 
     def bdyfcn_null(bdy):
