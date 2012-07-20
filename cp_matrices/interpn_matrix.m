@@ -23,7 +23,6 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
 %   (like in FEM).  This is efficient and avoids the overhead of
 %   constructing the matrix.  If BAND is passed or not determines
 %   the column space of the result (i.e., effects Ej).
-%   (TODO: with BAND currently not implemented).
 %
 %   Does no error checking up the equispaced nature of x,y,z
 
@@ -53,13 +52,13 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
   end
   end
 
-  if (nargin == 2)
-    p = 3
+  if (nargin == 2) || (isempty(p))
+    p = 3;
     makeBanded = false;
   elseif (nargin == 3)
     makeBanded = false;
   elseif (nargin == 4)
-    makeBanded = true;
+    if isempty(band) makeBanded = false; else makeBanded = true; end
   else
     error('unexpected inputs');
   end
@@ -68,10 +67,6 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
     makeListOutput = true;
   else
     makeListOutput = false;
-  end
-
-  if makeBanded && makeListOutput
-    error('currently cannot make both Banded and Ei,Ej,Es output');
   end
 
   T = tic;
@@ -84,8 +79,9 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
     ddx(d) = xs{d}(2)-xs{d}(1);
     ptL(d) = xs{d}(1);
   end
+  M = prod(Ns);
 
-  if (prod(Ns) > 1e15)
+  if (M > 1e15)
     error('too big to use doubles as indicies: implement int64 indexing')
   end
 
@@ -140,38 +136,20 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
   % TODO: is there any advantage to keeping Ei as matrices?  Then each
   % column corresponds to the same point in the stencil...
   if ~makeListOutput
-    tic
-    E = sparse(Ei(:), Ej(:), weights(:), Ni, prod(Ns));
-    T2 = toc;
+    %tic
+    E = sparse(Ei(:), Ej(:), weights(:), Ni, M);
+    %T2 = toc;
     %fprintf('call to "sparse" time: %g\n', toc);
-  end
-  % Straightening them first doesn't make it faster
-  %tic
-  %Ei = Ei(:);
-  %Ej = Ej(:);
-  %weights = weights(:);
-  %toc
-  %tic
-  %E = sparse(Ei, Ej, weights, length(xi), Nx*Ny*Nz);
-  %toc
 
-  if (makeBanded)
-    %disp('band the large matrix:');
-    if (1==1)
-      %tic
+    if (makeBanded)
+      nnzEfull = nnz(E);
       E = E(:,band);
-      %toc
-    else
-      % sanity check: the columns outside of band should all be zero
-      tic
-      Esparse = E(:,band);
-      Eout = E(:,setdiff(1:(Nx*Ny*Nz),band));
-      if (nnz(Eout) > 0)
-        nnz(Eout)
-        warning('Lost some non-zero coefficients (from outside the innerband)');
+
+      if nnz(E) < nnzEfull
+        % sanity check: the columns outside of band should all be
+        % zero.  TODO: should be an error?
+        warning('non-zero coefficients discarded by banding');
       end
-      E = Esparse;
-      toc
     end
   end
 
@@ -203,6 +181,11 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
     E = Ei(:);   % first output is called E
     Ej = Ej(:);
     Es = weights(:);
+
+    if (makeBanded)
+      logical2bandmap = sparse(band, 1, 1:length(band), M,1);
+      Ej = logical2bandmap(Ej);
+    end
   end
 end
 
