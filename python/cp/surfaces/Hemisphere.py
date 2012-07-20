@@ -88,7 +88,7 @@ class Hemisphere(ShapeWithBdy):
         TH, PHI = np.meshgrid(th, phi)
         x, y, z = sph2cart(TH, PHI, rad)
         # TODO: return a list?  In case we have multiple components
-        return x.ravel() + cen[0], y.ravel() + cen[1], z.ravel() + cen[2]
+        return x + cen[0], y + cen[1], z + cen[2]
 
 
 class Semicircle(Hemisphere):
