@@ -83,11 +83,12 @@ class Hemisphere(ShapeWithBdy):
         # parametric variables
         #u=np.r_[0:2*pi:10j]
         #v=np.r_[0:0.5*pi:10j]
+        # Spherical coordinates, as commonly used in mathematics (not matlab)
         th = np.linspace(0, 2*np.pi, num=4*rez, endpoint=True)
         phi = np.linspace(0, 0.5*np.pi, num=rez, endpoint=True)
         x = rad*np.outer(np.cos(th), np.sin(phi)) + cen[0]
         y = rad*np.outer(np.sin(th), np.sin(phi)) + cen[1]
-        z = rad*np.outer(np.ones(np.size(th)),np.cos(phi)) + cen[2]
+        z = rad*np.outer(np.ones_like(th), np.cos(phi)) + cen[2]
         # TODO: return a list?  In case we have multiple components
         return x, y, z
 

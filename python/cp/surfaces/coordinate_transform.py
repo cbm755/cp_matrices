@@ -42,7 +42,7 @@ def cart2pol(x, y, z=None):
 def cart2sph(x, y, z):
     '''Transform cartesian coordinates to spherical.
 
-    Like the matlab function, returns (azimuth, elevation, radius).'''
+    Like the matlab function! Returns (azimuth, elevation, radius).'''
     
     return (arctan2(y, x),
             arctan2(z, hypot(x, y)),
@@ -52,7 +52,7 @@ def cart2sph(x, y, z):
 def sph2cart(th, phi, r):
     '''Transform spherical coordinates to cartesian.
 
-    Like the matlab function (th is azimuth, phi is elevation)'''
+    Like the matlab function! (th is azimuth, phi is elevation)'''
 
     return (r * cos(phi) * cos(th),
             r * cos(phi) * sin(th),

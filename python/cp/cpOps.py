@@ -44,9 +44,9 @@ def buildDiffMatrixNoDX(Levolve, Lextend):
 
 def buildDiffMatrix(Levolve, Lextend):
     """
-    generate the matrix D
+    Generate the matrix D.
     """
-    from math import log10,ceil
+    from math import log10, ceil
     from scipy.sparse import coo_matrix
     from time import time
 
@@ -60,7 +60,7 @@ def buildDiffMatrix(Levolve, Lextend):
     #D = lil_matrix( (len(Levolve),len(Lextend)), dtype=type(dx) )
     # make empty lists for i,j and a_{ij}
     ii = [];  jj = [];  aij = []
-    for i,n in enumerate(Levolve):
+    for i, n in enumerate(Levolve):
         if i % progout == 0:  print "  D row " + str(i)
         ## Slow approach using lil_matrix
         #for s,j in enumerate(n.diffpts):
@@ -69,16 +69,18 @@ def buildDiffMatrix(Levolve, Lextend):
         ii.extend([i]*stencilsize)
         jj.extend(n.diffpts)
         aij.extend(diffWeights)
-    D = coo_matrix( (aij,(ii,jj)), shape=(len(Levolve),len(Lextend)), dtype=type(dx) )
-    print "  D row " + str(len(Levolve))
-    print "elapsed time = " + str(time()-st)
+    D = coo_matrix((aij,(ii,jj)), shape=(len(Levolve),len(Lextend)),
+                   dtype=type(dx))
+    print "D row " + str(len(Levolve))
+    print "elapsed time =", time()-st
     return D.tocsr()
 
 
 def _buildDiffMatrix_lil_slow(Levolve, Lextend):
     """
-    generate the matrix D using lil_matrix
-    Depreciated, slower than coo_matrix
+    Generate the matrix D using lil_matrix
+    
+    Deprecated, slower than coo_matrix
     """
     from math import log10,ceil
     from scipy.sparse import lil_matrix
@@ -103,7 +105,7 @@ def _buildDiffMatrix_lil_slow(Levolve, Lextend):
 
 def _buildDiffMatrix_depreciated(Grid, level):
     """
-    generate the matrix D, old version that needs to know Grid
+    Generate the matrix D, old version that needs to know Grid
     internals
     """
     from math import log10,ceil
@@ -192,7 +194,7 @@ def buildExtensionMatrix(Levolve, Lextend):
     In the diff op case, the weights are fixed, here they depend on
     which node we're at.
     """
-    from math import ceil,log10
+    from math import ceil, log10
     from scipy.sparse import coo_matrix
     from time import time
 
@@ -220,7 +222,8 @@ def buildExtensionMatrix(Levolve, Lextend):
         jj.extend(n.interppts)
         aij.extend(n.interpweights)
     #TODO: does this work with float96?
-    E = coo_matrix( (aij,(ii,jj)), shape=(len(Lextend),len(Levolve)), dtype=type(dx) )
+    E = coo_matrix((aij,(ii,jj)), shape=(len(Lextend),len(Levolve)),
+                   dtype=type(dx))
     print "  E row " + str(len(Lextend))
     print "elapsed time = " + str(time() - st)
     return E.tocsr()
