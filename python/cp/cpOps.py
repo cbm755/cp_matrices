@@ -471,35 +471,20 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     return extWeights
 
 
-
-
 def LinearDiagonalSplitting(D, E):
     """
-    Compute the DEstab matrix
+    Compute the DEstab matrix.
+
+    Implements stable modification of the implicit Closest Point
+    Mehtod procedure, see formula (2.8) in [ICPM].
     """
     import scipy.sparse
 
     usz, lsz = D.shape
-
-    # old scipy (<7?) version
-    if (1==0):
-        #I = scipy.sparse.lil_eye((10,10),k=0)
-        #Inonsq = scipy.sparse.lil_eye((usz,usz+gsz),k=0)
-        Ddiagv = scipy.sparse.extract_diagonal(D)
-        #Ddiagpadded = scipy.sparse.lil_diags([Ddiagv], [0], (usz, usz+gsz))
-        #Ddiagpadded = scipy.sparse.spdiags(Ddiagv, 0, usz, usz+gsz)
-        #Ddiagpadded = scipy.sparse.lil_matrix(shape=(usz,usz+gsz))
-        Ddiag = scipy.sparse.lil_eye((usz,usz))
-        Ddiag.setdiag(Ddiagv)
-        Ddiagpadded = scipy.sparse.lil_eye((usz,usz+gsz))
-        Ddiagpadded.setdiag(Ddiagv)
-        DE = Ddiag + (D - Ddiagpadded)*E
-
     Ddiagv = D.diagonal()
-    #Ddiag    = scipy.sparse.lil_diags([Ddiagv], [0], (usz,usz))
-    #Ddiagpad = scipy.sparse.lil_diags([Ddiagv], [0], (usz,usz+gsz))
-    Ddiag    = scipy.sparse.spdiags(Ddiagv, 0, usz,usz)
-    Ddiagpad = scipy.sparse.spdiags(Ddiagv, 0, usz,lsz)
+    Ddiag = scipy.sparse.spdiags(Ddiagv, 0, usz, usz)
+    Ddiagpad = scipy.sparse.spdiags(Ddiagv, 0, usz, lsz)
+    # sparse matrices, so this is matrix-matrix multiplication, not elementwise.
     DE = Ddiag + (D - Ddiagpad)*E
     return DE
 
