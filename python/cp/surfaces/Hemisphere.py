@@ -10,7 +10,7 @@ import numpy as np
 
 
 from Surface import ShapeWithBdy
-from coordinate_transform import cart2pol,pol2cart
+from coordinate_transform import cart2pol, pol2cart, sph2cart
 
 class Hemisphere(ShapeWithBdy):
     def __init__(self, center=np.array([0.0, 0.0, 0.0]), radius=1.0):
@@ -83,14 +83,12 @@ class Hemisphere(ShapeWithBdy):
         # parametric variables
         #u=np.r_[0:2*pi:10j]
         #v=np.r_[0:0.5*pi:10j]
-        # Spherical coordinates, as commonly used in mathematics (not matlab)
-        th = np.linspace(0, 2*np.pi, num=4*rez, endpoint=True)
-        phi = np.linspace(0, 0.5*np.pi, num=rez, endpoint=True)
-        x = rad*np.outer(np.cos(th), np.sin(phi)) + cen[0]
-        y = rad*np.outer(np.sin(th), np.sin(phi)) + cen[1]
-        z = rad*np.outer(np.ones_like(th), np.cos(phi)) + cen[2]
+        th = np.linspace(0, 2*np.pi, 4*rez)
+        phi = np.linspace(0, 0.5*np.pi, rez)
+        TH, PHI = np.meshgrid(th, phi)
+        x, y, z = sph2cart(TH, PHI, rad)
         # TODO: return a list?  In case we have multiple components
-        return x, y, z
+        return x.ravel() + cen[0], y.ravel() + cen[1], z.ravel() + cen[2]
 
 
 class Semicircle(Hemisphere):
