@@ -1,12 +1,11 @@
-#import numpy
-from numpy import array as a
+import numpy as np
 
 class Surface():
     def __init__(self):
         print 'base class constructor'
 
     def closestPointToCartesian(self, x):
-        raise NameError('should be implemented in subclass')
+        raise NotImplementedError('Should be implemented in subclass')
         #cp = numpy.zeros(x.shape)
         #dist = numpy.linalg.norm(x-cp,2)
         #return cp,dist,bdy,{}
@@ -19,6 +18,7 @@ class Surface():
     def getBB(self):
         """
         Return a bounding box for the object.
+        
         Could be overridden by subclasses.
         """
         return self._bb
@@ -30,55 +30,56 @@ class Surface():
         elif self._dim == 3:
             self._viztest3d(extra_bb=extra_bb)
         else:
-            raise NameError('Only 2d and 3d viz tests implemented')
+            raise NotImplementedError('Only 2d and 3d viz tests implemented')
 
     def _viztest2d(self, extra_bb):
-        import pylab
-        import numpy
-        plot = pylab.plot
+        import matplotlib.pyplot as plt
 
-        if (self._hasParam):
-            X,Y = self.ParamGrid()
-            plot(X,Y,'k-')
+        if self._hasParam:
+            X, Y = self.ParamGrid()
+            plt.plot(X, Y, 'k-')
 
-        a,b = self.getBB()
+        a, b = self.getBB()
         ll = (b+a)/2 - (extra_bb)*(b-a)/2
         rr = (b+a)/2 + (extra_bb)*(b-a)/2
         #xx = numpy.random.uniform(bb[0], bb[1], (100,2))
-        for i in range(0,100):
+        for i in xrange(100):
             # TODO: here we assume the object lives in [-2,2]^2
             # TODO: maybe each object could record a boundingbox
             #x = 4*numpy.random.random((2)) - 2
-            x = numpy.random.uniform( ll, rr )
-            cp,dist,bdy,other = self.cp(x)
+            x = np.random.uniform(ll, rr)
+            cp, dist, bdy, other = self.cp(x)
             col = [0.4, 0.4, 0.4]
-            plot([x[0], cp[0]], [x[1],cp[1]], '-', color=col)
-            plot([cp[0]], [cp[1]], 'o', color=col)
-        pylab.show()
+            np.plot([x[0], cp[0]], [x[1], cp[1]], '-', color=col)
+            np.plot([cp[0]], [cp[1]], 'o', color=col)
+        plt.show()
 
     def _viztest3d(self, extra_bb):
         """
         3D vizualization of CPRep for obj
         """
-        from enthought.mayavi import mlab
-        import numpy as np
+        try:
+            from mayavi import mlab
+        except ImportError:
+            from enthought.mayavi import mlab
+
         f = mlab.figure(1, fgcolor=(0, 0, 0), bgcolor=(1, 1, 1), size=(640,640))
         mlab.clf()
 
         if self._hasParam:
             L = self.ParamGrid()
-            x,y,z = L
+            x, y, z = L
             #print x,y,z
             #s = mlab.mesh(xb, yb, zb, scalars=real((Eplot_bulb*E*uxx).reshape(xb.shape)))
             # TODO: mayavi bug, opacity<1
             s = mlab.mesh(x, y, z, scalars=z, opacity=1.0)
 
-        a,b = self.getBB()
+        a, b = self.getBB()
         ll = (b+a)/2 - (extra_bb)*(b-a)/2
         rr = (b+a)/2 + (extra_bb)*(b-a)/2
-        for i in range(0,40):
-            x = np.random.uniform( ll, rr )
-            cp,dist,bdy,other = self.cp(x)
+        for i in xrange(40):
+            x = np.random.uniform(ll, rr)
+            cp, dist, bdy, other = self.cp(x)
             colt = (0.5,0.5,0.5)
             op = 0.3
             l = mlab.plot3d([x[0],cp[0]], [x[1],cp[1]], [x[2], cp[2]], color=colt, opacity=op, tube_radius=0.1)
@@ -86,24 +87,20 @@ class Surface():
         mlab.show()
 
 
-
-
 class ShapeWithBdy(Surface):
     def _viztest2d(self, extra_bb):
-        import pylab
-        import numpy
-        plot = pylab.plot
+        import matplotlib.pyplot as plt
 
-        if (self._hasParam):
-            X,Y = self.ParamGrid()
-            plot(X,Y,'k-')
+        if self._hasParam:
+            X, Y = self.ParamGrid()
+            plt.plot(X, Y, 'k-')
 
-        a,b = self.getBB()
+        a, b = self.getBB()
         ll = (b+a)/2 - (extra_bb)*(b-a)/2
         rr = (b+a)/2 + (extra_bb)*(b-a)/2
-        for i in range(0,100):
-            x = numpy.random.uniform( ll, rr )
-            cp,dist,bdy,other = self.cp(x)
+        for i in xrange(100):
+            x = np.random.uniform(ll, rr)
+            cp, dist, bdy, other = self.cp(x)
             if bdy==0:
                 col = [0.4, 0.4, 0.4]
             elif bdy==1:
@@ -114,18 +111,20 @@ class ShapeWithBdy(Surface):
                 # TODO:
                 print bdy
                 raise NameError('should do something for other bdy values')
-            plot([x[0], cp[0]], [x[1],cp[1]], '-', color=col)
-            plot([cp[0]], [cp[1]], 'o', color=col)
-        axis('scaled')
-        pylab.show()
+            plt.plot([x[0], cp[0]], [x[1],cp[1]], '-', color=col)
+            plt.plot([cp[0]], [cp[1]], 'o', color=col)
+        plt.axis('scaled')
+        plt.show()
 
 
     def _viztest3d(self):
         """
         3D vizualization of CPRep for obj with boundary
         """
-        from enthought.mayavi import mlab
-        import numpy as np
+        try:
+            from mayavi import mlab
+        except ImportError:
+            from enthought.mayavi import mlab
         f = mlab.figure(1, fgcolor=(0, 0, 0), bgcolor=(1, 1, 1), size=(500,700))
         mlab.clf()
 
@@ -143,33 +142,33 @@ class ShapeWithBdy(Surface):
         # TODO: is has param:
         if self._hasParam:
             L = self.ParamGrid()
-            x,y,z = L
+            x, y, z = L
             #print x,y,z
             #s = mlab.mesh(xb, yb, zb, scalars=real((Eplot_bulb*E*uxx).reshape(xb.shape)))
             # TODO: mayavi bug, opacity<1
             s = mlab.mesh(x, y, z, scalars=z, opacity=1.0)
 
-        a,b = self.getBB()
+        a, b = self.getBB()
         ll = (b+a)/2 - (extra_bb)*(b-a)/2
         rr = (b+a)/2 + (extra_bb)*(b-a)/2
-        for i in range(0,200):
+        for i in xrange(200):
             x = np.random.uniform( ll, rr )
-            cp,dist,bdy,other = self.cp(x)
+            cp, dist, bdy, other = self.cp(x)
             drawplot = False
             if bdy==1:
-                if (np.random.random(1) < 1.0):
+                if np.random.random(1) < 1.0:
                     drawplot = True
                     col = 'g'
                     colt = (0.5,1,.2)
                     op = 0.9
             elif bdy==2:
-                if (np.random.random(1) < 1.0):
+                if np.random.random(1) < 1.0:
                     drawplot = True
                     col = 'b'
                     colt = (.2,.5,1)
                     op = 0.9
             else:
-                if ( (np.random.random(1) < 0.5) and (dist <= max((b-a)/10)) ):
+                if (np.random.random(1) < 0.5) and (dist <= max((b-a)/10)):
                     drawplot = True
                     col = 'k'
                     colt = (0.5,0.5,0.5)
