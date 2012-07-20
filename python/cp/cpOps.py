@@ -445,41 +445,28 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     if (dim == 3):
         zweights = LagrangeWeights1D(Xgrid[2], X[2], dxv[2], EXTSTENWIDTH)
 
-    s = 0
-    sum1 = 0.0*dxv[0]
-    # need a type here because of float96
-    extWeights = np.zeros( EXTSTENSZ, dtype=type(dxv[0]) )
     #print extWeights.dtype, xweights.dtype, yweights.dtype
-    if (dim == 2):
+    if dim == 2:
         # loop in the same order as elsewhere and compute weights as
         # products of above
-        for j in range(0,EXTSTENWIDTH):
-            for i in range(0,EXTSTENWIDTH):
-                extWeights[s] = xweights[i]*yweights[j]
-                sum1 = sum1 + extWeights[s]
-                s = s + 1
-                if s > EXTSTENSZ:
-                    raise NameError('too many points in stencil')
-    elif (dim == 3):
-        for k in range(0,EXTSTENWIDTH):
-            for j in range(0,EXTSTENWIDTH):
-                for i in range(0,EXTSTENWIDTH):
-                    extWeights[s] = xweights[i]*yweights[j]*zweights[k]
-                    sum1 = sum1 + extWeights[s]
-                    s = s + 1
-                    if s > EXTSTENSZ:
-                        raise NameError('too many points in stencil')
+        extWeights = (yweights[:, np.newaxis] * xweights[np.newaxis, :]).ravel()
+    elif dim == 3:
+        extWeights = (zweights[:, np.newaxis, np.newaxis] *  # z varies the slowest, so put it in the first dimension
+                      yweights[np.newaxis, :, np.newaxis] *
+                      xweights[np.newaxis, np.newaxis, :]).ravel()  # x varies the fastest, put it in the last dimension
     else:
-        raise NameError('that dimension not implemented')
+        raise NotImplementedError('Dimension not implemented yet.')
 
+    sum1 = np.sum(extWeights, dtype=type(dxv[0]))
     # check here depends on what type of float
     # TODO: is this sanity check expensive?
+    # Yes it is: calculating sum1 and checking this takes about the same time
+    # as calculating extWeights given {x, y, z}weights
     eps = np.finfo(type(dxv[0])).eps
     if abs(sum1 - 1.0) > 50*eps:
-        print 'weight problem'
         print extWeights
         print sum1
-        raise NameError('weight problem')
+        raise ValueError('Weight problem')
 
     return extWeights
 
