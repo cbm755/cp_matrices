@@ -20,7 +20,7 @@ function [cpx, cpy, dist, varargout] = cpSpline2D(x, y, sp, isclosed, DEBUG)
 
   % TODO: functions with handle references are easier to
   % understand, work for different input sizes and are even
-  % slightly faster, so these function handles are depreciated
+  % slightly faster, so these function handles are deprecated
   S1.type='()';
   S1.subs = {1,':'};
   S2.type='()';

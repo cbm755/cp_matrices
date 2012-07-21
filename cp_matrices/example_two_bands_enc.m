@@ -111,7 +111,8 @@ M = lapsharp_unordered(L, E, R);
 %[xp,yp] = pol2cart(thetap,r);
 %xp = xp(:); yp = yp(:);
 [xp,yp,thp] = param(600);
-Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, iband2);
+%Eplot = interp2_matrix_band(x1d, y1d, xp, yp, p, iband2);
+Eplot = interp2_matrix(x1d, y1d, xp, yp, p, iband2);
 
 % after building matrices, don't need this set
 ICPM2009BANDINGCHECKS = 0;
