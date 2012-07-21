@@ -46,12 +46,13 @@ cpxg = cpx(:); cpyg = cpy(:); cpzg = cpz(:);
 
 
 %% Banding: do calculation in a narrow band around the sphere
-dim = 3;  % dimension
-p = 3;    % interpolation order
+dim = 3;    % dimension
+p = 3;      % interpolation degree
+order = 2;  % Laplacian order
 % "band" is a vector of the indices of the points in the computation
 % band.  The formula for bw is found in [Ruuth & Merriman 2008] and
 % the 1.0001 is a safety factor.
-bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
+bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((order/2+(p+1)/2)^2));
 band = find(abs(dist) <= bw*dx);
 
 % store closest points in the band;
@@ -87,7 +88,7 @@ E = interp3_matrix(x1d, y1d, z1d, cpxg, cpyg, cpzg, p, band);
 
 %% Create Laplacian matrix for heat equation
 
-order = 2;  % Laplacian order: bw will need to increase if changed
+
 L = laplacian_3d_matrix(x1d,y1d,z1d, order, band, band);
 
 
@@ -113,7 +114,7 @@ dt = Tf / numtimesteps
 tic
 for kt = 1:numtimesteps
     % explicit Euler timestepping
-    unew = u + dt*L*u;
+    unew = u + dt*(L*u);
 
     % closest point extension
     u = E*unew;
