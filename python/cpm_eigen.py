@@ -4,8 +4,8 @@ Laplacian Eigenvalues and Eigenfunctions of a surface.  Run cpm_load.py first.
 from enthought.mayavi import mlab
 from time import time
 import scipy.linalg
-#import scipy.sparse.linalg.eigen
-import scipy.sparse.linalg.eigen.arpack as arpack
+import scipy.sparse.linalg as splinalg
+#import scipy.sparse.linalg.eigen.arpack as arpack
 
 
 if (1==0):
@@ -23,7 +23,8 @@ if (1==0):
 
 print "computing eigenvalues..."
 st = time()
-Evals,Evecs = arpack.eigen(-M, k=32, which="SM")
+#Evals,Evecs = arpack.eigen(-M, k=32, which="SM")
+Evals,Evecs = splinalg.eigs(-M, k=32, which="SM")
 print "found eigenvalues in time = " + str(time() - st)
 # gives very poor results (as expected, our matrix is not symmetric)
 #L,X = arpack.eigen_symmetric(M, k=50, which="SM")
