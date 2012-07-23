@@ -498,11 +498,13 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     else:
         raise NotImplementedError('Dimension not implemented yet.')
 
+
+    # Check here depends on what type of float TODO: is this sanity
+    # check expensive?  Yes it is: calculating sum1 and checking this
+    # takes about the same time as calculating extWeights given {x, y,
+    # z}weights. Mmm running a full example without these checks only
+    # makes it ~3% faster
     sum1 = np.sum(extWeights, dtype=type(dxv[0]))
-    # check here depends on what type of float
-    # TODO: is this sanity check expensive?
-    # Yes it is: calculating sum1 and checking this takes about the same time
-    # as calculating extWeights given {x, y, z}weights
     eps = np.finfo(type(dxv[0])).eps
     if abs(sum1 - 1.0) > 50*eps:
         print extWeights
