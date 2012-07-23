@@ -57,21 +57,23 @@ Eplot = cpOps.buildEPlotMatrix(Grid, Lev, Lex, PlotPts, interp_degree=3)
 
 # the implicit closest point method matrix.  Almost a product of D and
 # E (see Macdonald and Ruuth 2009)
-M = cpOps.LinearDiagonalSplitting(D, E)
+# We don't need this here
+# M = cpOps.LinearDiagonalSplitting(D, E)
 
 #######
 
-usz = M.shape[0]  # system size
+#usz = M.shape[0]  # system size
+usz = D.shape[0]
 Nsteps = 500      # How many time steps
 dt = 0.1*dx*dx    # note O(dx^2) b/c this is explicit
 kappa = 1.0       # diffusion coefficient
 
 
 # setup (random) initial conditions
-u0 = 1*np.random.randn(usz)
+u0 = np.random.randn(usz)
 # scale to max abs 1
 u0 = u0 / max(abs(u0.max()), abs(u0.min()))
-u0plot = Eplot*E*u0
+u0plot = Eplot * (E * u0)  # Parentheses important for speed
 u = u0
 
 
