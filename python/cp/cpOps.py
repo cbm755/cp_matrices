@@ -401,6 +401,17 @@ def LagrangeWeights1D(xg, x, dx, N):
     x = np.atleast_1d(x)
     dx = np.atleast_1d(dx)
     # Maybe from __future__ import division just to be sure?
+    # Add bug test case:
+    # >>> LagrangeWeights1D(0, np.arange(3), 1., 6)  # Notice the dot (1.)
+    # array([[ 1.,  0., -0.,  0., -0.,  0.],  # GOOD
+    #       [-0.,  1.,  0., -0.,  0., -0.],
+    #       [ 0., -0.,  1.,  0., -0.,  0.]])
+    # but not:
+    # >>> LagrangeWeights1D(0, np.arange(3), 1, 6)  # All integers
+    # array([[ 0,  5, -5,  3, -2,  0],  # BAD!!
+    #       [-1,  0,  1, -1,  0,  0],
+    #       [ 0, -3,  0,  5, -2,  0]])
+
     # Barycentric formula (4.2) in Berrut & Trefethen
     # To avoid getting RuntimeWarning
     np.seterr(invalid='ignore', divide='ignore')
@@ -470,7 +481,7 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
         xweights, yweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
     elif dim == 3:
         # Calling LagrangeWeights1D like this makes the whole
-        # ex_heat_hemisphere.py 25% faster!
+        # ex_heat_hemisphere.py 25-30% faster!
         xweights, yweights, zweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
     else:
         raise NotImplementedError("Dimension not implemented yet")
