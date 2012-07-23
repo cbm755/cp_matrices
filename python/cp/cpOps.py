@@ -292,7 +292,7 @@ def _buildExtensionMatrix_depreciated(Grid, level):
 
 
 
-def findGridInterpBasePt(x,dx,relpt,p):
+def findGridInterpBasePt(x, dx, relpt, p):
     """
     Find the "base grid point" for a point x.  This is best explained
     in the diagram below.
@@ -542,21 +542,31 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
 
     # make empty lists for i,j and a_{ij}
     ii = [];  jj = [];  aij = []
-    for i in range(0,N):
-        if i % progout == 0:  print "  Eplot row " + str(i)
-        #   % find floor of x,y,z in uband and the CP, these are the only two
-        #   % things we need to construct this row of E
-        x = Points[i,:]
+    for i in xrange(N):
+        if i % progout == 0:
+            print "  Eplot row " + str(i)
+        # find floor of x,y,z in uband and the CP, these are the only
+        # two things we need to construct this row of E
+        x = Points[i]
         # TODO: could cache the baseptI
         #Bpt = VertexBpt[i]
         #if uband.isBpt[Bpt] != 1:
         #    raise NameError("should be a Bpt!!")
         xbaseptIndex = findGridInterpBasePt(x, dx, relpt, EXTSTENP)
-
+        
+        # For a single point, the second option (using G[tuple...]) is
+        # ~4x faster, but it can't be vectorized and thus, for
+        # thousands of points it gets 50x slower than the first
+        # line. Of course, this won't work for weird grids (eg, non
+        # uniform). Are they possible?  Any way, I can find Xgrid for
+        # over a million points in 1s in my laptop, so in the mean
+        # time we can vectorize findGridInterpBasePt and
+        # buildInterpWeights and keep this in a pure Python loop.
+        #Xgrid = xbaseptIndex * dx + relpt
         Xgrid = G[tuple(xbaseptIndex)].gridpt
         interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
 
-        for s,offsets in enumerate(interpStencil):
+        for s, offsets in enumerate(interpStencil):
                 gii = xbaseptIndex + offsets
                 nn = G[tuple(gii)]
                 #mm = Levolve.index(nn)
