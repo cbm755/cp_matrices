@@ -16,6 +16,7 @@ hemisphere = surfaces.Hemisphere()
 
 # Wrap the object in CPBar, for accurately imposing boundary
 # conditions on shapes with boundaries (like a hemisphere)
+# See [Macdonald, Brandman, Ruuth]
 hemisphere = surfaces.CPBar(hemisphere)
 
 # base grid point
@@ -84,7 +85,7 @@ if True:
     surf = mlab.pipeline.surface(normals)
 else:
     # this is easier but less convenient to change the data
-    s = mlab.mesh(x, y, z, scalars=real(uplot.reshape(x.shape)))
+    s = mlab.mesh(x, y, z, scalars=np.real(u0plot.reshape(x.shape)))
 # TODO: size is not fontsize
 mlab.title('Initial conditions', size=0.2)
 mlab.show()
@@ -116,8 +117,4 @@ for kt in xrange(Nsteps):
             #, vmin=-absmax, vmax=absmax)
             mlab.title("time = " + str(t) + ", step #" + str(kt+1))
             mlab.show()
-            pause(0.1)
-
     u = unew
-
-
