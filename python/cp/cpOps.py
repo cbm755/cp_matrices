@@ -294,8 +294,8 @@ def _buildExtensionMatrix_depreciated(Grid, level):
 
 def findGridInterpBasePt(x, dx, relpt, p):
     """
-    Find the "base grid point" for a point x.  This is best explained
-    in the diagram below.
+    Find the "base grid point" for an array of points x.  This is best
+    explained in the diagram below.
 
     x: is the interpolation point, must lie inside the === signs below
     p: degree interpolation (N-1 point interp)
@@ -314,8 +314,6 @@ stencil hypercube.  It is a 2D/3D/etc index, measured relative to
     etc
     This index is base 0 (i.e., B=(0,0,...) is the bottom left of the
     whole grid)
-
-    TODO: processes one point: should accept an array for x (maybe it already works?)
     """
     if p % 2 == 0:  # even
         I = np.round( (x-relpt) / dx ).astype(int) + 1
@@ -471,6 +469,8 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     if dim == 2:
         xweights, yweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
     elif dim == 3:
+        # Calling LagrangeWeights1D like this makes the whole
+        # ex_heat_hemisphere.py 25% faster!
         xweights, yweights, zweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
     else:
         raise NotImplementedError("Dimension not implemented yet")
@@ -567,6 +567,10 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
 
     #EPlot = lil_matrix( (N,len(Lextend)), dtype=type(dx) )
 
+    #xbaseptIndex = findGridInterpBasePt(Points, dx, relpt, EXTSTENP)
+    #Xgrid = [G[tuple(xbaseptIndex_i)].gridpt for xbaseptIndex_i in xbaseptIndex]
+    #interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
+    
     # make empty lists for i,j and a_{ij}
     ii = [];  jj = [];  aij = []
     for i in xrange(N):
