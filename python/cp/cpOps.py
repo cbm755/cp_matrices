@@ -378,16 +378,19 @@ def LagrangeWeights1D(xg, x, dx, N):
               8:np.array([1, -7, 21, -35,  35, -21,   7,  -1]),
               }[N]
     except KeyError:
-        raise ValueError('need to hardcode more weights')
+        raise ValueError('Need to hardcode more weights')
 
     scalar = np.isscalar(x)
+    xg = np.atleast_1d(xg)
     x = np.atleast_1d(x)
+    dx = np.atleast_1d(dx)
     # Maybe from __future__ import division just to be sure?
     # Barycentric formula (4.2) in Berrut & Trefethen
     # To avoid getting RuntimeWarning
     np.seterr(invalid='ignore', divide='ignore')
-    w = ww / (x[:, np.newaxis] - (xg + np.arange(N) * dx))
-    w /= np.sum(w, axis=1)[:, np.newaxis]
+    w = ww / (x[..., np.newaxis] - (xg[..., np.newaxis] +
+                                    np.arange(N) * dx[..., np.newaxis]))
+    w /= np.sum(w, axis=-1)[..., np.newaxis]
     np.seterr(invalid='warn', divide='warn')  # back to default settings
     w[np.isnan(w)] = 1
     # 15% faster using bottleneck here:
@@ -428,7 +431,8 @@ def LagrangeWeights1DSlow(xg, x, dx, N):
 
 def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     """
-    build the interpolation weights
+    Build the interpolation weights.
+
     Xgrid is the B-pt (the base grid point below X)
     X is the point to be evaluated at
 
@@ -442,11 +446,16 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
         dxv = [dx]*3
     else:
         dxv = dx
-
-    xweights = LagrangeWeights1D(Xgrid[0], X[0], dxv[0], EXTSTENWIDTH)
-    yweights = LagrangeWeights1D(Xgrid[1], X[1], dxv[1], EXTSTENWIDTH)
-    if (dim == 3):
-        zweights = LagrangeWeights1D(Xgrid[2], X[2], dxv[2], EXTSTENWIDTH)
+    #xweights = LagrangeWeights1D(Xgrid[0], X[0], dxv[0], EXTSTENWIDTH)
+    #yweights = LagrangeWeights1D(Xgrid[1], X[1], dxv[1], EXTSTENWIDTH)
+    #if dim == 3:
+    #    zweights = LagrangeWeights1D(Xgrid[2], X[2], dxv[2], EXTSTENWIDTH)
+    if dim == 2:
+        xweights, yweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
+    elif dim == 3:
+        xweights, yweights, zweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
+    else:
+        raise NotImplementedError("Dimension not implemented yet")
 
     #print extWeights.dtype, xweights.dtype, yweights.dtype
     if dim == 2:
