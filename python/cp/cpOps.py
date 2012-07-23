@@ -335,15 +335,33 @@ def LagrangeWeights1D(xg, x, dx, N):
     Input
     -----
     xg : base grid point
+         Can be an scalar (1D point) or an array (nD point)
     x : array of lenght M, or scalar
         Points for which the interpolation weights will be calculated.
     dx : grid spacing
+         Can be an scalar or an array [dx, dy, ...]
     N : number of interpolation points (interpolation degree + 1)
 
     Output
     ------
     w : array of shape (M,N) if x is an array, else array of shape (N,)
         Barycentric weights.
+
+    Examples
+    --------
+
+    >>> LagrangeWeights1D(0, 0.2, 0.1, 4)
+    array([ 0., -0.,  1.,  0.])
+    >>> LagrangeWeights1D(0, 0.1 * np.arange(4), 0.1, 4)
+    array([[ 1.,  0., -0.,  0.],
+           [-0.,  1.,  0., -0.],
+           [ 0., -0.,  1.,  0.],
+           [-0.,  0., -0.,  1.]])
+    >>> LagrangeWeights1D(0.1 * np.arange(4), 0.1 * np.arange(4), 0.1, 4)
+    array([[ 1.,  0., -0.,  0.],
+           [ 1.,  0., -0.,  0.],
+           [ 1.,  0., -0.,  0.],
+           [ 1.,  0., -0.,  0.]])
 
     Usage
     -----
