@@ -585,7 +585,8 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
     #interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
     
     # make empty lists for i,j and a_{ij}
-    ii = [];  jj = [];  aij = []
+    len_interpStencil = len(interpStencil)
+    ii, jj, aij = [], [], np.empty(N * len_interpStencil)
     for i in xrange(N):
         if i % progout == 0:
             print "  Eplot row " + str(i)
@@ -611,29 +612,30 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
         interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
 
         for s, offsets in enumerate(interpStencil):
-                gii = xbaseptIndex + offsets
-                nn = G[tuple(gii)]
-                #mm = Levolve.index(nn)
-                # Previous works but is quadratic, see above in the
-                # diff code.  Levolve and Lextend have the same
-                # indices so we use index in extend here
-                mm = nn.IndexInLextend
-                # TOOD: how about we just make it Eplot*E*u?
-                # TODO: should we check if we find it in evolve here?
-                #if (mm >= len(Levolve)):
-                #    print "about to fail on row " + str(i) + ", mm=" \
-                #        + str(mm) + ", len(Levolve)=" + str(len(Levolve))
-                # TODO: may not even be in extend!?  can this even happen?
-                if (mm >= len(Lextend)):
-                    raise NameError("Outside Lextend, report")
-
-                #EPlot[i,mm] = interpWeights[s]
-                # ii.extend([i]*stencilsize)
-                # jj.extend(n.diffpts)
-                # aij.extend(diffWeights)
-                ii.append(i)
-                jj.append(mm)
-                aij.append(interpWeights[s])
+            gii = xbaseptIndex + offsets
+            nn = G[tuple(gii)]
+            #mm = Levolve.index(nn)
+            # Previous works but is quadratic, see above in the
+            # diff code.  Levolve and Lextend have the same
+            # indices so we use index in extend here
+            mm = nn.IndexInLextend
+            # TOOD: how about we just make it Eplot*E*u?
+            # TODO: should we check if we find it in evolve here?
+            #if (mm >= len(Levolve)):
+            #    print "about to fail on row " + str(i) + ", mm=" \
+            #        + str(mm) + ", len(Levolve)=" + str(len(Levolve))
+            # TODO: may not even be in extend!?  can this even happen?
+            if (mm >= len(Lextend)):
+                raise NameError("Outside Lextend, report")
+            
+            #EPlot[i,mm] = interpWeights[s]
+            # ii.extend([i]*stencilsize)
+            # jj.extend(n.diffpts)
+            # aij.extend(diffWeights)
+            
+            jj.append(mm)
+        aij[i*len_interpStencil:(i+1)*len_interpStencil] = interpWeights
+        ii.extend([i] * len_interpStencil)
     EPlot = coo_matrix( (aij,(ii,jj)), shape=(N,len(Lextend)), dtype=type(dx) )
     print "elapsed time = " + str(time()-st)
 
