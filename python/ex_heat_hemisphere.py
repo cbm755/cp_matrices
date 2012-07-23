@@ -8,7 +8,6 @@ try:
 except ImportError:
     from enthought.mayavi import  mlab
 from time import time
-from operator import mod
 
 from cp import surfaces
 from cp import cpGrid, cpOps
@@ -100,10 +99,10 @@ for kt in xrange(Nsteps):
     t = 0 + dt*(kt+1)
 
     # Do viz for some timesteps
-    if (kt < 10) or (mod(kt+1,10) == 0):
-        uplot = Eplot*(E*unew)  # brackets necessary for speed here
+    if kt < 10 or not (kt+1) % 10:
+        uplot = Eplot * (E*unew)  # brackets necessary for speed here
         # update the viz
-        src.data.point_data.scalars = Eplot*(E*unew)
+        src.data.point_data.scalars = uplot
         src.data.point_data.scalars.name = 'scalars'
         src.data.modified()
         mlab.title("time = " + str(t) + ", step #" + str(kt+1), size=0.2)
