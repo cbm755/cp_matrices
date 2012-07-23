@@ -514,7 +514,6 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
     #    raise NameError()
 
 
-    dim = len(Levolve[0].gridpt)
     relpt = Levolve[0].basicPt
     # TODO: this is duplicated info... or maybe not if this degree can
     # differ
