@@ -559,7 +559,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
     # differ
     EXTSTENP = interp_degree
     EXTSTENWIDTH = EXTSTENP+1
-    interpStencil = Levolve[0].root.InterpStencil
+    interpStencil = np.array(Levolve[0].root.InterpStencil)
 
     # TODO: VertexBpt could cache the Bpts for each vertex
 
@@ -610,9 +610,10 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
         #Xgrid = xbaseptIndex * dx + relpt
         Xgrid = G[tuple(xbaseptIndex)].gridpt
         interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
-
-        for s, offsets in enumerate(interpStencil):
-            gii = xbaseptIndex + offsets
+        
+        gii_all = xbaseptIndex + interpStencil
+        
+        for s, gii in enumerate(gii_all):
             nn = G[tuple(gii)]
             #mm = Levolve.index(nn)
             # Previous works but is quadratic, see above in the
