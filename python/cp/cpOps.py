@@ -470,7 +470,7 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     EXTSTENSZ = EXTSTENWIDTH**dim
 
     if np.isscalar(dx):
-        dxv = [dx]*3
+        dxv = [dx]*dim
     else:
         dxv = dx
     #xweights = LagrangeWeights1D(Xgrid[0], X[0], dxv[0], EXTSTENWIDTH)
