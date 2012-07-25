@@ -585,8 +585,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
     #interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
     
     # make empty lists for i,j and a_{ij}
-    len_interpStencil = len(interpStencil)
-    ii, jj, aij = [], [], np.empty(N * len_interpStencil)
+    ii, jj, aij = [], [], np.empty((N, len(interpStencil)))
     for i in xrange(N):
         if i % progout == 0:
             print "  Eplot row " + str(i)
@@ -609,7 +608,10 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
         # buildInterpWeights and keep this in a pure Python loop.
         #Xgrid = xbaseptIndex * dx + relpt
         Xgrid = G[tuple(xbaseptIndex)].gridpt
-        interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
+
+        # interpWeights
+        aij[i] = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
+        ii.extend([i] * len(interpStencil))
         
         gii_all = xbaseptIndex + interpStencil
         
@@ -626,7 +628,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
             #    print "about to fail on row " + str(i) + ", mm=" \
             #        + str(mm) + ", len(Levolve)=" + str(len(Levolve))
             # TODO: may not even be in extend!?  can this even happen?
-            if (mm >= len(Lextend)):
+            if mm >= len(Lextend):
                 raise NameError("Outside Lextend, report")
             
             #EPlot[i,mm] = interpWeights[s]
@@ -635,9 +637,9 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
             # aij.extend(diffWeights)
             
             jj.append(mm)
-        aij[i*len_interpStencil:(i+1)*len_interpStencil] = interpWeights
-        ii.extend([i] * len_interpStencil)
-    EPlot = coo_matrix( (aij,(ii,jj)), shape=(N,len(Lextend)), dtype=type(dx) )
+
+        
+    EPlot = coo_matrix( (aij.ravel(),(ii,jj)), shape=(N,len(Lextend)), dtype=type(dx) )
     print "elapsed time = " + str(time()-st)
 
     # LIL/COO matrices are slow in most use cases, convert to CSR for
