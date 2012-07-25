@@ -580,7 +580,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
 
     #EPlot = lil_matrix( (N,len(Lextend)), dtype=type(dx) )
 
-    #xbaseptIndex = findGridInterpBasePt(Points, dx, relpt, EXTSTENP)
+    xbaseptIndex = findGridInterpBasePt(Points, dx, relpt, EXTSTENP)
     #Xgrid = [G[tuple(xbaseptIndex_i)].gridpt for xbaseptIndex_i in xbaseptIndex]
     #interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
     
@@ -596,8 +596,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
         #Bpt = VertexBpt[i]
         #if uband.isBpt[Bpt] != 1:
         #    raise NameError("should be a Bpt!!")
-        xbaseptIndex = findGridInterpBasePt(x, dx, relpt, EXTSTENP)
-        
+    
         # For a single point, the second option (using G[tuple...]) is
         # ~4x faster, but it can't be vectorized and thus, for
         # thousands of points it gets 50x slower than the first
@@ -607,13 +606,13 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
         # time we can vectorize findGridInterpBasePt and
         # buildInterpWeights and keep this in a pure Python loop.
         #Xgrid = xbaseptIndex * dx + relpt
-        Xgrid = G[tuple(xbaseptIndex)].gridpt
+        Xgrid = G[tuple(xbaseptIndex[i])].gridpt
 
         # interpWeights
         aij[i] = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
         ii.extend([i] * len(interpStencil))
         
-        gii_all = xbaseptIndex + interpStencil
+        gii_all = xbaseptIndex[i] + interpStencil
         
         for s, gii in enumerate(gii_all):
             nn = G[tuple(gii)]
