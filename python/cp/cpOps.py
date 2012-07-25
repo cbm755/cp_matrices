@@ -585,7 +585,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
     #interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
     
     # make empty lists for i,j and a_{ij}
-    ii, jj, aij = [], [], np.empty((N, len(interpStencil)))
+    ii, jj, aij = np.arange(N)[:, np.newaxis] * np.ones(len(interpStencil)), [], np.empty((N, len(interpStencil)))
     for i in xrange(N):
         if i % progout == 0:
             print "  Eplot row " + str(i)
@@ -610,7 +610,6 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
 
         # interpWeights
         aij[i] = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
-        ii.extend([i] * len(interpStencil))
         
         gii_all = xbaseptIndex[i] + interpStencil
         
@@ -638,7 +637,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
             jj.append(mm)
 
         
-    EPlot = coo_matrix( (aij.ravel(),(ii,jj)), shape=(N,len(Lextend)), dtype=type(dx) )
+    EPlot = coo_matrix( (aij.ravel(),(ii.ravel(),jj)), shape=(N,len(Lextend)), dtype=type(dx) )
     print "elapsed time = " + str(time()-st)
 
     # LIL/COO matrices are slow in most use cases, convert to CSR for
