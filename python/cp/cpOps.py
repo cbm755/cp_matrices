@@ -51,7 +51,7 @@ def buildDiffMatrix(Levolve, Lextend):
     from time import time
 
     progout = 10 ** (ceil(log10(len(Levolve)))-1)
-    print "building D"
+    print "Building D"
     st=time()
 
     dx = Levolve[0].dx
@@ -59,9 +59,10 @@ def buildDiffMatrix(Levolve, Lextend):
     stencilsize = len(diffWeights)
     #D = lil_matrix( (len(Levolve),len(Lextend)), dtype=type(dx) )
     # make empty lists for i,j and a_{ij}
-    ii = [];  jj = [];  aij = []
+    ii, jj, aij = [], [], []
     for i, n in enumerate(Levolve):
-        if i % progout == 0:  print "  D row " + str(i)
+        if i % progout == 0:
+            print "  D row " + str(i)
         ## Slow approach using lil_matrix
         #for s,j in enumerate(n.diffpts):
         #    D[i,j] = diffWeights[s]
@@ -263,7 +264,7 @@ def _buildExtensionMatrix_lil_slow(Levolve, Lextend):
     return E.tocsr()
 
 
-def _buildExtensionMatrix_depreciated(Grid, level):
+def _buildExtensionMatrix_deprecated(Grid, level):
     """
     generate the matrix E, old version that uses Grid directly
     """
@@ -322,7 +323,6 @@ stencil hypercube.  It is a 2D/3D/etc index, measured relative to
         I = np.floor( (x-relpt) / dx ).astype(int) + 1
         B = I - (p - 1)/2 - 1
     return B
-
 
 
 def LagrangeWeights1D(xg, x, dx, N):
@@ -455,7 +455,6 @@ def LagrangeWeights1DSlow(xg, x, dx, N):
     w = w / sum(w);
     return w
 
-
 def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     """
     Build the interpolation weights.
@@ -473,10 +472,7 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
         dxv = [dx]*dim
     else:
         dxv = dx
-    #xweights = LagrangeWeights1D(Xgrid[0], X[0], dxv[0], EXTSTENWIDTH)
-    #yweights = LagrangeWeights1D(Xgrid[1], X[1], dxv[1], EXTSTENWIDTH)
-    #if dim == 3:
-    #    zweights = LagrangeWeights1D(Xgrid[2], X[2], dxv[2], EXTSTENWIDTH)
+
     if dim == 2:
         xweights, yweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
     elif dim == 3:
