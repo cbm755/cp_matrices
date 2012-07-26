@@ -54,7 +54,8 @@ Grid = TreeGrid.Grids[maxlevel]
 D = cpOps.buildDiffMatrix(Lev, Lex)
 E = cpOps.buildExtensionMatrix(Lev, Lex)
 Eplot = cpOps.buildEPlotMatrix(Grid, Lev, Lex, PlotPts, interp_degree=3)
-
+#import sys
+#sys.exit()
 # the implicit closest point method matrix.  Almost a product of D and
 # E (see Macdonald and Ruuth 2009)
 # We don't need this here
@@ -80,14 +81,11 @@ u = u0
 # setup viz
 f = mlab.figure(1, fgcolor=(0, 0, 0), bgcolor=(1, 1, 1), size=(640,640))
 mlab.clf()
-if True:
-    # build a pipeline so we can explicitly change the data later
-    src = mlab.pipeline.grid_source(x, y, z, scalars=u0plot.reshape(x.shape))
-    normals = mlab.pipeline.poly_data_normals(src)
-    surf = mlab.pipeline.surface(normals)
-else:
-    # this is easier but less convenient to change the data
-    s = mlab.mesh(x, y, z, scalars=np.real(u0plot.reshape(x.shape)))
+# build a pipeline so we can explicitly change the data later
+src = mlab.pipeline.grid_source(x, y, z, scalars=u0plot.reshape(x.shape))
+normals = mlab.pipeline.poly_data_normals(src)
+surf = mlab.pipeline.surface(normals)
+
 # TODO: size is not fontsize
 mlab.title('Initial conditions', size=0.2)
 mlab.show()
@@ -111,12 +109,4 @@ for kt in xrange(Nsteps):
         mlab.title("time = " + str(t) + ", step #" + str(kt+1), size=0.2)
         mlab.show()
         #mlab.savefig('hemisphere' + str(ii) + '_' + str(eval) + '.png')
-
-        # A simpler but less efficient approach: draw a new surface each time
-        if False:
-            mlab.clf()
-            s = mlab.mesh(x, y, z, scalars=uplot.reshape(x.shape))
-            #, vmin=-absmax, vmax=absmax)
-            mlab.title("time = " + str(t) + ", step #" + str(kt+1))
-            mlab.show()
     u = unew
