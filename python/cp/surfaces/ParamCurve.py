@@ -8,16 +8,11 @@ generalize this to 3D, (x,y,z) = (f(t),g(t),h(t))
 Newton's method on derivative of distance squared works better than
 straight optimization on distance squared.
 """
+import numpy as np
+from scipy.optimize import fminbound
+
 from Surface import ShapeWithBdy
 
-from numpy import array as a
-from numpy import sqrt, linspace, pi, abs  #, cos
-from numpy import cos as npcos
-from numpy import cos, sin
-#from math import cos, sin
-
-from numpy.linalg import norm
-from scipy.optimize import fminbound
 
 class ParamCurve(ShapeWithBdy):
     def __init__(self, end1=1.0/4, end2=4, f=None):
@@ -26,9 +21,9 @@ class ParamCurve(ShapeWithBdy):
         self._l = end1
         self._r = end2
         self._dim = 2
-        if f==None:
+        if f is None:
             def f(t):
-                return cos(t)
+                return np.cos(t)
         def mf(t):
             return -f(t)
         self._f = f
@@ -40,14 +35,14 @@ class ParamCurve(ShapeWithBdy):
         (topt, fmin, ierr, numfunc) = fminbound(f,  l, r, xtol=tol,full_output=True,disp=1)
         (topt, fval, ierr, numfunc) = fminbound(mf,l , r, xtol=tol,full_output=True,disp=1)
         fmax = -fval
-        self._bb = [ a([l,fmin]), a([r,fmax]) ]
+        self._bb = [np.array([l,fmin]), np.array([r,fmax]) ]
 
         self._hasParam = True
 
 
     def closestPointToCartesianOld(self, xx):
         """ this version doesn't detect endpts """
-        x,y = xx
+        x, y = xx
         f = self._f
 
         def d2(s,x,y):
@@ -57,10 +52,10 @@ class ParamCurve(ShapeWithBdy):
         endpt2 = self._r
         (sopt, fval, ierr, numfunc) = fminbound(d2, endpt1, endpt2, args=(x,y), \
                                                     xtol=self._tol,full_output=True,disp=3)
-        cp = a([sopt,cos(sopt)])
+        cp = np.array([sopt,cos(sopt)])
 
-        dist = sqrt(fval)
-        dist2 = norm(xx-cp, 2)
+        dist = np.sqrt(fval)
+        dist2 = np.linalg.norm(xx-cp, 2)
         print dist-dist2
 
         others = dict(param=sopt)
@@ -85,7 +80,7 @@ class ParamCurve(ShapeWithBdy):
                                           full_output=True, \
                                           xtol=self._tol, maxfun=5000, disp=1)
         if ierr == 1:
-            raise nameError('max iter exceeded')
+            raise ValueError('Max iter exceeded')
         tmin = t[0]  # for same reason t is a length 1 array
         ddmin = dd
 
@@ -108,9 +103,9 @@ class ParamCurve(ShapeWithBdy):
         #(x,y) = scipy.interpolate.splev(tmin, sp.tck)
         # TODO: hardcoded for 2D
 
-        cp = a([tmin, self._f(tmin)])
+        cp = np.array([tmin, self._f(tmin)])
         #dist2 = sqrt( (xx[0]-cp[0])**2 + (xx[1]-cp[1])**2 )
-        dist = norm(xx - cp, 2)
+        dist = np.linalg.norm(xx - cp, 2)
 
         others = dict(param=tmin)
         return cp, dist, bdy, others
@@ -119,8 +114,8 @@ class ParamCurve(ShapeWithBdy):
     def closestPointToCartesianColin(self, xx, verbose=0):
         x,y = xx
         f = self._f
-        def fp(s): return -sin(s)
-        def fpp(s): return -cos(s)
+        fp = lambda s: -np.sin(s)
+        fpp = lambda s: -np.cos(s)
         endpt1 = self._l
         endpt2 = self._r
 
@@ -145,7 +140,7 @@ class ParamCurve(ShapeWithBdy):
                                           full_output=True, \
                                           xtol=self._tol, maxfun=5000, disp=disp)
         if ierr == 1:
-            raise nameError('max iter exceeded')
+            raise ValueError('max iter exceeded')
         tmin = t[0]  # for same reason t is a length 1 array
         ddmin = dd
 
@@ -163,7 +158,7 @@ class ParamCurve(ShapeWithBdy):
         s = tmin.astype('float96')
         #s = tmin
         n = 1
-        while (1):
+        while True:
             #print type(g(s,x,y))
             n = n + 1
             snew = s - g(s,x,y) / gp(s,x,y)
@@ -177,7 +172,7 @@ class ParamCurve(ShapeWithBdy):
                 fail = True
                 break
             s = snew
-        if (fail):
+        if fail:
             if not CloseToEndpt:
                 print 'too many iterations, not close to endpoint'
                 print x,y
@@ -218,9 +213,9 @@ class ParamCurve(ShapeWithBdy):
         #(x,y) = scipy.interpolate.splev(tmin, sp.tck)
         # TODO: hardcoded for 2D
 
-        cp = a([tmin, self._f(tmin)])
+        cp = np.array([tmin, self._f(tmin)])
         #dist2 = sqrt( (xx[0]-cp[0])**2 + (xx[1]-cp[1])**2 )
-        dist = norm(xx - cp, 2)
+        dist = np.linalg.norm(xx - cp, 2)
 
         others = dict(param=tmin)
         return cp, dist, bdy, others
@@ -229,10 +224,10 @@ class ParamCurve(ShapeWithBdy):
 
     def closestPointToCartesian_Newton(self, xx, verbose=0):
         """ Newton's method """
-        x,y = xx
+        x, y = xx
         f = self._f
-        def fp(s): return -sin(s)
-        def fpp(s): return -cos(s)
+        fp = lambda s: -np.sin(s)
+        fpp = lambda s: -np.cos(s)
         endpt1 = self._l
         endpt2 = self._r
 
@@ -249,7 +244,7 @@ class ParamCurve(ShapeWithBdy):
             #return 2 + 2*(sin(s))**2 - 2*(cos(s) - y)*cos(s)
 
         # Todo: time it, balance this with the newton solve
-        ss = linspace(endpt1, endpt2, 1000)
+        ss = np.linspace(endpt1, endpt2, 1000)
         dd = d2(ss, x, y)
         t_guess = ss[dd.argmin()]
         dd_guess = dd[dd.argmin()]
@@ -263,7 +258,7 @@ class ParamCurve(ShapeWithBdy):
         s = t_guess
         n = 1
         outsideCounter = 0
-        while (1):
+        while True:
             #print type(g(s,x,y))
             n = n + 1
             snew = s - g(s,x,y) / gp(s,x,y)
@@ -349,7 +344,7 @@ class ParamCurve(ShapeWithBdy):
                                           full_output=True, \
                                           xtol=self._tol, maxfun=5000, disp=disp)
             if ierr == 1:
-                raise nameError('max iter exceeded')
+                raise NameError('max iter exceeded')
             tmin = t[0]  # for same reason t is a length 1 array
             ddmin = dd
 
@@ -362,9 +357,9 @@ class ParamCurve(ShapeWithBdy):
                 CloseToEndpt = False
 
 
-        cp = a([tmin, self._f(tmin)])
+        cp = np.array([tmin, self._f(tmin)])
         #dist2 = sqrt( (xx[0]-cp[0])**2 + (xx[1]-cp[1])**2 )
-        dist = norm(xx - cp, 2)
+        dist = np.linalg.norm(xx - cp, 2)
 
         others = dict(param=tmin)
         return cp, dist, bdy, others
@@ -377,8 +372,7 @@ class ParamCurve(ShapeWithBdy):
         """
         Parameritized form (for plotting)
         """
-        th = linspace(self._l, self._r, num=rez, endpoint=True)
+        th = np.linspace(self._l, self._r, rez)
         X = th
-        Y = npcos(th)
+        Y = np.cos(th)
         return X,Y
-

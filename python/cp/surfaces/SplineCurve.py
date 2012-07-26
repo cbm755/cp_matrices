@@ -9,14 +9,10 @@ optimization code with endpoints.
 """
 from Surface import Surface
 
-from numpy import array as a
-from numpy import sqrt, linspace, pi, abs, floor
-from numpy import cos as npcos
-from numpy import cos, sin
-#from math import cos, sin
+import numpy as np
 
-from numpy.linalg import norm
 from scipy.interpolate import splprep, splev
+from scipy.optimize import fminbound
 import scipy.interpolate as si
 import scipy.integrate
 
@@ -29,13 +25,13 @@ class SplineCurve(Surface):
         # smoothing?)
         scale=1.6888266102348
 
-        pts = scale*a([ \
-                [0    ,      0.7    ], \
-                [0.4  ,        0.1  ], \
-                [0.2  ,       -0.7  ], \
-                [-0.4 ,        -0.5 ], \
-                [-0.4 ,         0.2 ], \
-                [0    ,      0.7]])
+        pts = scale*np.array([
+                             [0, 0.7],
+                             [0.4, 0.1],
+                             [0.2, -0.7],
+                             [-0.4, -0.5],
+                             [-0.4, 0.2],
+                             [0, 0.7]])
         x = pts[:,0]
         y = pts[:,1]
         pts2 = [x, y]
@@ -44,11 +40,11 @@ class SplineCurve(Surface):
 
         # find the arclength
         def integrand(s):
-            return sqrt(sum(  a(si.splev(s, tck, der=1))**2  ))
+            return np.sqrt(np.sum(np.array(si.splev(s, tck, der=1))**2  ))
 
         arclen,errest = scipy.integrate.quad(integrand,0,1,epsabs=1e-15, epsrel=5e-14, limit=500)
 
-        print "arclen,errst,err", arclen, errest, 2*pi-arclen
+        print "arclen,errst,err", arclen, errest, 2*np.pi-arclen
 
         self.tck = tck
         self.u = u
@@ -56,7 +52,7 @@ class SplineCurve(Surface):
         self._dim = 2
 
         # find an approximate bounding box
-        s = linspace(u[0], u[-1], 1000)
+        s = np.linspace(u[0], u[-1], 1000)
         x,y = splev(s, self.tck)
         xmin = x.min()
         xmax = x.max()
@@ -65,33 +61,34 @@ class SplineCurve(Surface):
         width = xmax-xmin
         height = ymax-ymin
         # add/subtract 1% of the width for a little padding
-        self._bb = [ a([xmin-width/100,ymin-height/100]), a([xmax+width/100,ymax+height/100]) ]
+        self._bb = [np.array([xmin-width/100,ymin-height/100]),
+                    np.array([xmax+width/100,ymax+height/100])]
 
         self._hasParam = True
 
 
     def closestPointToCartesian(self, xx, verbose=0):
-        """ using Newton's method """
-        x,y = xx
+        """Using Newton's method """
+        x, y = xx
         endpt1 = self.paramBounds[0]
         endpt2 = self.paramBounds[1]
 
         def d2(s, X, Y):
-            x,y = splev(s, self.tck)
+            x, y = splev(s, self.tck)
             return (x - X)**2 + (y - Y)**2
         # dist squared deriv
         def g(s, X, Y):
-            x,y = splev(s, self.tck)
-            xp,yp = splev(s, self.tck, der=1)
+            x, y = splev(s, self.tck)
+            xp, yp = splev(s, self.tck, der=1)
             return 2*(x - X)*xp + 2*(y - Y)*yp
         def gp(s, X, Y):
-            x,y = splev(s, self.tck)
-            xp,yp = splev(s, self.tck, der=1)
-            xpp,ypp = splev(s, self.tck, der=2)
+            x, y = splev(s, self.tck)
+            xp, yp = splev(s, self.tck, der=1)
+            xpp, ypp = splev(s, self.tck, der=2)
             return 2*(xp**2) + 2*(x-X)*(xpp)  +  2*(yp)**2 + 2*(y-Y)*(ypp)
 
         # Todo: time it, balance this with the newton solve
-        ss = linspace(endpt1, endpt2, 1000)
+        ss = np.linspace(endpt1, endpt2, 1000)
         dd = d2(ss, x, y)
         t_guess = ss[dd.argmin()]
         dd_guess = dd[dd.argmin()]
@@ -99,10 +96,10 @@ class SplineCurve(Surface):
         #t_guess= t_guess.astype('float96')
 
 
-        def argPeriodic(v, P=2*pi):
+        def argPeriodic(v, P=2*np.pi):
             """ Return the principal value the argument. """
             A = v/P
-            B = A - floor(A)
+            B = A - np.floor(A)
             return B*P
 
         # tighten with newton's method:
@@ -110,7 +107,7 @@ class SplineCurve(Surface):
         s = t_guess
         n = 1
         outsideCounter = 0
-        while (1):
+        while True:
             #print type(g(s,x,y))
             n = n + 1
             snew = s - g(s,x,y) / gp(s,x,y)
@@ -196,11 +193,11 @@ class SplineCurve(Surface):
 
             disp = 1
             if  (verbose > 12): disp=3
-            t,dd,ierr,numfunc = fminbound(d2, endpt1, endpt2, args=(xx[0],xx[1]), \
-                                          full_output=True, \
+            t,dd,ierr,numfunc = fminbound(d2, endpt1, endpt2, args=(xx[0],xx[1]),
+                                          full_output=True,
                                           xtol=self._tol, maxfun=5000, disp=disp)
             if ierr == 1:
-                raise nameError('max iter exceeded')
+                raise NameError('max iter exceeded')
             tmin = t[0]  # for same reason t is a length 1 array
             ddmin = dd
 
@@ -212,8 +209,8 @@ class SplineCurve(Surface):
             else:
                 CloseToEndpt = False
 
-        cp = a(splev(tmin, self.tck))
-        dist = norm(xx - cp, 2)
+        cp = np.array(splev(tmin, self.tck))
+        dist = np.linalg.norm(xx - cp, 2)
 
         others = dict(param=tmin)
         return cp, dist, bdy, others
@@ -226,7 +223,6 @@ class SplineCurve(Surface):
         """
         Parameritized form (for plotting)
         """
-        s = linspace(self.paramBounds[0], self.paramBounds[1], num=rez, endpoint=True)
+        s = np.linspace(self.paramBounds[0], self.paramBounds[1], rez)
         x,y = splev(s, self.tck)
-        return x,y
-
+        return x, y

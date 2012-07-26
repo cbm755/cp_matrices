@@ -21,7 +21,7 @@ class Hemisphere(ShapeWithBdy):
         rr = center + radius
         ll[-1] = center[-1]
         self._bb = [ll, rr]
-        if (self._dim == 2) or (self._dim == 3):
+        if self._dim == 2 or self._dim == 3:
             self._hasParam = True
         #self._dim = self._center.shape[0]
         # TODO: superclass knows about dimension?
@@ -40,7 +40,6 @@ class Hemisphere(ShapeWithBdy):
         xm = x.copy()
         xm[0] = tx
 
-        #dim = len(x)
         dim = self._dim
 
         if xm[-1] < SURF_CEN[-1]:
@@ -52,16 +51,18 @@ class Hemisphere(ShapeWithBdy):
                 else:  # right
                     cpx = SURF_CEN + np.array([SURF_SR, 0.0])
                     bdy = 2
-            if dim == 3:
+            elif dim == 3:
                 xx = xm[0] - SURF_CEN[0]
                 yy = xm[1] - SURF_CEN[1]
                 th, r = cart2pol(xx,yy)
                 xx, yy = pol2cart(th,SURF_SR)
                 cpx = SURF_CEN + np.array([xx,yy,0])
                 bdy = 1
-            if dim >= 4:
+            else:
                 # general case possible?
-                raise NotImplementedError('4D and higher not implemented')
+                raise NotImplementedError(
+                    'Dim {} and higher not implemented'.format(dim)
+                    )
         else:
             # at or "above" semicircle: same as for whole circle
             c = SURF_SR / r
@@ -96,26 +97,14 @@ class Semicircle(Hemisphere):
     Closest point represenation of a semicircle.
     """
     def __init__(self, center=np.array([0.0, 0.0]), radius=1.0):
-        #print super(self)
-        #self.super(self, center=center, radius=radius)
-        # call the superclass constructor
         Hemisphere.__init__(self, center=center, radius=radius)
-        #self._hasParam = True
 
     def ParamGrid(self, rez=256):
         """
         Parameterized form (for plotting).
         """
-        th = np.linspace(0, 1*np.pi, num=rez, endpoint=True)
+        th = np.linspace(0, np.pi, rez)
         circ = self._radius * np.exp(1j*th)
         X = np.real(circ) + self._center[0]
         Y = np.imag(circ) + self._center[1]
-        #plot(real(circ), imag(circ), 'k-');
-        #XtraPts = numpy.vstack((real(circ),imag(circ))).transpose()
         return X, Y
-
-
-
-#if __name__ == "__main__":
-#    print "running as a script, do some tests"
-#   test()

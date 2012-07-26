@@ -7,18 +7,18 @@ Algorithm: take the minimum distance and return that cp
 TODO: dealing with boundaries properly might be difficult
 """
 from Surface import Surface
-#import numpy
-from numpy import array as a
+import numpy as np
 
 class Multi(Surface):
     def __init__(self, list):
+        raise NotImplementedError
         self._list = list
 
     def closestPointToCartesian(self, x):
         print 'TODO: in multi, WIP'
-        mindist = inf
+        mindist = np.inf
         for l in list:
-            cp,dist,bdy,other = l.closestPointToCartesian(x)
+            cp, dist, bdy, other = l.closestPointToCartesian(x)
             if dist < mindist:
                 mincp = cp
                 mindist = dist

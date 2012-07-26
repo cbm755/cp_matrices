@@ -4,10 +4,11 @@ Closest point representation of a circle.
 A special case of Sphere but implemented differently because this
 version is clearer to understand.
 """
-from Surface import Surface
-
-from coordinate_transform import cart2pol, pol2cart
 import numpy as np
+
+from Surface import Surface
+from coordinate_transform import cart2pol, pol2cart
+
 
 class Circle(Surface):
     def __init__(self, center=np.array([0.0, 0.0]), radius=1.0):
