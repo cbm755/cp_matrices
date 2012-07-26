@@ -1,6 +1,6 @@
 import numpy as np
 
-class Surface():
+class Surface(object):
     def __init__(self):
         print 'base class constructor'
 
