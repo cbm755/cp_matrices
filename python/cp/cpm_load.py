@@ -35,7 +35,7 @@ import surfaces
 q2 = surfaces.Hemisphere()
 # wrap the object in CPBar, for accurately imposing boundary
 # conditions on shapes with boundaries (like a hemisphere)
-q = surfaces.CPBar(parent=q2)
+q = surfaces.CPBar(q2)
 cpfun = q.cp
 
 #cpfun = cpbar

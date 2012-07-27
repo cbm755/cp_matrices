@@ -1,5 +1,5 @@
 """Example.
-...
+Solve the heat equation on a surface, using explicit forward Euler.
 """
 
 import numpy as np
@@ -9,8 +9,7 @@ except ImportError:
     from enthought.mayavi import  mlab
 from time import time
 
-from cp import surfaces
-from cp import cpGrid, cpOps
+from cp import surfaces, cpGrid, cpOps
 
 hemisphere = surfaces.Hemisphere()
 
