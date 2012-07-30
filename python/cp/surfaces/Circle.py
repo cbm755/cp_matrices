@@ -42,13 +42,23 @@ class Circle(Surface):
         dist = np.linalg.norm(xx - cp, 2)
         return cp, dist, 0, {}
 
+    def closestPointToCartesianGrid(self, grid):
+        """Closest points from a grid (returned by {m, o}grid)"""
+        th, r = cart2pol(grid[0] - self._center[0],
+                        grid[1] - self._center[1])
+        x, y = pol2cart(th, self._radius)
+        cp = np.vstack(((x + self._center[0])[np.newaxis, ...],
+                        (y + self._center[1])[np.newaxis, ...]))
+        dist = np.sqrt(((grid - cp)**2).sum(axis=0))
+        return cp, dist, 0, {}
+
     cp = closestPointToCartesian
 
     def ParamGrid(self, rez=256):
         """
-        Parameritized form (for plotting)
+        Parameterized form (for plotting)
         """
-        th = np.linspace(0, 2*np.pi, num=rez, endpoint=True)
+        th = np.linspace(0, 2*np.pi, num=rez)
         circ = self._radius * np.exp(1j*th)
         X = np.real(circ) + self._center[0]
         Y = np.imag(circ) + self._center[1]

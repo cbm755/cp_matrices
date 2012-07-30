@@ -12,6 +12,7 @@ import numpy as np
 from Surface import ShapeWithBdy
 from coordinate_transform import cart2pol, pol2cart, sph2cart
 
+
 class Hemisphere(ShapeWithBdy):
     def __init__(self, center=np.array([0.0, 0.0, 0.0]), radius=1.0):
         self._center = center
@@ -28,12 +29,9 @@ class Hemisphere(ShapeWithBdy):
         #super(Hemisphere, self).__init__()
 
     def closestPointToCartesian(self, x):
-        SURF_CEN = self._center
-        SURF_SR = self._radius
-
-        r = np.linalg.norm(x - SURF_CEN, 2)
+        r = np.linalg.norm(x - self._center, 2)
         if r==0:
-            tx = SURF_CEN[0] + 1.0
+            tx = self._center[0] + 1.0
             r = 1.0
         else:
             tx = x[0]
@@ -42,21 +40,21 @@ class Hemisphere(ShapeWithBdy):
 
         dim = self._dim
 
-        if xm[-1] < SURF_CEN[-1]:
+        if xm[-1] < self._center[-1]:
             # "below" semicircle,
             if dim == 2:
-                if xm[0] <= SURF_CEN[0]:  # left
-                    cpx = SURF_CEN - np.array([SURF_SR, 0.0])
+                if xm[0] <= self._center[0]:  # left
+                    cpx = self._center - np.array([self._radius, 0.0])
                     bdy = 1
                 else:  # right
-                    cpx = SURF_CEN + np.array([SURF_SR, 0.0])
+                    cpx = self._center + np.array([self._radius, 0.0])
                     bdy = 2
             elif dim == 3:
-                xx = xm[0] - SURF_CEN[0]
-                yy = xm[1] - SURF_CEN[1]
+                xx = xm[0] - self._center[0]
+                yy = xm[1] - self._center[1]
                 th, r = cart2pol(xx,yy)
-                xx, yy = pol2cart(th,SURF_SR)
-                cpx = SURF_CEN + np.array([xx,yy,0])
+                xx, yy = pol2cart(th, self._radius)
+                cpx = self._center + np.array([xx,yy,0])
                 bdy = 1
             else:
                 # general case possible?
@@ -65,15 +63,26 @@ class Hemisphere(ShapeWithBdy):
                     )
         else:
             # at or "above" semicircle: same as for whole circle
-            c = SURF_SR / r
-            cpx = c*(xm-SURF_CEN) + SURF_CEN
+            c = self._radius / r
+            cpx = c*(xm-self._center) + self._center
             bdy = 0
 
         dist = np.linalg.norm(cpx - x, 2)
         return cpx, dist, bdy, {}
 
-    cp = closestPointToCartesian
+    def closestPointToCartesianGrid(self, grid):
+        """ Hack to accept grid arrays, since np.vectorize doesn't
+        work for class methods (see
+        mail.scipy.org./pipermail/numpy-discussion/2007-February/026060.html
 
+        FIXME It looses the actual closestpoint, and bdy"""
+        ret = np.empty(grid[0].shape).ravel()
+        gr = grid.reshape((3, -1))
+        for i in xrange(len(ret)):
+            ret[i] = self.closestPointToCartesian(gr[:, i])[1]
+        return None, ret.reshape(grid[0].shape), None, None
+        
+    cp = closestPointToCartesian
 
     def ParamGrid(self, rez=10):
         """
