@@ -104,7 +104,7 @@ def _buildDiffMatrix_lil_slow(Levolve, Lextend):
 
 
 
-def _buildDiffMatrix_depreciated(Grid, level):
+def _buildDiffMatrix_deprecated(Grid, level):
     """
     Generate the matrix D, old version that needs to know Grid
     internals

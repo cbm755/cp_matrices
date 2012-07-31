@@ -18,7 +18,7 @@ function E = interp3_matrix_band(x, y, z, xi, yi, zi, p, band, use_ndgrid)
     use_ndgrid = false;
   end
 
-  warning('this code is depreciated, call interp3_matrix directly');
+  warning('this code is deprecated, call interp3_matrix directly');
 
   E = interp3_matrix_oldloop(x, y, z, xi, yi, zi, p, use_ndgrid);
 

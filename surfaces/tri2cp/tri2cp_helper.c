@@ -941,7 +941,7 @@ void outputGridToFile(const char *fname, int withPruning)
   FILE *fd;
   struct_cp *s;
 
-  myerr("Depreciated");
+  myerr("Deprecated");
 
   if ((fd = fopen(fname, "w")) == NULL) myerr_nix("Error writing griddata");
 
