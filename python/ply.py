@@ -4,7 +4,7 @@ import numpy as np
 def load_ply(fname):
     """Loads ascii ply files. The standard probably allows/disallows
     things that are (not) accepted here, but it works well enough for
-    my purposes"""
+    my purposes, and it's rather fast."""
     # Accept file names and file handles
     if isinstance(fname, basestring):
         fh = open(fname)
@@ -28,17 +28,13 @@ def load_ply(fname):
         elif l.startswith('element face'):
             n_faces = int(l.split()[-1])
     # Load vertex
-    vertex = np.empty((n_vertex, 3), dtype=np.float)
-    for i in xrange(n_vertex):
-        l = fh.readline().strip()
-        vertex[i] = map(float, l.split())
-    # Load faces
-    faces = np.empty((n_faces, 3), dtype=np.int)
-    for i in xrange(n_faces):
-        l = map(int, fh.readline().strip().split())
-        assert l[0] == 3
-        faces[i] = l[1:]
-        
+    vertex = np.fromfile(fh, dtype=np.float,
+                         count=3*n_vertex, sep=' ').reshape((n_vertex, 3))
+    # Load faces, the first column should contain nothing but 3's, but
+    # I don't check it
+    faces = np.fromfile(fh, dtype=np.int,
+                        count=4*n_faces, sep=' ').reshape((n_faces, 4))[:, 1:]
+    fh.close()
     return vertex, faces
 
 if __name__ == '__main__':
