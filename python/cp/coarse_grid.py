@@ -70,11 +70,15 @@ class CoarseGrid(object):
         refine that hypercube."""
         dx = self.dx
         return sqrt(np.dot(dx, dx)) / 2. + np.max(bandwidth)
-        
 
     def mask(self, grid, bandwidth):
         _, dist, _, _ = self.surface.closestPointToCartesianGrid(grid)
         return np.abs(dist) <= self.bound(bandwidth)
+
+    def build_index_mappers(self, mask):
+        self.linear_to_grid = {i:j for i, j in enumerate(zip(*np.nonzero(mask)))}
+        self.grid_to_linear = {v:k for k, v in self.linear_to_grid.iteritems()}
+        
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
@@ -90,6 +94,7 @@ if __name__ == '__main__':
         g = c.grid(30., [-2., -2.], [2., 2.])
         b = c.bandwidth(3., 1.)
         mask = c.mask(g, b)
+        c.build_index_mappers(mask)
         fig = plt.figure()
         ax = fig.add_subplot(111, aspect='equal')
         scatter = ax.scatter(g[0], g[1], c=mask, cmap=cm.flag, s=10, linewidth=0)
@@ -104,6 +109,7 @@ if __name__ == '__main__':
         g = c.grid(40, [-2, -2, -2], [2, 2, 2])
         b = c.bandwidth(3., 1.)
         mask = c.mask(g, b)
+        c.build_index_mappers(mask)
         fig = mlab.figure()
         scalars = np.ones_like(mask, dtype=np.int)
         scalars[mask] = 2.
