@@ -3,18 +3,21 @@ Closest point function for a sphere.
 
 Works in multidimensions.
 """
-import numpy as np
-
 from Surface import Surface
-from coordinate_transform import sph2cart
+
+from numpy import array as a
+from scipy.linalg import norm
+from scipy import sum as spsum
+from scipy import sqrt,where,zeros
+
 
 class Sphere(Surface):
-    def __init__(self, center=np.array([0.0, 0.0, 0.0]), radius=1.0):
+    def __init__(self, center=a([0.0, 0.0, 0.0]), radius=1.0):
         self._center = center
         self._radius = radius
         self._dim = len(center)
         self._bb = [center - radius, center + radius]
-        if self._dim == 2 or self._dim == 3:
+        if ((self._dim == 2) or (self._dim == 3)):
             self._hasParam = True
         # TODO: superclass knows about dimension?
         #super(Hemisphere, self).__init__()
@@ -27,36 +30,48 @@ class Sphere(Surface):
         """
         SURF_CEN = self._center
         SURF_SR = self._radius
+        
+        if x.ndim == 1:
+            cpx = x-SURF_CEN
+            r = norm(cpx)
+            if r == 0:
+                cpx[0] += 1
+                r = 1
+            cpx = SURF_SR/r*cpx + SURF_CEN
+            d = norm(cpx-x)
+            return cpx,d,0,{}
+            
+        cpx = x-SURF_CEN
+        r = sqrt(spsum(pow(cpx,2),axis=1))
+        if (r.any()==0):
+            ind = where(r == 0)
+            cpx[ind,0] = 1
+            r[ind] = 1
 
-        r = np.linalg.norm(x - SURF_CEN, 2)
-        if r==0:
-            tx = SURF_CEN[0] + 1.0
-            r = 1.0
-        else:
-            tx = x[0]
-        xm = x.copy()
-        xm[0] = tx
 
-        c = SURF_SR / r
-        cpx = c*(xm-SURF_CEN) + SURF_CEN
-        dist = np.linalg.norm(cpx - x, 2)
-        return cpx, dist, 0, {}
+        r = SURF_SR / r
+        for dim in range(x.shape[1]):
+            cpx[:,dim] *= r
+        cpx += SURF_CEN
+        dist = sqrt(spsum(pow(cpx - x, 2),axis=1))
+        return cpx, dist, zeros(x.ndim), {}
 
     cp = closestPointToCartesian
 
     def ParamGrid(self, rez=20):
         """ Return a mesh, for example for plotting with mlab
         """
+        #import numpy as np
+        from numpy import pi,sin,cos,outer,ones,size,linspace
         rad = self._radius
         cen = self._center
         # parametric variables
         #u=np.r_[0:2*pi:10j]
-        #v=np.r_[0:pi:10j]
-        th = np.linspace(0, 2*np.pi, 2*rez)
-        # Since sph2cart uses the Matlab convention, elevation angle
-        # goes from -pi/2 to pi/2
-        phi = np.linspace(-np.pi/2, np.pi/2, rez)
-        TH, PHI = np.meshgrid(th, phi)
-        x, y, z = sph2cart(TH, PHI, rad)
+        #v=np.r_[0:0.5*pi:10j]
+        th = linspace(0, 2*pi, num=2*rez, endpoint=True)
+        phi = linspace(0, 1*pi, num=rez, endpoint=True)
+        x = rad*outer(cos(th), sin(phi)) + cen[0]
+        y = rad*outer(sin(th), sin(phi)) + cen[1]
+        z = rad*outer(ones(size(th)),cos(phi)) + cen[2]
         # TODO: return a list?  In case we have multiple components
-        return x + cen[0],y + cen[1], z + cen[2]
+        return x,y,z
