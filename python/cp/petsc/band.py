@@ -12,7 +12,7 @@ import exceptions
 
 class Band(object):
     '''
-    classdocs
+    select from coarse grid.
     '''
 
 
@@ -42,12 +42,18 @@ class Band(object):
                                           (self.hBlock-self.hGrid)*sp.sqrt(self.Dim))
         lindBlockWithinBand = lindBlockWithinBand+BlockStart
         lBlockSize = a(lindBlockWithinBand.size,'i')
-        self.numTotalBlocksWithinBand = comm.allreduce(lBlockSize)
-        if comm.size == 0:
-                    
+        numTotalBlocksWBand = comm.allreduce(lBlockSize)
+        self.numTotalBlocksWBand = numTotalBlocksWBand
+        self.numBlockWBandAssigned = numTotalBlocksWBand // comm.size + int(comm.rank < (numTotalBlocksWBand % comm.size))
+        gindBlocksWBand = PETSc.Vec().createMPI((lBlockSize,PETSc.DECIDE))
+        gindBlocksWBand.setArray(lindBlockWithinBand)
+        self.gindBlockWBand = PETSc.Vec().createMPI((self.numBlockWBandAssigned,PETSc.DECIDE))
+        ISAll = PETSc.IS().createStride(numTotalBlocksWBand,step=1,comm=comm)
+        scatter = PETSc.Scatter().create(gindBlocksWBand,ISAll,self.gindBlockWBand,None) 
+        scatter.scatter(gindBlocksWBand,self.gindBlockWBand,PETSc.InsertMode.INSERT)
 #        PETSc.Sys.syncPrint('Process {0} got {1} Blocks'.format(comm.rank,lBlockSize))
 #        PETSc.Sys.syncFlush()
-#        PETSc.Sys.Print('Total Blocks {0}'.format(self.numTotalBlocksWithinBand))
+#        PETSc.Sys.Print('Total Blocks {0}'.format(self.numTotalBlocksWBand))
         
     
     def BlockInd2SubWithoutBand(self,index):

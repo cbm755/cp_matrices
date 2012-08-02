@@ -9,15 +9,15 @@ import unittest
 import exceptions
 
 from surfaces import Sphere as Surface
-from band import Band
+from petsc.band import Band
 from mpi4py import MPI
 
 
 try:
     import petsc4py
-    import os
+    import sys
 #    from petsc4py import PETSc
-    petsc4py.init(os.sys.argv)
+    petsc4py.init(sys.argv)
     from numpy import array as a
     import numpy.testing as npt
 except Exception as exp:
@@ -64,6 +64,17 @@ class TestBand(unittest.TestCase):
         for x,y in example:
             rlt,_,_,_ = surface.cp(x)
             npt.assert_array_equal(y,rlt)
+            
+    def testVisually(self):
+        '''visually blocks selected.'''
+        x = self.bnd.BlockSub2CenterCarWithoutBand(self.bnd.BlockInd2SubWithoutBand(self.bnd.gindBlockWBand.getArray()))
+#        self.bnd.gindBlockWBand.view()
+        import pylab as pl
+        from mpl_toolkits.mplot3d import Axes3D
+        fig = pl.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter3D(x[:,0],x[:,1],x[:,2])
+        pl.show()
         
 
 
