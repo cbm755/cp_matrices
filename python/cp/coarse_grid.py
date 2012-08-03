@@ -56,7 +56,7 @@ class CoarseGrid(object):
         Ruuth & Merriman
         """
         dim = self.surface._dim
-        dx = self.dx
+        dx = self.dx  # TODO fine dx
         # 1.0001 is a security factor
         lam = 1.0001 * sqrt((dim-1.0)*((p+1)/2.0)**2 + 
                             (diff_stencil_arm + (p+1)/2.0)**2) * dx
@@ -78,7 +78,6 @@ class CoarseGrid(object):
     def build_index_mappers(self, mask):
         self.linear_to_grid = {i:j for i, j in enumerate(zip(*np.nonzero(mask)))}
         self.grid_to_linear = {v:k for k, v in self.linear_to_grid.iteritems()}
-        
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
