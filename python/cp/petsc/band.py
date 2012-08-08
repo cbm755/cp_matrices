@@ -7,7 +7,6 @@ from __future__ import division
 from mpi4py import MPI
 from petsc4py import PETSc
 import scipy as sp
-from numpy import array 
 import exceptions
 
 
@@ -26,19 +25,22 @@ class Band(object):
     '''
 
 
-    def __init__(self,surface,comm):
+    def __init__(self,surface,comm,opt = None):
         '''
         Constructor
         '''
+        if opt is None:
+            opt = {}
         self.comm = comm
         self.surface = surface
-        OptDB = PETSc.Options()
-        self.M = OptDB.getInt('M',20)
-        self.m = OptDB.getInt('m',2)
-        self.StencilWidth = OptDB.getInt('p',1)
-        self.Dim = OptDB.getInt('d',3)
+        self.M = opt.get('M',20)
+        self.m = opt.get('m',2)
+        self.StencilWidth = opt.get('sw',1)
+        self.Dim = opt.get('d',3)
+        self.interpDegree = opt.get('p',4)
         self.hBlock = 4/self.M
         self.hGrid = self.hBlock/self.m
+        self.sizes = (self.M,)*self.Dim
         
     def SelectBlock(self,surface = None):
         
@@ -53,19 +55,23 @@ class Band(object):
         subBlock = self.BlockInd2SubWithoutBand(indBlock)
         BlockCenterCar = self.BlockSub2CenterCarWithoutBand(subBlock)
         _,dBlockCenter,_,_ = surface.cp(BlockCenterCar)
-        (lindBlockWithinBand,) = sp.where(dBlockCenter<1/2*\
-                                          (self.hBlock-self.hGrid)*sp.sqrt(self.Dim))
+        p = self.interpDegree
+        if p % 2 == 1:
+            p = ( p + 1 ) / 2
+        else:
+            p = ( p + 2 ) / 2
+        bw = 1.0001*(p*self.hGrid+(self.hBlock-self.hGrid)/2)*sp.sqrt(self.Dim)
+        (lindBlockWithinBand,) = sp.where(dBlockCenter<bw)
         lindBlockWithinBand = lindBlockWithinBand+Blocktart
         lBlockSize = lindBlockWithinBand.size
-        lsubBlockWBand = self.BlockInd2SubWithoutBand(lindBlockWithinBand)
         numTotalBlockWBand = comm.allreduce(lBlockSize)
         
         
 
         numBlockWBandAssigned = numTotalBlockWBand // comm.size + int(comm.rank < (numTotalBlockWBand % comm.size))
-               
-        lsubBlockWBandFrom = PETSc.Vec().createWithArray(lsubBlockWBand,comm=comm)
-        self.gsubBlockWBand = PETSc.Vec().createMPI((self.Dim*numBlockWBandAssigned,PETSc.DECIDE),comm=comm)
+        
+        lindBlockWBandFrom = PETSc.Vec().createWithArray(lindBlockWithinBand,comm=comm)
+        self.gindBlockWBand = PETSc.Vec().createMPI((numBlockWBandAssigned,PETSc.DECIDE),comm=comm)
         
         
 
@@ -82,8 +88,8 @@ class Band(object):
         self.BlockWBandStart = BlockWBandStart
         
                 
-        LInd = PETSc.IS().createStride(numBlockWBandAssigned*self.Dim,\
-                                       first=BlockWBandStart*self.Dim,\
+        LInd = PETSc.IS().createStride(numBlockWBandAssigned,\
+                                       first=BlockWBandStart,\
                                        step=1,comm=comm)
 
 
@@ -92,10 +98,85 @@ class Band(object):
         
         BlockWBandEnd = BlockWBandStart + numBlockWBandAssigned
         self.BlockWBandEnd = BlockWBandEnd
-        scatter = PETSc.Scatter().create(lsubBlockWBandFrom,LInd,self.gsubBlockWBand,None) 
-        scatter.scatter(lsubBlockWBandFrom,self.gsubBlockWBand,PETSc.InsertMode.INSERT)
         
         
+        scatter = PETSc.Scatter().create(lindBlockWBandFrom,LInd,self.gindBlockWBand,None) 
+        scatter.scatter(lindBlockWBandFrom,self.gindBlockWBand,PETSc.InsertMode.INSERT)
+        #Natural order Index To Petsc order Index
+        self.ni2pi = PETSc.AO().createMapping(self.gindBlockWBand.getArray().astype(sp.int64))
+        
+    def getCoordinatesWithGhost(self):
+        '''Return the coordinates of local vector.'''
+        # TODO: this may return repeated superfluous coordinates.
+        leng =  self.m+self.StencilWidth*2
+        x = sp.arange(leng**self.Dim)
+        x = self.Ind2Sub(x, (leng,)*self.Dim).astype(sp.double)
+        x *= (self.hBlock+self.hGrid*self.StencilWidth*2)/leng
+        x -= (self.StencilWidth-1/2)*self.hGrid
+        x = sp.tile(x,(self.numBlockWBandAssigned,1))
+        
+        
+        y = self.gindBlockWBand.getArray()
+        y = self.BlockInd2CornerCarWithoutBand(y)
+        y = sp.tile(y,leng**self.Dim)
+        y = y.reshape((-1,self.Dim))
+        
+        return x + y
+        
+    def findIndForIntpl(self,cp):
+        '''find the indices of interpolation points'''
+        #find base point first
+        #subBlock is the sub of Block the base points lie in
+        subBlock = sp.floor_divide(cp+2,self.hBlock)
+        corner = self.BlockSub2CornerCarWithoutBand(subBlock)
+        p = self.interpDegree
+        if p%2 == 1:
+            offset = p // 2
+        else:
+            offset = p // 2 - 1
+        subInBlock = sp.floor_divide(cp-corner-self.hGrid/2,self.hGrid)
+        subInBlock -= offset
+        offsetBlock = sp.floor_divide(subInBlock,self.m)
+        subInBlock = sp.mod(subInBlock,self.m)
+        subBlock += offsetBlock
+        
+        
+        p = self.interpDegree + 1
+        d = self.Dim
+        x = sp.arange(p**d)
+        x = self.Ind2Sub(x, (p,)*d)
+        x = sp.tile(x,(cp.shape[0],1))
+        #time consuming or memory consuming? choose one
+        subInBlock = sp.tile(subInBlock,p**d)
+        subInBlock = subInBlock.reshape((-1,d))
+        subBlock = sp.tile(subBlock,p**d)
+        subBlock = subBlock.rehshape((-1,d))
+        offset = sp.zeros(subBlock.shape)
+        x += subInBlock
+        ind = sp.where( x > self.m )
+        offset[ind] = 1
+        subInBlock = sp.mod(x,self.m)
+        subBlock += offset
+        indBlock = self.BlockSub2IndWithoutBand(subBlock)
+        try:
+            indBlock = self.ni2pi.app2petsc(indBlock)
+        except Exception:
+            print 'Not every block used for interpolation is selected\n'
+        ind = self.Sub2Ind(subInBlock, (self.m,)*d)
+        ind += indBlock*self.m**d
+        return ind.shape((-1,p**d))        
+    @staticmethod    
+    def interp1d(bp,cp,N):
+        from scipy.misc import comb
+        w = [comb(N,i)*(-1)**i for i in range(N+1)]
+        w = sp.array(w)
+        
+        
+        
+        
+        
+        
+              
     def createGLVectors(self):
         
         self.SelectBlock()
@@ -127,6 +208,8 @@ class Band(object):
             
         ISFrom = PETSc.IS().createGeneral(ISList,comm=self.comm)
         self.l2g = PETSc.Scatter().create(self.lvec,ISFrom,self.gvec,None)
+        
+        
             
         
         
@@ -167,7 +250,31 @@ class Band(object):
         extMat.setO
         extMat.setSizes((self.lvec.sizes,self.gvec.sizes))
         
+
+    @staticmethod
+    def Ind2Sub(index,size):
+        if sp.isscalar(index):
+            ind = sp.int64(index)
+        else:
+            ind = index.copy()
+            if ind.dtype is not sp.dtype('int64'):
+                ind = ind.astype(sp.int64)
+        total = 1
+        for i in size:
+            total *= i
+        if sp.isscalar(ind):
+            if ind < 0 or ind > total:
+                raise exceptions.IndexError('BlockInd2SubWithoutBand')
+            return sp.column_stack(sp.unravel_index(ind,size,order='F'))[0]
+            
+        else:
+            if ind.any() < 0 or ind.any() > total:
+                raise exceptions.IndexError('BlockInd2SubWithoutBand')
+            return sp.column_stack(sp.unravel_index(ind,size,order='F'))
         
+    @staticmethod
+    def Sub2Ind(sub,size): 
+        return sp.column_stack(sp.ravel_multi_index(sub.T,size,order='F'))     
                         
                 
     
@@ -176,6 +283,8 @@ class Band(object):
             ind = index
         else:
             ind = index.copy()
+            if ind.dtype is not sp.dtype('int64'):
+                ind = ind.astype(sp.int64)
         if sp.isscalar(ind):
             if ind < 0 or ind > self.M**self.Dim-1:
                 raise exceptions.IndexError('BlockInd2SubWithoutBand')
@@ -186,8 +295,35 @@ class Band(object):
                 raise exceptions.IndexError('BlockInd2SubWithoutBand')
             return sp.column_stack(sp.unravel_index(ind,(self.M,)*self.Dim,order='F'))
         
+    def BlockSub2IndWithoutBand(self,tsub):
+        if tsub.ndim == 1:
+            sub = tsub.reshape((-1,self.Dim)).T
+        else:
+            sub = tsub.T
+        return sp.ravel_multi_index(sub,(self.M,)*self.Dim,order='F')
+        
+        
     def BlockSub2CenterCarWithoutBand(self,sub):       
         return sub/self.M*4-2+self.hBlock/2
+    
+    def BlockSub2CornerCarWithoutBand(self,sub):
+        return sub/self.M*4-2
+    
+    def BlockInd2CenterCarWithoutBand(self,ind):
+        return self.BlockSub2CenterCarWithoutBand(self.BlockInd2SubWithoutBand(ind))
+    
+    def BlockInd2CornerCarWithoutBand(self,ind):
+        return self.BlockSub2CornerCarWithoutBand(self.BlockInd2SubWithoutBand(ind))
+    
+    
+    @staticmethod
+    def norm1(x):
+        if x.ndim == 1:
+            return sp.absolute(x).max()
+        return sp.amax(sp.absolute(x),axis=1)
+    
+    
+        
         
         
         

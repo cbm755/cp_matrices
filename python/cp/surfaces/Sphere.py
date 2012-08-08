@@ -45,8 +45,8 @@ class Sphere(Surface):
         r = sqrt(spsum(pow(cpx,2),axis=1))
         if (r.any()==0):
             ind = where(r == 0)
-            cpx[ind,0] = 1
-            r[ind] = 1
+            cpx[ind,0] = SURF_SR
+            r[ind] = SURF_SR
 
 
         r = SURF_SR / r
