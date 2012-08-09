@@ -597,6 +597,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
     
     # make empty lists for i,j and a_{ij}
     ii, jj, aij = np.arange(N)[:, np.newaxis] * np.ones(len(interpStencil)), [], np.empty((N, len(interpStencil)))
+    gii_all_all = xbaseptIndex[:, np.newaxis, :] + interpStencil[np.newaxis, ...]
     for i in xrange(N):
         if i % progout == 0:
             print "  Eplot row " + str(i)
@@ -622,8 +623,8 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
         # interpWeights
         #aij[i] = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
         
-        gii_all = xbaseptIndex[i] + interpStencil
-        
+        #gii_all = xbaseptIndex[i] + interpStencil
+        gii_all = gii_all_all[i]
         for s, gii in enumerate(gii_all):
             nn = G[tuple(gii)]
             #mm = Levolve.index(nn)
