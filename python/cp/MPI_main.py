@@ -21,4 +21,5 @@ except Exception as exp:
 if __name__ == '__main__':
     surface = Surface()
     bnd = Band(surface,MPI.COMM_WORLD)
+    bnd.createGLVectors()
     
