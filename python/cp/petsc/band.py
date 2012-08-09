@@ -122,6 +122,21 @@ class Band(object):
         y = y.reshape((-1,self.Dim))
         
         return x + y
+    def getCoordinates(self):
+        '''Return the coordinates of global vector.'''
+        leng =  self.m
+        x = sp.arange(leng**self.Dim)
+        x = self.Ind2Sub(x, (leng,)*self.Dim).astype(sp.double)
+        x *= (self.hBlock)/leng
+        x -= self.hGrid/2
+        x = sp.tile(x,(self.numBlockWBandAssigned,1))
+        
+        
+        y = self.gindBlockWBand.getArray()
+        y = self.BlockInd2CornerCarWithoutBand(y)
+        y = sp.repeat(y,leng**self.Dim,axis=0)
+        
+        return x + y
         
     def findIndForIntpl(self,cp):
         '''find the indices of interpolation points'''
@@ -189,6 +204,8 @@ class Band(object):
         lsize = self.numBlockWBandAssigned*self.m**self.Dim
         self.gvec = PETSc.Vec().createMPI((lsize,PETSc.DECIDE))
         self.gvec.setUp()
+        self.wvec = self.gvec.copy()
+        
         
 #        self.createIndicesHelper()
         tind = sp.arange((self.m+self.StencilWidth*2)**self.Dim)
@@ -200,19 +217,42 @@ class Band(object):
             
         tind = tind.flatten(order='F')
         
-        ISList = []
-        c = (self.m+self.StencilWidth*2)**self.Dim
-        for i in xrange(self.BlockWBandStart,self.BlockWBandEnd):
-            ti = i*c
-            ISList.extend(list(tind+ti))
+#        ISList = []
+#        c = (self.m+self.StencilWidth*2)**self.Dim
+#        for i in xrange(self.BlockWBandStart,self.BlockWBandEnd):
+#            ti = i*c
+#            ISList.extend(list(tind+ti))
+        tind = sp.tile(tind,self.numBlockWBandAssigned)
+        ttind = sp.arange(self.BlockWBandStart,self.BlockWBandEnd)
+        tt = (self.m+2*self.StencilWidth)**self.Dim
+        ttind *= tt
+        ttind = sp.repeat(ttind, self.m**self.Dim)
+        ttind = tind + ttind
+        
             
-        ISFrom = PETSc.IS().createGeneral(ISList,comm=self.comm)
+        ISFrom = PETSc.IS().createGeneral(ttind,comm=self.comm)
         self.l2g = PETSc.Scatter().create(self.lvec,ISFrom,self.gvec,None)
         
-        
-            
-        
-        
+        #generate scatter global2local
+        tind = sp.arange(tt)
+        tind = self.Ind2Sub(tind,(self.m+2*self.StencilWidth,)*self.Dim)
+        tind -= self.StencilWidth
+        tind = sp.tile(tind,(self.numBlockWBandAssigned,1))
+        ttind = self.ni2pi.petsc2app(sp.arange(self.BlockWBandStart,self.BlockWBandEnd))
+        ttind = self.BlockInd2SubWithoutBand(ttind)
+        ttind = sp.repeat(ttind,tt,axis=0)
+        ttind += tind/self.m
+        tind = sp.mod(tind,self.m)
+        tind = self.Sub2Ind(tind, (self.m,)*self.Dim)
+        ttind = self.BlockSub2IndWithoutBand(ttind)
+        ttind = self.ni2pi.app2petsc(ttind)
+        ttind *= tt
+        tind += ttind
+        ind,_ = sp.where(tind>=0)
+        ISTo = ind+self.BlockWBandStart*tt
+        ISFrom = PETSc.IS().createGeneral(tind)
+        ISTo = PETSc.IS().createGeneral(ISTo)
+        self.g2l = PETSc.Scatter(self.gvec,ISFrom,self.lvec,ISTo)
         
         
         

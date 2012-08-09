@@ -117,9 +117,26 @@ class TestBand(unittest.TestCase):
             pl.savefig('x{0}.png'.format(self.comm.rank))
             pl.show()
             
-#    def testBlockSub2IndWithoutBand(self):
-#        example = (a([4,4,4]),a([])
-#                   )
+    def testgetCoordinates(self):
+        '''What the return values of this function look like.'''
+        #This test takes time.
+        if 1 == 0 :return
+        x = self.bnd.getCoordinates()
+        try:
+            from mayavi import mlab
+            mlab.figure()
+            mlab.points3d(x[:,0],x[:,1],x[:,2])
+            #fig.add(pts)
+            mlab.show()
+            
+        except ImportError:
+            import pylab as pl
+            from mpl_toolkits.mplot3d import Axes3D #@UnusedImport
+            fig = pl.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            ax.scatter3D(x[:,0],x[:,1],x[:,2])
+            pl.savefig('x{0}.png'.format(self.comm.rank))
+            pl.show()
         
         
 
