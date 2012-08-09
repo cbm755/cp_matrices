@@ -463,6 +463,13 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     X is the point to be evaluated at
 
     TODO: clean up EXTSTENWIDTH and/or document (its degree+1)
+
+    Xgrid and X can have shape (N, dim) (ie, arrays of points) or
+    single points (1D arrays)
+
+    dx can be a scalar or have shape (dim,)
+
+    EXTSTENWIDTH is an natural number
     """
     dim = len(X)
 
@@ -473,12 +480,19 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     else:
         dxv = dx
 
+    Xgrid = np.atleast_2d(Xgrid)
+    X = np.atleast_2d(X)
     if dim == 2:
-        xweights, yweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
+        weights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
+        xweights = weights[:, 0]
+        yweights = weights[:, 1]
     elif dim == 3:
         # Calling LagrangeWeights1D like this makes the whole
         # ex_heat_hemisphere.py 25-30% faster!
-        xweights, yweights, zweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
+        weights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
+        xweights = weights[:, 0]
+        yweights = weights[:, 1]
+        zweights = weights[:, 2]
     else:
         raise NotImplementedError("Dimension not implemented yet")
 
@@ -486,11 +500,11 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     if dim == 2:
         # loop in the same order as elsewhere and compute weights as
         # products of above
-        extWeights = (yweights[:, np.newaxis] * xweights[np.newaxis, :]).ravel()
+        extWeights = (yweights[..., np.newaxis] * xweights[:, np.newaxis, :]).reshape(yweights.shape[0], -1)
     elif dim == 3:
-        extWeights = (zweights[:, np.newaxis, np.newaxis] *  # z varies the slowest, so put it in the first dimension
-                      yweights[np.newaxis, :, np.newaxis] *
-                      xweights[np.newaxis, np.newaxis, :]).ravel()  # x varies the fastest, put it in the last dimension
+        extWeights = (zweights[..., np.newaxis, np.newaxis] *  # z varies the slowest, so put it in the first dimension
+                      yweights[:, np.newaxis, :, np.newaxis] *
+                      xweights[:, np.newaxis, np.newaxis, :]).reshape(yweights.shape[0], -1)  # x varies the fastest, put it in the last dimension
     else:
         raise NotImplementedError('Dimension not implemented yet.')
 
@@ -500,14 +514,14 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     # takes about the same time as calculating extWeights given {x, y,
     # z}weights. Mmm running a full example without these checks only
     # makes it ~3% faster
-    sum1 = np.sum(extWeights, dtype=type(dxv[0]))
+    sum1 = np.sum(extWeights, dtype=type(dxv[0]), axis=1)
     eps = np.finfo(type(dxv[0])).eps
-    if abs(sum1 - 1.0) > 50*eps:
+    if np.max(np.abs(sum1 - 1.0)) > 50*eps:
         print extWeights
         print sum1
         raise ValueError('Weight problem')
 
-    return extWeights
+    return extWeights.squeeze()
 
 
 def LinearDiagonalSplitting(D, E):
