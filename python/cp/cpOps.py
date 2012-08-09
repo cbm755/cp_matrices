@@ -471,7 +471,10 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
 
     EXTSTENWIDTH is an natural number
     """
-    dim = len(X)
+    Xgrid = np.atleast_2d(Xgrid)
+    X = np.atleast_2d(X)
+
+    dim = X.shape[1]  # X.shape = (#points, dim)
 
     EXTSTENSZ = EXTSTENWIDTH**dim
 
