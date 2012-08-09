@@ -483,8 +483,6 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     else:
         dxv = dx
 
-    Xgrid = np.atleast_2d(Xgrid)
-    X = np.atleast_2d(X)
     if dim == 2:
         weights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
         xweights = weights[:, 0]
@@ -594,8 +592,8 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
     #EPlot = lil_matrix( (N,len(Lextend)), dtype=type(dx) )
 
     xbaseptIndex = findGridInterpBasePt(Points, dx, relpt, EXTSTENP)
-    #Xgrid = [G[tuple(xbaseptIndex_i)].gridpt for xbaseptIndex_i in xbaseptIndex]
-    #interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
+    Xgrid = np.array([G[tuple(xbaseptIndex_i)].gridpt for xbaseptIndex_i in xbaseptIndex])
+    interpWeights = buildInterpWeights(Xgrid, Points, dx, EXTSTENWIDTH)
     
     # make empty lists for i,j and a_{ij}
     ii, jj, aij = np.arange(N)[:, np.newaxis] * np.ones(len(interpStencil)), [], np.empty((N, len(interpStencil)))
@@ -604,7 +602,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
             print "  Eplot row " + str(i)
         # find floor of x,y,z in uband and the CP, these are the only
         # two things we need to construct this row of E
-        x = Points[i]
+        #x = Points[i]
         # TODO: could cache the baseptI
         #Bpt = VertexBpt[i]
         #if uband.isBpt[Bpt] != 1:
@@ -619,10 +617,10 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
         # time we can vectorize findGridInterpBasePt and
         # buildInterpWeights and keep this in a pure Python loop.
         #Xgrid = xbaseptIndex * dx + relpt
-        Xgrid = G[tuple(xbaseptIndex[i])].gridpt
+        #Xgrid = G[tuple(xbaseptIndex[i])].gridpt
 
         # interpWeights
-        aij[i] = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
+        #aij[i] = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
         
         gii_all = xbaseptIndex[i] + interpStencil
         
@@ -649,7 +647,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
             
             jj.append(mm)
 
-        
+    aij = interpWeights
     EPlot = coo_matrix( (aij.ravel(),(ii.ravel(),jj)), shape=(N,len(Lextend)), dtype=type(dx) )
     print "elapsed time = " + str(time()-st)
 
