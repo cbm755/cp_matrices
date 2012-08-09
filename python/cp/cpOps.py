@@ -463,8 +463,18 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     X is the point to be evaluated at
 
     TODO: clean up EXTSTENWIDTH and/or document (its degree+1)
+
+    Xgrid and X can have shape (N, dim) (ie, arrays of points) or
+    single points (1D arrays)
+
+    dx can be a scalar or have shape (dim,)
+
+    EXTSTENWIDTH is an natural number
     """
-    dim = len(X)
+    Xgrid = np.atleast_2d(Xgrid)
+    X = np.atleast_2d(X)
+
+    dim = X.shape[1]  # X.shape = (#points, dim)
 
     EXTSTENSZ = EXTSTENWIDTH**dim
 
@@ -474,11 +484,16 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
         dxv = dx
 
     if dim == 2:
-        xweights, yweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
+        weights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
+        xweights = weights[:, 0]
+        yweights = weights[:, 1]
     elif dim == 3:
         # Calling LagrangeWeights1D like this makes the whole
         # ex_heat_hemisphere.py 25-30% faster!
-        xweights, yweights, zweights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
+        weights = LagrangeWeights1D(Xgrid, X, dxv, EXTSTENWIDTH)
+        xweights = weights[:, 0]
+        yweights = weights[:, 1]
+        zweights = weights[:, 2]
     else:
         raise NotImplementedError("Dimension not implemented yet")
 
@@ -486,11 +501,11 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     if dim == 2:
         # loop in the same order as elsewhere and compute weights as
         # products of above
-        extWeights = (yweights[:, np.newaxis] * xweights[np.newaxis, :]).ravel()
+        extWeights = (yweights[..., np.newaxis] * xweights[:, np.newaxis, :]).reshape(yweights.shape[0], -1)
     elif dim == 3:
-        extWeights = (zweights[:, np.newaxis, np.newaxis] *  # z varies the slowest, so put it in the first dimension
-                      yweights[np.newaxis, :, np.newaxis] *
-                      xweights[np.newaxis, np.newaxis, :]).ravel()  # x varies the fastest, put it in the last dimension
+        extWeights = (zweights[..., np.newaxis, np.newaxis] *  # z varies the slowest, so put it in the first dimension
+                      yweights[:, np.newaxis, :, np.newaxis] *
+                      xweights[:, np.newaxis, np.newaxis, :]).reshape(yweights.shape[0], -1)  # x varies the fastest, put it in the last dimension
     else:
         raise NotImplementedError('Dimension not implemented yet.')
 
@@ -500,14 +515,14 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
     # takes about the same time as calculating extWeights given {x, y,
     # z}weights. Mmm running a full example without these checks only
     # makes it ~3% faster
-    sum1 = np.sum(extWeights, dtype=type(dxv[0]))
+    sum1 = np.sum(extWeights, dtype=type(dxv[0]), axis=1)
     eps = np.finfo(type(dxv[0])).eps
-    if abs(sum1 - 1.0) > 50*eps:
+    if np.max(np.abs(sum1 - 1.0)) > 50*eps:
         print extWeights
         print sum1
         raise ValueError('Weight problem')
 
-    return extWeights
+    return extWeights.squeeze()
 
 
 def LinearDiagonalSplitting(D, E):
@@ -577,17 +592,18 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
     #EPlot = lil_matrix( (N,len(Lextend)), dtype=type(dx) )
 
     xbaseptIndex = findGridInterpBasePt(Points, dx, relpt, EXTSTENP)
-    #Xgrid = [G[tuple(xbaseptIndex_i)].gridpt for xbaseptIndex_i in xbaseptIndex]
-    #interpWeights = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
+    Xgrid = np.array([G[tuple(xbaseptIndex_i)].gridpt for xbaseptIndex_i in xbaseptIndex])
+    interpWeights = buildInterpWeights(Xgrid, Points, dx, EXTSTENWIDTH)
     
     # make empty lists for i,j and a_{ij}
     ii, jj, aij = np.arange(N)[:, np.newaxis] * np.ones(len(interpStencil)), [], np.empty((N, len(interpStencil)))
+    gii_all_all = xbaseptIndex[:, np.newaxis, :] + interpStencil[np.newaxis, ...]
     for i in xrange(N):
         if i % progout == 0:
             print "  Eplot row " + str(i)
         # find floor of x,y,z in uband and the CP, these are the only
         # two things we need to construct this row of E
-        x = Points[i]
+        #x = Points[i]
         # TODO: could cache the baseptI
         #Bpt = VertexBpt[i]
         #if uband.isBpt[Bpt] != 1:
@@ -602,13 +618,13 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
         # time we can vectorize findGridInterpBasePt and
         # buildInterpWeights and keep this in a pure Python loop.
         #Xgrid = xbaseptIndex * dx + relpt
-        Xgrid = G[tuple(xbaseptIndex[i])].gridpt
+        #Xgrid = G[tuple(xbaseptIndex[i])].gridpt
 
         # interpWeights
-        aij[i] = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
+        #aij[i] = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
         
-        gii_all = xbaseptIndex[i] + interpStencil
-        
+        #gii_all = xbaseptIndex[i] + interpStencil
+        gii_all = gii_all_all[i]
         for s, gii in enumerate(gii_all):
             nn = G[tuple(gii)]
             #mm = Levolve.index(nn)
@@ -632,7 +648,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
             
             jj.append(mm)
 
-        
+    aij = interpWeights
     EPlot = coo_matrix( (aij.ravel(),(ii.ravel(),jj)), shape=(N,len(Lextend)), dtype=type(dx) )
     print "elapsed time = " + str(time()-st)
 
