@@ -33,7 +33,7 @@ class CoarseGrid(object):
         grid : array
                desired grid
         """
-        ll, ur = np.asarray(ll), np.asarray(ur)
+        ll, ur = np.asarray(ll, dtype=np.float64), np.asarray(ur, dtype=np.float64)
         f = np.mgrid if filled else np.ogrid
         grid = f[tuple(slice(ll_i, ur_i, complex(0, n)) 
                        for ll_i, ur_i in zip(ll, ur))]

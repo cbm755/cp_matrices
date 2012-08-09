@@ -26,8 +26,8 @@ def load_ply(fname):
         binary = False
         sep = ' '
         faces_multiplier = 4
-        vertex_dtype = np.float
-        faces_dtype = np.int
+        vertex_dtype = np.float32
+        faces_dtype = np.int32
     else:
         binary = True
         sep = ''
