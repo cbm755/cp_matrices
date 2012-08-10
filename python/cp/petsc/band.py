@@ -8,7 +8,10 @@ from mpi4py import MPI
 from petsc4py import PETSc
 import scipy as sp
 import exceptions
-
+try:
+    from cp.cpOps import buildInterpWeights
+except ImportError:
+    from cpOps import buildInterpWeights
 
 #class harray(array):
 #    '''Providing hash for Array. Use this for indexing dictionary.'''
@@ -34,13 +37,14 @@ class Band(object):
         self.comm = comm
         self.surface = surface
         self.M = opt.get('M',20)
-        self.m = opt.get('m',2)
+        self.m = opt.get('m',4)
         self.StencilWidth = opt.get('sw',1)
         self.Dim = opt.get('d',3)
-        self.interpDegree = opt.get('p',4)
+        self.interpDegree = opt.get('p',3)
         self.hBlock = 4/self.M
         self.hGrid = self.hBlock/self.m
         self.sizes = (self.M,)*self.Dim
+        self.test = 1
         
     def SelectBlock(self,surface = None):
         
@@ -49,20 +53,21 @@ class Band(object):
         comm = self.comm
         numTotalBlock = self.M**self.Dim
         numBlockAssigned = numTotalBlock // comm.size + int(comm.rank < (numTotalBlock % comm.size))
-        Blocktart = comm.exscan(numBlockAssigned)
-        if comm.rank == 0:Blocktart = 0
-        indBlock = sp.arange(Blocktart,Blocktart+numBlockAssigned)
+        Blockstart = comm.exscan(numBlockAssigned)
+        if comm.rank == 0:Blockstart = 0
+        indBlock = sp.arange(Blockstart,Blockstart+numBlockAssigned)
         subBlock = self.BlockInd2SubWithoutBand(indBlock)
         BlockCenterCar = self.BlockSub2CenterCarWithoutBand(subBlock)
-        _,dBlockCenter,_,_ = surface.cp(BlockCenterCar)
+        cp,_,_,_ = surface.cp(BlockCenterCar)
+        dBlockCenter = self.norm1(cp-BlockCenterCar)
         p = self.interpDegree
         if p % 2 == 1:
             p = ( p + 1 ) / 2
         else:
             p = ( p + 2 ) / 2
-        bw = 1.0001*(p*self.hGrid+(self.hBlock-self.hGrid)/2)*sp.sqrt(self.Dim)
+        bw = 1.0001*(p*self.hGrid+(self.hBlock-self.hGrid)/2)#*sp.sqrt(self.Dim)
         (lindBlockWithinBand,) = sp.where(dBlockCenter<bw)
-        lindBlockWithinBand = lindBlockWithinBand+Blocktart
+        lindBlockWithinBand = lindBlockWithinBand+Blockstart
         lBlockSize = lindBlockWithinBand.size
         numTotalBlockWBand = comm.allreduce(lBlockSize)
         
@@ -128,7 +133,7 @@ class Band(object):
         x = sp.arange(leng**self.Dim)
         x = self.Ind2Sub(x, (leng,)*self.Dim).astype(sp.double)
         x *= (self.hBlock)/leng
-        x -= self.hGrid/2
+        x += self.hGrid/2
         x = sp.tile(x,(self.numBlockWBandAssigned,1))
         
         
@@ -151,47 +156,39 @@ class Band(object):
             offset = p // 2 - 1
         subInBlock = sp.floor_divide(cp-corner-self.hGrid/2,self.hGrid)
         subInBlock -= offset
+        
+        bp = subInBlock/self.m*self.hBlock+self.hGrid/2+corner
+        
         offsetBlock = sp.floor_divide(subInBlock,self.m)
         subInBlock = sp.mod(subInBlock,self.m)
         subBlock += offsetBlock
+        
+        
         
         
         p = self.interpDegree + 1
         d = self.Dim
         x = sp.arange(p**d)
         x = self.Ind2Sub(x, (p,)*d)
-        x = sp.tile(x,(cp.shape[0],1))
+#        x = sp.tile(x,(cp.shape[0],1))
         #time consuming or memory consuming? choose one
-        subInBlock = sp.tile(subInBlock,p**d)
-        subInBlock = subInBlock.reshape((-1,d))
-        subBlock = sp.tile(subBlock,p**d)
-        subBlock = subBlock.rehshape((-1,d))
-        offset = sp.zeros(subBlock.shape)
-        x += subInBlock
-        ind = sp.where( x > self.m )
-        offset[ind] = 1
-        subInBlock = sp.mod(x,self.m)
-        subBlock += offset
+        subInBlock = sp.repeat(subInBlock,p**d,axis=0)
+        subBlock = sp.repeat(subBlock,p**d,axis=0)
+#        offset = sp.zeros(subBlock.shape)
+#        x += subInBlock
+        subInBlock += sp.tile(x,(cp.shape[0],1))
+        subBlock += sp.floor_divide(subInBlock,self.m)
+        
+#        ind = sp.where( x > self.m )
+#        offset[ind] = 1
+        subInBlock = sp.mod(subInBlock,self.m)
+        
         indBlock = self.BlockSub2IndWithoutBand(subBlock)
-        try:
-            indBlock = self.ni2pi.app2petsc(indBlock)
-        except Exception:
-            print 'Not every block used for interpolation is selected\n'
+        indBlock = self.ni2pi.app2petsc(indBlock)
         ind = self.Sub2Ind(subInBlock, (self.m,)*d)
         ind += indBlock*self.m**d
-        return ind.shape((-1,p**d))        
-    @staticmethod    
-    def interp1d(bp,cp,N):
-        from scipy.misc import comb
-        w = [comb(N,i)*(-1)**i for i in range(N+1)]
-        w = sp.array(w)
-        
-        
-        
-        
-        
-        
-              
+        return bp,ind.reshape((-1,p**d))        
+
     def createGLVectors(self):
         
         self.SelectBlock()
@@ -248,11 +245,12 @@ class Band(object):
         ttind = self.ni2pi.app2petsc(ttind)
         ttind *= tt
         tind += ttind
-        ind,_ = sp.where(tind>=0)
+        (ind,) = sp.where(tind>=0)
         ISTo = ind+self.BlockWBandStart*tt
         ISFrom = PETSc.IS().createGeneral(tind)
         ISTo = PETSc.IS().createGeneral(ISTo)
         self.g2l = PETSc.Scatter(self.gvec,ISFrom,self.lvec,ISTo)
+        return self.lvec,self.gvec,self.wvec
         
         
         
@@ -286,9 +284,45 @@ class Band(object):
                 
     def createExtensionMat(self):     
         '''create a real PETSc.Mat() for extension'''       
-        extMat = PETSc.Mat().create()
-        extMat.setO
-        extMat.setSizes((self.lvec.sizes,self.gvec.sizes))
+        p = self.interpDegree + 1
+        d = self.Dim
+        tt = self.m**self.Dim
+        
+        extMat = PETSc.Mat().create(self.comm)
+        extMat.setSizes((self.wvec.sizes,self.gvec.sizes))
+        extMat.setFromOptions()
+        extMat.setPreallocationNNZ((p**d,p**d))
+#        if self.test == 1:
+#            PETSc.Sys.syncPrint('extMat.sizes')
+#            PETSc.Sys.syncPrint(extMat.sizes)
+#            PETSc.Sys.syncPrint('extMat.getOwnershipRange')
+#            PETSc.Sys.syncPrint(extMat.getOwnershipRange())
+        cp = self.getCoordinates()
+        cp,_,_,_ = self.surface.cp(cp)
+        Xgrid,ind = self.findIndForIntpl(cp)
+#        if ind.any() < 0:
+#            print 'Error..............'
+        weights = buildInterpWeights(Xgrid,cp,self.hGrid,p)
+        start = self.BlockWBandStart*tt
+        ranges = self.numBlockWBandAssigned*tt
+#        end = self.BlockWBandEnd*tt+1
+#        if self.test == 1:
+#            PETSc.Sys.syncPrint('start:{0},end:{1}'.format(start,end))
+#            PETSc.Sys.syncPrint('weights.shape')
+#            PETSc.Sys.syncPrint(weights.shape)
+#            PETSc.Sys.syncPrint('==================')
+#            PETSc.Sys.syncFlush()
+  
+        for i in xrange(ranges):
+            extMat[i+start,ind[i]] = weights[i]
+
+
+                    
+        extMat.assemble()
+        return extMat
+        
+        
+        
         
 
     @staticmethod
@@ -313,8 +347,12 @@ class Band(object):
             return sp.column_stack(sp.unravel_index(ind,size,order='F'))
         
     @staticmethod
-    def Sub2Ind(sub,size): 
-        return sp.column_stack(sp.ravel_multi_index(sub.T,size,order='F'))     
+    def Sub2Ind(tsub,size): 
+        if tsub.dtype is not sp.dtype('int'):
+            sub = tsub.T.astype(sp.int64)
+        else:
+            sub = tsub.T
+        return sp.ravel_multi_index(sub,size,order='F')     
                         
                 
     
@@ -340,6 +378,8 @@ class Band(object):
             sub = tsub.reshape((-1,self.Dim)).T
         else:
             sub = tsub.T
+        if sub.dtype is not sp.dtype('int'):
+            sub = sub.astype(sp.int64)
         return sp.ravel_multi_index(sub,(self.M,)*self.Dim,order='F')
         
         
