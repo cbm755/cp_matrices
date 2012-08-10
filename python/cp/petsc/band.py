@@ -127,6 +127,17 @@ class Band(object):
         y = y.reshape((-1,self.Dim))
         
         return x + y
+    
+    def getCP(self):
+        cp = self.getCoordinates()
+        cp,_,_,_ = self.surface.cp(cp)
+        self.cp = cp
+        
+        
+    def initialu(self,f):
+        wv = self.gvec.getArray()
+        wv += f(self.cp)
+        
     def getCoordinates(self):
         '''Return the coordinates of global vector.'''
         leng =  self.m
@@ -249,8 +260,8 @@ class Band(object):
         ISTo = ind+self.BlockWBandStart*tt
         ISFrom = PETSc.IS().createGeneral(tind)
         ISTo = PETSc.IS().createGeneral(ISTo)
-        self.g2l = PETSc.Scatter(self.gvec,ISFrom,self.lvec,ISTo)
-        return self.lvec,self.gvec,self.wvec
+        self.g2l = PETSc.Scatter().create(self.gvec,ISFrom,self.lvec,ISTo)
+        return self.larray,self.lvec,self.gvec,self.wvec
         
         
         
@@ -297,8 +308,7 @@ class Band(object):
 #            PETSc.Sys.syncPrint(extMat.sizes)
 #            PETSc.Sys.syncPrint('extMat.getOwnershipRange')
 #            PETSc.Sys.syncPrint(extMat.getOwnershipRange())
-        cp = self.getCoordinates()
-        cp,_,_,_ = self.surface.cp(cp)
+        cp = self.cp
         Xgrid,ind = self.findIndForIntpl(cp)
 #        if ind.any() < 0:
 #            print 'Error..............'

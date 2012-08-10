@@ -36,8 +36,12 @@ class MeshCP(object):
     def __init__(self, vertices, faces):
         if not vertices.dtype.isnative:
             self.vertices = vertices.byteswap().newbyteorder().astype(np.float64)
+        else:
+            self.vertices = vertices.astype(np.float64)
         if not faces.dtype.isnative:
            self.faces = faces.byteswap().newbyteorder().astype(np.int32)
+        else:
+            self.faces = faces
         self.tree = ss.cKDTree(self.vertices)
         self.vertices2faces = build_vertices2faces(self.vertices, self.faces)
         

@@ -8,13 +8,10 @@ from __future__ import division
 import unittest
 import exceptions
 
-
-from cp.surfaces import Sphere as Surface
-from cp.petsc.band import Band
-from mpi4py import MPI
-
-
 try:
+    from cp.surfaces import Sphere as Surface
+    from cp.petsc.band import Band
+    from mpi4py import MPI
     import petsc4py
     import sys
     from petsc4py import PETSc
