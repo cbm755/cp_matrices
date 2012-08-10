@@ -1,0 +1,12 @@
+diff -r ce527270c551 src/dm/ao/impls/mapping/aomapping.c
+--- a/src/dm/ao/impls/mapping/aomapping.c	Tue Jul 31 17:09:57 2012 -0700
++++ b/src/dm/ao/impls/mapping/aomapping.c	Wed Aug 08 22:55:08 2012 +0100
+@@ -133,7 +133,7 @@
+         low  = mid + 1;
+       }
+     }
+-    if (low > high) SETERRQ1(PETSC_COMM_SELF,PETSC_ERR_ARG_OUTOFRANGE, "Invalid input index %D", idex);
++    if (low > high) {ia[i] = -1; continue;}
+     ia[i] = petsc[perm[mid]];
+   }
+   PetscFunctionReturn(0);
