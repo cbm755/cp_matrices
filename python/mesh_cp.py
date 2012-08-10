@@ -34,8 +34,10 @@ def refine(index_cp, grid_fine, vertex2faces, vertices, faces):
 
 class MeshCP(object):
     def __init__(self, vertices, faces):
-        self.vertices = vertices
-        self.faces = faces
+        if not vertices.dtype.isnative:
+            self.vertices = vertices.byteswap().newbyteorder().astype(np.float64)
+        if not faces.dtype.isnative:
+           self.faces = faces.byteswap().newbyteorder().astype(np.int32)
         self.tree = ss.cKDTree(self.vertices)
         self.vertices2faces = build_vertices2faces(self.vertices, self.faces)
         
