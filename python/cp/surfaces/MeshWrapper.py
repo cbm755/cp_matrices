@@ -4,7 +4,7 @@ Created on Aug 10, 2012
 @author: nullas
 '''
 from __future__ import division
-import scipy as sp
+import numpy as np
 from cp.tools.io import load_ply
 from cp.mesh_cp import MeshCP
 
@@ -19,7 +19,7 @@ class MeshWrapper(object):
         Constructor
         '''
         if ff is None:
-            ff = open('Armadillo_ascii_converted_using_meshlab.ply')
+            ff = open('cp/tests/data/Armadillo.ply')
         v,f = load_ply(ff)
         ma = v.max()
         mi = v.min()
@@ -34,7 +34,8 @@ class MeshWrapper(object):
         
     def cp(self,points,bounds = None):
         if bounds is None:
-            return self.meshcp.query(points),0,0,0
+            res = self.meshcp.query(points)
+            return res[:,1:], np.sqrt(res[:,0]), 0, {}
         else:
             return self.meshcp.query(points, bounds),0,0,0
         

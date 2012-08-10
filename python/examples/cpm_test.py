@@ -16,8 +16,8 @@ if __name__ == '__main__':
     mlab.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,opacity = 0.2)
     a = sp.randn(300)
     a = a.reshape((-1,3))
-    v,_,_,_ = surface.cp(a)
-#    mlab.points3d(v[:,0],v[:,1],v[:,2],mode = 'point')
+    cp, d ,_ ,_ = surface.cp(a)
+    mlab.points3d(cp[:,0],cp[:,1],cp[:,2],mode = 'point')
     mlab.show()    
     
     
