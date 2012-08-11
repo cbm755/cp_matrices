@@ -14,10 +14,9 @@ if __name__ == '__main__':
     opt = {'M':50,'m':5}
     surface = MeshWrapper()
     mlab.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,opacity = 0.2)
-    a = sp.randn(300)
-    a = a.reshape((-1,3))
+    a = sp.rand(300,3)
     v,_,_,_ = surface.cp(a)
-#    mlab.points3d(v[:,0],v[:,1],v[:,2],mode = 'point')
+    mlab.points3d(v[:,0],v[:,1],v[:,2],mode = 'point')
     mlab.show()    
     
     

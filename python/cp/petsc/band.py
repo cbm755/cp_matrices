@@ -44,7 +44,7 @@ class Band(object):
         self.hBlock = 4/self.M
         self.hGrid = self.hBlock/self.m
         self.sizes = (self.M,)*self.Dim
-        self.test = 1
+        self.dx = self.hGrid
         
     def SelectBlock(self,surface = None):
         
@@ -254,9 +254,10 @@ class Band(object):
         tind = self.Sub2Ind(tind, (self.m,)*self.Dim)
         ttind = self.BlockSub2IndWithoutBand(ttind)
         ttind = self.ni2pi.app2petsc(ttind)
-        ttind *= tt
+        ttind *= self.m**self.Dim
         tind += ttind
         (ind,) = sp.where(tind>=0)
+        tind = tind[ind]
         ISTo = ind+self.BlockWBandStart*tt
         ISFrom = PETSc.IS().createGeneral(tind)
         ISTo = PETSc.IS().createGeneral(ISTo)
@@ -292,7 +293,42 @@ class Band(object):
 #            sub = self.ind2subWBand[i]
 #            for offset in x:
 #                tsub = tuple(sub + offset)
+    def createAnyMat(self,rp,weights,NNZ = None):
+        if NNZ is None:
+            NNZ = (rp.shape[0],rp.shape[0]-1)
+        tt = self.m**self.Dim
+        start = self.BlockWBandStart
+        size = (self.m,)*self.Dim
+        rpt = sp.tile(rp,(tt,1))
+        
+        m = PETSc.Mat().create(comm=self.comm)
+        m.setSizes((self.wvec.sizes,self.gvec.sizes))
+        m.setFromOptions()
+        m.setPreallocationNNZ(NNZ)
+        for block in xrange(self.numBlockWBandAssigned):
+            tx = (block+start)*tt
+            ind = xrange(tt)
+            index = ind + tx
+            subInBlock = self.Ind2Sub(ind, size)
+            subInBlock = sp.repeat(subInBlock,rp.shape[0],axis=0)
+            subInBlock += rpt
+            nind = self.ni2pi.petsc2app(block + start)
+            nsub = self.BlockInd2SubWithoutBand(nind)
+            nsub = sp.repeat(nsub,tt*rp.shape[0],axis = 0)
+            nsub += sp.floor_divide(subInBlock,self.m)
+            subInBlock = sp.mod(subInBlock,self.m)
+            nind = self.BlockSub2IndWithoutBand(nsub)
+            ind = self.Sub2Ind(subInBlock, size)
+            pind = self.ni2pi.app2petsc(nind)
+            pind *= tt
+            pind += ind
+            for ind in xrange(tt):
+                m[index[ind],pind[ind]] = weights
+        m.assemble()
+        return m
                 
+            
+                  
     def createExtensionMat(self):     
         '''create a real PETSc.Mat() for extension'''       
         p = self.interpDegree + 1
