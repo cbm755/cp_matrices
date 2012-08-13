@@ -142,6 +142,11 @@ class TestBand(unittest.TestCase):
     def testBuildExtMat(self):
         self.bnd.createExtensionMat()
         
+    def testCreateAnyMat(self):
+        v = a([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]])
+        weights = a([-6,1,1,1,1,1,1])
+        self.bnd.createAnyMat(v, weights, (7,3))
+        
 
 
 if __name__ == "__main__":

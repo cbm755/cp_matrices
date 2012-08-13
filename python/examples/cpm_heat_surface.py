@@ -21,7 +21,6 @@ if __name__ == '__main__':
     comm = MPI.COMM_WORLD
     band = Band(surface,comm,opt)
     la,lv,gv,wv = band.createGLVectors()
-    band.getCP()
     M = band.createExtensionMat()
     band.initialu(initialu)
 #    gv.view()

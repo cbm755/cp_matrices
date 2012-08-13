@@ -19,13 +19,13 @@ class MeshWrapper(object):
         Constructor
         '''
         if ff is None:
-            ff = open('cp/tests/data/Armadillo.ply')
+            ff = open('Armadillo.ply')
         v,f = load_ply(ff)
         ma = v.max()
         mi = v.min()
         med = (ma+mi)/2
         v -= med
-        v /= (ma-mi)/2
+        v /= (ma-mi)/(2*1.5)
         
         
         self.v = v

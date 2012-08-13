@@ -60,12 +60,12 @@ class Band(object):
         BlockCenterCar = self.BlockSub2CenterCarWithoutBand(subBlock)
         cp,_,_,_ = surface.cp(BlockCenterCar)
         dBlockCenter = self.norm1(cp-BlockCenterCar)
-        p = self.interpDegree
+        p = self.interpDegree 
         if p % 2 == 1:
             p = ( p + 1 ) / 2
         else:
             p = ( p + 2 ) / 2
-        bw = 1.0001*(p*self.hGrid+(self.hBlock-self.hGrid)/2)#*sp.sqrt(self.Dim)
+        bw = 1.001*((p+2)*self.hGrid+self.hBlock/2)#*sp.sqrt(self.Dim)
         (lindBlockWithinBand,) = sp.where(dBlockCenter<bw)
         lindBlockWithinBand = lindBlockWithinBand+Blockstart
         lBlockSize = lindBlockWithinBand.size
@@ -128,15 +128,16 @@ class Band(object):
         
         return x + y
     
-    def getCP(self):
+    def computeCP(self):
         cp = self.getCoordinates()
         cp,_,_,_ = self.surface.cp(cp)
-        self.cp = cp
+        self.cp = cp        
+    def test_initialu(self,f):
+        self.gvec.setArray(f(self.getCoordinates()))   
         
         
     def initialu(self,f):
-        wv = self.gvec.getArray()
-        wv += f(self.cp)
+        self.gvec.setArray(f(self.cp))
         
     def getCoordinates(self):
         '''Return the coordinates of global vector.'''
@@ -158,17 +159,18 @@ class Band(object):
         '''find the indices of interpolation points'''
         #find base point first
         #subBlock is the sub of Block the base points lie in
-        subBlock = sp.floor_divide(cp+2,self.hBlock)
-        corner = self.BlockSub2CornerCarWithoutBand(subBlock)
         p = self.interpDegree
         if p%2 == 1:
             offset = p // 2
         else:
             offset = p // 2 - 1
-        subInBlock = sp.floor_divide(cp-corner-self.hGrid/2,self.hGrid)
+        subBlock = sp.floor_divide(cp+2-self.dx/2,self.dx)
+        bp = (subBlock-(offset-1/2))*self.dx - 2
+        subInBlock = sp.mod(subBlock,self.m)
+        subBlock = sp.floor_divide(subBlock,self.m)
+#        corner = self.BlockSub2CornerCarWithoutBand(subBlock)
+
         subInBlock -= offset
-        
-        bp = subInBlock/self.m*self.hBlock+self.hGrid/2+corner
         
         offsetBlock = sp.floor_divide(subInBlock,self.m)
         subInBlock = sp.mod(subInBlock,self.m)
@@ -203,6 +205,7 @@ class Band(object):
     def createGLVectors(self):
         
         self.SelectBlock()
+        self.computeCP()
         
 
         
@@ -296,6 +299,7 @@ class Band(object):
     def createAnyMat(self,rp,weights,NNZ = None):
         if NNZ is None:
             NNZ = (rp.shape[0],rp.shape[0]-1)
+        shape0 = rp.shape[0]
         tt = self.m**self.Dim
         start = self.BlockWBandStart
         size = (self.m,)*self.Dim
@@ -305,25 +309,30 @@ class Band(object):
         m.setSizes((self.wvec.sizes,self.gvec.sizes))
         m.setFromOptions()
         m.setPreallocationNNZ(NNZ)
+        ind = sp.arange(tt)
+        tsubInBlock = self.Ind2Sub(ind, size)
+        tsubInBlock = sp.repeat(tsubInBlock,shape0,axis=0)
+        tsubInBlock += rpt
+        offset = sp.floor_divide(tsubInBlock,self.m)
+        subInBlock = sp.mod(tsubInBlock,self.m)
+        ones = sp.ones(tt*shape0,dtype=sp.int64)
+        indInBlock = self.Sub2Ind(subInBlock, size)
         for block in xrange(self.numBlockWBandAssigned):
             tx = (block+start)*tt
-            ind = xrange(tt)
             index = ind + tx
-            subInBlock = self.Ind2Sub(ind, size)
-            subInBlock = sp.repeat(subInBlock,rp.shape[0],axis=0)
-            subInBlock += rpt
+            #petsc ->  natural -> sub -> +offset -> natural -> petsc
             nind = self.ni2pi.petsc2app(block + start)
+            nind = ones*nind
             nsub = self.BlockInd2SubWithoutBand(nind)
-            nsub = sp.repeat(nsub,tt*rp.shape[0],axis = 0)
-            nsub += sp.floor_divide(subInBlock,self.m)
-            subInBlock = sp.mod(subInBlock,self.m)
+            nsub += offset
             nind = self.BlockSub2IndWithoutBand(nsub)
-            ind = self.Sub2Ind(subInBlock, size)
             pind = self.ni2pi.app2petsc(nind)
+            
             pind *= tt
-            pind += ind
-            for ind in xrange(tt):
-                m[index[ind],pind[ind]] = weights
+            pind += indInBlock
+#            pind = pind.reshape((-1,shape0))
+            for i in xrange(tt):
+                m[index[i],pind[shape0*i:shape0*(i+1)]] = weights
         m.assemble()
         return m
                 
@@ -339,6 +348,8 @@ class Band(object):
         extMat.setSizes((self.wvec.sizes,self.gvec.sizes))
         extMat.setFromOptions()
         extMat.setPreallocationNNZ((p**d,p**d))
+        
+        
 #        if self.test == 1:
 #            PETSc.Sys.syncPrint('extMat.sizes')
 #            PETSc.Sys.syncPrint(extMat.sizes)
@@ -346,9 +357,15 @@ class Band(object):
 #            PETSc.Sys.syncPrint(extMat.getOwnershipRange())
         cp = self.cp
         Xgrid,ind = self.findIndForIntpl(cp)
-#        if ind.any() < 0:
-#            print 'Error..............'
+        if ind.any() < 0:
+            raise Exception('BW Error..............')
+        if ind.any() > self.gvec.sizes[1]:
+            raise Exception('BW Error...............')
         weights = buildInterpWeights(Xgrid,cp,self.hGrid,p)
+        sum1 = weights.sum(axis=1)
+        if sp.absolute(sum1-1).max() > 0.000001:
+            raise Exception('weights Wrong')
+            print 'weights wrong'
         start = self.BlockWBandStart*tt
         ranges = self.numBlockWBandAssigned*tt
 #        end = self.BlockWBandEnd*tt+1
