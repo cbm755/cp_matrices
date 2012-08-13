@@ -215,7 +215,7 @@ class CPGrid:
                          np.array([0,1,0]), np.array([0,1,1]), np.array([1,1,1]),
                          np.array([1,0,1]), np.array([0,0,1])]
         else:
-            raise NotImplementedError('dim {} not implemented'.format(dim))
+            raise NotImplementedError('Dim {0} not implemented'.format(dim))
 
         # TODO: better way to default to Laplacian?  import stencils
         # outside the function?

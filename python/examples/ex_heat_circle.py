@@ -93,7 +93,7 @@ for kt in xrange(Nsteps):
     now = time()
     utilde = E*u
     unew = utilde[0:usz] + (dt*kappa)*(D*utilde)
-    print "timestep {: 6d} took  {:.3f} s".format(kt, time()-now)
+    print "timestep {0: 6d} took  {1:.3f} s".format(kt, time()-now)
 
     t = 0 + dt*(kt+1)
 
@@ -101,6 +101,6 @@ for kt in xrange(Nsteps):
     if kt < 10 or not (kt+1) % 5:
         uplot = Eplot * (E*unew)  # brackets necessary for speed here
         scatter.set_array(uplot)
-        ax.set_title("time = {: 6.3f}, step #{: 5d}".format(t, kt+1))
+        ax.set_title("time = {0: 6.3f}, step #{1: 5d}".format(t, kt+1))
         fig.canvas.draw()
     u = unew
