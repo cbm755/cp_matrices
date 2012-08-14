@@ -296,6 +296,21 @@ class Band(object):
 #            sub = self.ind2subWBand[i]
 #            for offset in x:
 #                tsub = tuple(sub + offset)
+
+
+    def toZero(self,gvec = None):
+        if gvec is None:
+            gvec = self.gvec
+        tozero,zvec = PETSc.Scatter.toZero(self.gvec)# return values are self.tozero, self.zvec
+        tozero.scatter(gvec, zvec, PETSc.InsertMode.INSERT)
+        return zvec
+        
+    @staticmethod
+    def toZeroStatic(gvec):
+        tozero,zvec = PETSc.Scatter.toZero(gvec)
+        tozero.scatter(gvec, zvec, PETSc.InsertMode.INSERT)
+        return zvec        
+         
     def createAnyMat(self,rp,weights,NNZ = None):
         if NNZ is None:
             NNZ = (rp.shape[0],rp.shape[0]-1)
@@ -338,14 +353,20 @@ class Band(object):
                 
             
                   
-    def createExtensionMat(self):     
+    def createExtensionMat(self,cp = None):     
         '''create a real PETSc.Mat() for extension'''       
         p = self.interpDegree + 1
         d = self.Dim
-        tt = self.m**self.Dim
+        
+        if cp is None:
+            wvec = self.wvec
+            cp = self.cp
+        else:
+            wvec = PETSc.Vec().createMPI((cp.shape[0],PETSc.DECIDE))
+        gvec = self.gvec
         
         extMat = PETSc.Mat().create(self.comm)
-        extMat.setSizes((self.wvec.sizes,self.gvec.sizes))
+        extMat.setSizes((wvec.sizes,gvec.sizes))
         extMat.setFromOptions()
         extMat.setPreallocationNNZ((p**d,p**d))
         
@@ -355,19 +376,14 @@ class Band(object):
 #            PETSc.Sys.syncPrint(extMat.sizes)
 #            PETSc.Sys.syncPrint('extMat.getOwnershipRange')
 #            PETSc.Sys.syncPrint(extMat.getOwnershipRange())
-        cp = self.cp
+        
         Xgrid,ind = self.findIndForIntpl(cp)
-        if ind.any() < 0:
-            raise Exception('BW Error..............')
-        if ind.any() > self.gvec.sizes[1]:
-            raise Exception('BW Error...............')
         weights = buildInterpWeights(Xgrid,cp,self.hGrid,p)
-        sum1 = weights.sum(axis=1)
-        if sp.absolute(sum1-1).max() > 0.000001:
-            raise Exception('weights Wrong')
-            print 'weights wrong'
-        start = self.BlockWBandStart*tt
-        ranges = self.numBlockWBandAssigned*tt
+#        start = self.BlockWBandStart*tt
+#        ranges = self.numBlockWBandAssigned*tt
+        
+        (start,end) = extMat.getOwnershipRange()
+        ranges = end - start
 #        end = self.BlockWBandEnd*tt+1
 #        if self.test == 1:
 #            PETSc.Sys.syncPrint('start:{0},end:{1}'.format(start,end))
@@ -384,7 +400,41 @@ class Band(object):
         extMat.assemble()
         return extMat
         
+    def createExtensionMatForLoop(self,cp = None):     
+        '''create a real PETSc.Mat() for extension using for loop'''       
+        p = self.interpDegree + 1
+        d = self.Dim
         
+        if cp is None:
+            wvec = self.wvec
+            cp = self.cp
+        else:
+            wvec = PETSc.Vec().createMPI((cp.shape[0],PETSc.DECIDE))
+        gvec = self.gvec
+        
+        extMat = PETSc.Mat().create(self.comm)
+        extMat.setSizes((wvec.sizes,gvec.sizes))
+        extMat.setFromOptions()
+        extMat.setPreallocationNNZ((p**d,p**d))
+        
+        
+        (start,end) = extMat.getOwnershipRange() #@UnusedVariable
+
+        bsize = 1000
+        for i in xrange(0,cp.shape[0],bsize):
+            base = bsize*i
+            Xgrid,ind = self.findIndForIntpl(cp[base:bsize+base])
+            weights = buildInterpWeights(Xgrid,cp[base:bsize+base],self.hGrid,p)
+            ranges = weights.shape[0]
+            
+  
+            for j in xrange(ranges):
+                extMat[j+start+base,ind[j]] = weights[j]
+
+
+                    
+        extMat.assemble()
+        return extMat        
         
         
 

@@ -25,7 +25,7 @@ class MeshWrapper(object):
         mi = v.min()
         med = (ma+mi)/2
         v -= med
-        v /= (ma-mi)/(2*1.5)
+        v /= (ma-mi)/(2*1.7)
         
         
         self.v = v
