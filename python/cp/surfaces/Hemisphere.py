@@ -59,7 +59,7 @@ class Hemisphere(ShapeWithBdy):
             else:
                 # general case possible?
                 raise NotImplementedError(
-                    'Dim {} and higher not implemented'.format(dim)
+                    'Dim {0} and higher not implemented'.format(dim)
                     )
         else:
             # at or "above" semicircle: same as for whole circle

@@ -7,7 +7,7 @@ import scipy.spatial as ss
 from cp.surfaces.triangulation_fast import FindClosestPointToTriSet as fast_FindClosestPointToTriSet
 
 
-def build_vertices2faces(vertices, faces):
+def build_vertices2faces(faces):
     """Returns dict that maps each vertex to the indexes of all its faces."""
     vertices2faces = defaultdict(list)
     for i, face in enumerate(faces):
@@ -43,7 +43,7 @@ class MeshCP(object):
         else:
             self.faces = faces
         self.tree = ss.cKDTree(self.vertices)
-        self.vertices2faces = build_vertices2faces(self.vertices, self.faces)
+        self.vertices2faces = build_vertices2faces(self.faces)
         
     def query(self, points, bound=np.inf):
         dist, index = self.tree.query(points, distance_upper_bound=bound)

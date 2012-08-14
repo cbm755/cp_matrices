@@ -49,7 +49,7 @@ def Laplacian_2nd(dim):
                                 [ 0,  0, -1]])
         DiffLongestArm = 1
     else:
-        raise NotImplementedError('Dim {} not implemented'.format(dim))
+        raise NotImplementedError('Dim {0} not implemented'.format(dim))
     return DiffWeightsFcn, DiffStencil, DiffLongestArm
 
 
@@ -109,7 +109,7 @@ def Laplacian_4th(dim):
                                 [ 0,  0,  2]])
         DiffLongestArm = 2
     else:
-        raise NotImplementedError('dim {} not implemented'.format(dim))
+        raise NotImplementedError('Dim {0} not implemented'.format(dim))
     return DiffWeightsFcn, DiffStencil, DiffLongestArm
 
 
@@ -140,5 +140,5 @@ def Biharmonic_2nd(dim):
                                 [-1, -1]])
         DiffLongestArm = 2
     else:
-        raise NotImplementedError('dim {} not implemented'.format(dim))
+        raise NotImplementedError('Dim {0} not implemented'.format(dim))
     return DiffWeightsFcn, DiffStencil, DiffLongestArm
