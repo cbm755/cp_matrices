@@ -35,9 +35,9 @@ class CoarseGrid(object):
         """
         ll, ur = np.asarray(ll, dtype=np.float64), np.asarray(ur, dtype=np.float64)
         f = np.mgrid if filled else np.ogrid
-        grid = f[tuple(slice(ll_i, ur_i, complex(0, n)) 
+        grid = f[tuple(slice(ll_i, ur_i, complex(0, n))
                        for ll_i, ur_i in zip(ll, ur))]
-        self.dx = (ur - ll) / n
+        self.dx = (ur - ll) / (n-1)
         return grid
 
     def bandwidth(self, p, diff_stencil_arm=1):
