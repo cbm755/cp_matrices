@@ -4,7 +4,7 @@ Created on Aug 10, 2012
 @author: nullas
 '''
 import scipy as sp
-from mayavi import mlab as pl
+#from mayavi import mlab as pl
 from mpi4py import MPI
 from cp.surfaces.MeshWrapper import MeshWrapper
 from cp.surfaces.Sphere import Sphere
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     mv.mult(gv,cv)
     
     plot3dformesh(v,cv,surface.f)
-    pl.show()
+#    pl.show()
     PETSc.Sys.Print('maximal is {0}'.format(gv.max()[1]))    
 del band,v   
     
