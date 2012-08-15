@@ -49,7 +49,7 @@ def plot3dformesh(x,cv,f):
         pl.triangular_mesh(x[:,0],x[:,1],x[:,2],f,scalars=v2)
 
 if __name__ == '__main__':
-    opt = {'M':60,'m':5,'d':3}
+    opt = {'M':80,'m':5,'d':3}
     surface = MeshWrapper('eight.ply')
     pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
     pl.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,scalars=surface.v[:,0],opacity = 1)
@@ -89,13 +89,13 @@ if __name__ == '__main__':
     band.initialu(initialu)
     PETSc.Sys.Print('Initial')
     plot3d_total(v,gv)
-    nextt = 0.1
+    nextt = 0.05
     PETSc.Sys.Print('Begin to solve.\n dt is {0}'.format(dt))
-    for t in sp.arange(0,0,dt):
+    for t in sp.arange(0,1,dt):
         L.multAdd(gv,gv,wv)
         M.mult(wv,gv)
         if t > nextt:
-            nextt += 0.1
+            nextt += 0.05
             PETSc.Sys.Print('time is {0}'.format(t))
             
     PETSc.Sys.Print('End to solve.')
