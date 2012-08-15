@@ -65,7 +65,7 @@ class Band(object):
             p = ( p + 1 ) / 2
         else:
             p = ( p + 2 ) / 2
-        bw = 1.0001*((p+1)*self.hGrid+self.hBlock/2)#*sp.sqrt(self.Dim)
+        bw = 1.1*((p+2)*self.hGrid+self.hBlock/2)#*sp.sqrt(self.Dim)
         (lindBlockWithinBand,) = sp.where(dBlockCenter<bw)
         lindBlockWithinBand = lindBlockWithinBand+Blockstart
         lBlockSize = lindBlockWithinBand.size
