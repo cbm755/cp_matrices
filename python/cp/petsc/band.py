@@ -65,7 +65,7 @@ class Band(object):
             p = ( p + 1 ) / 2
         else:
             p = ( p + 2 ) / 2
-        bw = 1.001*((p+2)*self.hGrid+self.hBlock/2)#*sp.sqrt(self.Dim)
+        bw = 1.1*((p+2)*self.hGrid+self.hBlock/2)#*sp.sqrt(self.Dim)
         (lindBlockWithinBand,) = sp.where(dBlockCenter<bw)
         lindBlockWithinBand = lindBlockWithinBand+Blockstart
         lBlockSize = lindBlockWithinBand.size
@@ -369,28 +369,14 @@ class Band(object):
         extMat.setSizes((wvec.sizes,gvec.sizes))
         extMat.setFromOptions()
         extMat.setPreallocationNNZ((p**d,p**d))
-        
-        
-#        if self.test == 1:
-#            PETSc.Sys.syncPrint('extMat.sizes')
-#            PETSc.Sys.syncPrint(extMat.sizes)
-#            PETSc.Sys.syncPrint('extMat.getOwnershipRange')
-#            PETSc.Sys.syncPrint(extMat.getOwnershipRange())
+
         
         Xgrid,ind = self.findIndForIntpl(cp)
         weights = buildInterpWeights(Xgrid,cp,self.hGrid,p)
-#        start = self.BlockWBandStart*tt
-#        ranges = self.numBlockWBandAssigned*tt
         
         (start,end) = extMat.getOwnershipRange()
         ranges = end - start
-#        end = self.BlockWBandEnd*tt+1
-#        if self.test == 1:
-#            PETSc.Sys.syncPrint('start:{0},end:{1}'.format(start,end))
-#            PETSc.Sys.syncPrint('weights.shape')
-#            PETSc.Sys.syncPrint(weights.shape)
-#            PETSc.Sys.syncPrint('==================')
-#            PETSc.Sys.syncFlush()
+
   
         for i in xrange(ranges):
             extMat[i+start,ind[i]] = weights[i]
@@ -406,14 +392,14 @@ class Band(object):
         d = self.Dim
         
         if cp is None:
-            wvec = self.wvec
+            wvecsizes = self.wvec.sizes
             cp = self.cp
         else:
-            wvec = PETSc.Vec().createMPI((cp.shape[0],PETSc.DECIDE))
+            wvecsizes = (cp.shape[0],PETSc.DECIDE)
         gvec = self.gvec
         
         extMat = PETSc.Mat().create(self.comm)
-        extMat.setSizes((wvec.sizes,gvec.sizes))
+        extMat.setSizes((wvecsizes,gvec.sizes))
         extMat.setFromOptions()
         extMat.setPreallocationNNZ((p**d,p**d))
         
@@ -422,14 +408,13 @@ class Band(object):
 
         bsize = 1000
         for i in xrange(0,cp.shape[0],bsize):
-            base = bsize*i
-            Xgrid,ind = self.findIndForIntpl(cp[base:bsize+base])
-            weights = buildInterpWeights(Xgrid,cp[base:bsize+base],self.hGrid,p)
+            Xgrid,ind = self.findIndForIntpl(cp[i:i+bsize])
+            weights = buildInterpWeights(Xgrid,cp[i:i+bsize],self.hGrid,p)
             ranges = weights.shape[0]
             
   
             for j in xrange(ranges):
-                extMat[j+start+base,ind[j]] = weights[j]
+                extMat[j+start+i,ind[j]] = weights[j]
 
 
                     

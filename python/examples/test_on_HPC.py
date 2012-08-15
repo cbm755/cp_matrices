@@ -4,7 +4,7 @@ Created on Aug 10, 2012
 @author: nullas
 '''
 import scipy as sp
-from mayavi import mlab as pl
+#from mayavi import mlab as pl
 from mpi4py import MPI
 from cp.surfaces.MeshWrapper import MeshWrapper
 from cp.surfaces.Sphere import Sphere
@@ -20,14 +20,16 @@ petsc4py.init(sys.argv)
 def test_initialu(cp):
     return sp.ones(cp.shape[0])#cp[:,0]
 def initialu(cp):
-    return cp[:,0]
+    return cp[:,0]+sp.sin(cp[:,1])
 
 def plot3d_sep(x,gv):
+    return
     v2 = gv.getArray()
     pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
     pl.points3d(x[:,0],x[:,1],x[2::3],v2,mode='point')
 
 def plot3d_total(x,gv = None):
+    return
     v = PETSc.Vec().createWithArray(x)
     v = band.toZeroStatic(v)
     v = v.getArray()
@@ -42,24 +44,31 @@ def plot3d_total(x,gv = None):
             pl.points3d(v[0::3],v[1::3],v[2::3],mode='point')        
     
 def plot3dformesh(x,cv,f):
+    return
     cv = band.toZeroStatic(cv)
     if MPI.COMM_WORLD.rank == 0:
         v2 = cv.getArray()
         pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
         pl.triangular_mesh(x[:,0],x[:,1],x[:,2],f,scalars=v2)
+        
+def outputBin(gv):
+    cv = band.toZeroStatic(gv)
+    if comm.rank == 0:
+        viewer = PETSc.Viewer().createBinary()('gv.dat',comm = MPI.COMM_SELF)
+        cv.view(viewer)
 
 if __name__ == '__main__':
-    opt = {'M':80,'m':5,'d':3}
+    opt = {'M':100,'m':5,'d':3}
     surface = MeshWrapper('eight.ply')
-    pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
-    pl.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,scalars=surface.v[:,0],opacity = 1)
+#    pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
+#    pl.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,scalars=surface.v[:,0],opacity = 1)
     comm = MPI.COMM_WORLD
     band = Band(surface,comm,opt)
     la,lv,gv,wv = band.createGLVectors()
     v = band.getCoordinates()
     centers = band.BlockInd2CenterCarWithoutBand(band.gindBlockWBand.getArray())
-    pl.points3d(centers[:,0],centers[:,1],centers[:,2],mode='point')
-    dt = 0.3*band.dx**2
+#    pl.points3d(centers[:,0],centers[:,1],centers[:,2],mode='point')
+    dt = 0.1*band.dx**2
     vv = sp.array([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]])
     weights = sp.array([-6,1,1,1,1,1,1])*(dt/band.dx**2)
     L = band.createAnyMat(vv, weights, (7,3))
@@ -89,13 +98,13 @@ if __name__ == '__main__':
     band.initialu(initialu)
     PETSc.Sys.Print('Initial')
     plot3d_total(v,gv)
-    nextt = 0.05
+    nextt = 0.01
     PETSc.Sys.Print('Begin to solve.\n dt is {0}'.format(dt))
-    for t in sp.arange(0,1,dt):
+    for t in sp.arange(0,0.2,dt):
         L.multAdd(gv,gv,wv)
         M.mult(wv,gv)
         if t > nextt:
-            nextt += 0.05
+            nextt += 0.01
             PETSc.Sys.Print('time is {0}'.format(t))
             
     PETSc.Sys.Print('End to solve.')
@@ -123,9 +132,10 @@ if __name__ == '__main__':
     PETSc.Sys.syncFlush()
     cv = mv.getVecLeft()
     mv.mult(gv,cv)
+    outputBin(cv)
     
     plot3dformesh(v,cv,surface.f)
-    pl.show()
+#    pl.show()
     PETSc.Sys.Print('maximal is {0}'.format(gv.max()[1]))    
 del band,v   
     
