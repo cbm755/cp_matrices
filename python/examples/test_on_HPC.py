@@ -98,13 +98,13 @@ if __name__ == '__main__':
     band.initialu(initialu)
     PETSc.Sys.Print('Initial')
     plot3d_total(v,gv)
-    nextt = 0.05
+    nextt = 0.01
     PETSc.Sys.Print('Begin to solve.\n dt is {0}'.format(dt))
-    for t in sp.arange(0,0,dt):
+    for t in sp.arange(0,0.15,dt):
         L.multAdd(gv,gv,wv)
         M.mult(wv,gv)
         if t > nextt:
-            nextt += 0.05
+            nextt += 0.01
             PETSc.Sys.Print('time is {0}'.format(t))
             
     PETSc.Sys.Print('End to solve.')
