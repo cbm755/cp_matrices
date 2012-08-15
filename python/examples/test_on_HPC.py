@@ -20,7 +20,7 @@ petsc4py.init(sys.argv)
 def test_initialu(cp):
     return sp.ones(cp.shape[0])#cp[:,0]
 def initialu(cp):
-    return cp[:,0]+sp.sin(cp[:,1])
+    return cp[:,0]+sp.sin(2*cp[:,2])
 
 def plot3d_sep(x,gv):
     return
