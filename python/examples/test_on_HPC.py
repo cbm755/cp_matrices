@@ -54,7 +54,7 @@ def plot3dformesh(x,cv,f):
 def outputBin(gv):
     cv = band.toZeroStatic(gv)
     if comm.rank == 0:
-        viewer = PETSc.Viewer().createASCII('gv.txt',comm = MPI.COMM_SELF)
+        viewer = PETSc.Viewer().createBinary()('gv.dat',comm = MPI.COMM_SELF)
         cv.view(viewer)
 
 if __name__ == '__main__':
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     plot3d_total(v,gv)
     nextt = 0.01
     PETSc.Sys.Print('Begin to solve.\n dt is {0}'.format(dt))
-    for t in sp.arange(0,0.15,dt):
+    for t in sp.arange(0,0.2,dt):
         L.multAdd(gv,gv,wv)
         M.mult(wv,gv)
         if t > nextt:
