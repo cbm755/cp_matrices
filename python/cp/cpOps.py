@@ -551,7 +551,7 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
     """
     Interpolate to get values at Points
 
-    TODO: currently, the degree here myst match the "main" one, but
+    TODO: currently, the degree here must match the "main" one, but
     this could be changed (see e.g., g.InterpStencil())
     """
     from scipy.sparse import coo_matrix
