@@ -68,7 +68,7 @@ if __name__ == '__main__':
     v = band.getCoordinates()
     centers = band.BlockInd2CenterCarWithoutBand(band.gindBlockWBand.getArray())
 #    pl.points3d(centers[:,0],centers[:,1],centers[:,2],mode='point')
-    dt = 0.3*band.dx**2
+    dt = 0.1*band.dx**2
     vv = sp.array([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]])
     weights = sp.array([-6,1,1,1,1,1,1])*(dt/band.dx**2)
     L = band.createAnyMat(vv, weights, (7,3))
