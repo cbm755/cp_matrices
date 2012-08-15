@@ -80,7 +80,7 @@ if __name__ == '__main__':
         nextt = 0.1
         PETSc.Sys.Print('Begin to solve')
         t = 0
-        for t in sp.arange(0,1,dt):
+        for t in sp.arange(0,0,dt):
             L.multAdd(gv,gv,wv)
             M.mult(wv,gv)
             if t > nextt:
@@ -92,23 +92,26 @@ if __name__ == '__main__':
         cv = mv.getVecLeft()
         mv.mult(gv,cv)
         cv = band.toZeroStatic(cv)
-        cv = cv.getArray()
-        exu = sp.exp(-t)*exactu
-        ee = norm(cv-exu, sp.inf)
-        error.append(ee)
-        dx.append( band.dx )
+        if comm.rank == 0:
+            cv = cv.getArray()
+            exu = sp.exp(-t)*exactu
+            ee = norm(cv-exu, sp.inf)
+            error.append(ee)
+            dx.append( band.dx )
         
     
         
-        PETSc.Sys.Print('==================================')    
-        PETSc.Sys.Print('maximal is {0}'.format(ee))
+        PETSc.Sys.Print('==================================')   
+        if comm.rank == 0: 
+            print('maximal is {0}'.format(ee))
         PETSc.Sys.Print('==================================')   
         del band,v,mv,cv 
-    import pickle
-    ferror = open('error.pickle','w')
-    fdx = open('dx.pickle','w')
-    pickle.dump(error, ferror)
-    pickle.dump(dx,fdx)
+    if comm.rank == 0:
+        import pickle
+        ferror = open('error.pickle','w')
+        fdx = open('dx.pickle','w')
+        pickle.dump(error, ferror)
+        pickle.dump(dx,fdx)
     
     
     
