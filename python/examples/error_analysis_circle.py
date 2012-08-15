@@ -80,7 +80,7 @@ if __name__ == '__main__':
         nextt = 0.1
         PETSc.Sys.Print('Begin to solve')
         t = 0
-        for t in sp.arange(0,0,dt):
+        for t in sp.arange(0,1,dt):
             L.multAdd(gv,gv,wv)
             M.mult(wv,gv)
             if t > nextt:
