@@ -20,7 +20,7 @@ petsc4py.init(sys.argv)
 def test_initialu(cp):
     return sp.ones(cp.shape[0])#cp[:,0]
 def initialu(cp):
-    return cp[:,0]
+    return cp[:,0]+sp.sin(cp[:,1])
 
 def plot3d_sep(x,gv):
     return
@@ -50,9 +50,15 @@ def plot3dformesh(x,cv,f):
         v2 = cv.getArray()
         pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
         pl.triangular_mesh(x[:,0],x[:,1],x[:,2],f,scalars=v2)
+        
+def outputBin(gv):
+    cv = band.toZeroStatic(gv)
+    if comm.rank == 0:
+        viewer = PETSc.Viewer().createASCII('gv.txt',comm = MPI.COMM_SELF)
+        cv.view(viewer)
 
 if __name__ == '__main__':
-    opt = {'M':50,'m':5,'d':3}
+    opt = {'M':100,'m':5,'d':3}
     surface = MeshWrapper('eight.ply')
 #    pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
 #    pl.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,scalars=surface.v[:,0],opacity = 1)
@@ -94,7 +100,7 @@ if __name__ == '__main__':
     plot3d_total(v,gv)
     nextt = 0.05
     PETSc.Sys.Print('Begin to solve.\n dt is {0}'.format(dt))
-    for t in sp.arange(0,0.01,dt):
+    for t in sp.arange(0,0,dt):
         L.multAdd(gv,gv,wv)
         M.mult(wv,gv)
         if t > nextt:
@@ -126,6 +132,7 @@ if __name__ == '__main__':
     PETSc.Sys.syncFlush()
     cv = mv.getVecLeft()
     mv.mult(gv,cv)
+    outputBin(cv)
     
     plot3dformesh(v,cv,surface.f)
 #    pl.show()
