@@ -68,7 +68,12 @@ def load_ply(fname):
         faces = faces['f1']  # Second field
     else:
         faces = faces.reshape((n_faces, 4))[:, 1:]
-    return vertex, faces
+    if not vertex.dtype.isnative:
+        vertex = vertex.byteswap().newbyteorder()
+    if not faces.dtype.isnative:
+        faces = faces.byteswap().newbyteorder()
+
+    return vertex.astype(np.float64), faces.astype(np.int32)
 
 if __name__ == '__main__':
     v, f = load_ply('Armadillo_ascii_converted_using_meshlab.ply')
