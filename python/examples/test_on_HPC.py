@@ -54,7 +54,7 @@ def plot3dformesh(x,cv,f):
 def outputBin(gv):
     cv = band.toZeroStatic(gv)
     if comm.rank == 0:
-        viewer = PETSc.Viewer().createBinary()('gv.dat',comm = MPI.COMM_SELF)
+        viewer = PETSc.Viewer().createBinary('gv.dat',comm = MPI.COMM_SELF)
         cv.view(viewer)
 
 if __name__ == '__main__':
