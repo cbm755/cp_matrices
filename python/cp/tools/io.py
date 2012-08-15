@@ -2,10 +2,17 @@ import numpy as np
 
 
 def load_ply(fname):
-    """Loads ascii and binary ply files. The standard probably
-    allows/disallows things that are (not) accepted here, but it works
-    well enough for my purposes, and it's rather fast (even more
-    reading binary)."""
+    """Loads ascii and binary ply files. The standard allows/disallows
+    things that are (not) accepted here, but it works well enough for
+    my purposes, and it's rather fast (even more reading binary).
+
+    If your file is not correctly loaded, open it in MeshLab, and save
+    it as a .ply file (binary is faster, more compact, ascii is easier
+    to read, seems to lose some precision), and check *None* of the
+    additional parameters.
+
+    More information about the format:
+    http://paulbourke.net/dataformats/ply/"""
     # Accept file names and file handles
     if isinstance(fname, basestring):
         fh = open(fname)
@@ -14,13 +21,19 @@ def load_ply(fname):
     else:
         raise ValueError('fname must be string or file handle')
 
+    def readline():
+        l = fh.readline().strip()
+        while l.startswith('comment'):
+            l = fh.readline().strip()
+        return l
+        
     # This is a ply file
     try:
-        assert fh.readline().strip() == "ply"
+        assert readline() == "ply"
     except AssertionError:
         raise ValueError("Not a ply file")
     # Figure out the format
-    file_format = fh.readline().strip().split()
+    file_format = readline().split()
     assert file_format[0] == "format" and file_format[2] == "1.0"
     if file_format[1] == 'ascii':
         binary = False
@@ -33,27 +46,41 @@ def load_ply(fname):
         sep = ''
         faces_multiplier = 1
         if file_format[1] == 'binary_little_endian':
-            # This is not tested (haven't found a file with this
-            # format), but it should work anyway
+            #endiannes = '<'
             vertex_dtype = np.dtype('<f4')
-            faces_dtype = np.dtype('<u2, 3<i4')
+            faces_dtype = np.dtype('<u1, 3<i4')
         elif file_format[1] == 'binary_big_endian':
+            #endiannes = '>'
             vertex_dtype = np.dtype('>f4')
-            faces_dtype = np.dtype('>u2, 3>i4')
+            faces_dtype = np.dtype('>u1, 3>i4')
         else:
             raise ValueError("Format not understood")
-    
+        
+        #name2dtype = {'char': '{0}i1'.format(endiannes),
+        #              'uchar': '{0}u1'.format(endiannes),
+        #              'short': '{0}i2'.format(endiannes),
+        #              'ushort': '{0}u2'.format(endiannes),
+        #              'int': '{0}i4'.format(endiannes),
+        #              'uint': '{0}u4'.format(endiannes),
+        #              'float': '{0}f4'.format(endiannes),
+        #              'double': '{0}f8'.format(endiannes),
+        #              }
+
     # Read header
     while True:
-        l = fh.readline().strip()
+        l = readline()
         if l.startswith('comment'):
             continue
         elif l.startswith('end_header'):
             break
         elif l.startswith('element vertex'):
             n_vertex = int(l.split()[-1])
+            for i in xrange(3):
+                assert readline().startswith('property float')
         elif l.startswith('element face'):
             n_faces = int(l.split()[-1])
+            assert readline().startswith('property list uchar int')
+
     # Load vertex
     # np.fromfile is very low level, and doesn't accept gzipped
     # files. If needed, np.fromstring(fh.read(... could be used
