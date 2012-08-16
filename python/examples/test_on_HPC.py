@@ -20,7 +20,10 @@ petsc4py.init(sys.argv)
 def test_initialu(cp):
     return sp.ones(cp.shape[0])#cp[:,0]
 def initialu(cp):
-    return cp[:,0]+sp.sin(2*cp[:,2])
+    rlt = sp.ones(cp.shape[0])
+    (ind,) = sp.where(2.3*cp[:,0]+cp[:,2] > 0)
+    rlt[ind] = 0
+    return rlt
 
 def plot3d_sep(x,gv):
     return
@@ -59,7 +62,7 @@ def outputBin(gv):
 
 if __name__ == '__main__':
     opt = {'M':100,'m':5,'d':3}
-    surface = MeshWrapper('eight.ply')
+    surface = MeshWrapper('eight_refined.ply')
 #    pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
 #    pl.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,scalars=surface.v[:,0],opacity = 1)
     comm = MPI.COMM_WORLD
