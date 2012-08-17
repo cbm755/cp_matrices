@@ -17,10 +17,10 @@ except ImportError:
 #    '''Providing hash for Array. Use this for indexing dictionary.'''
 #    def __init__(self,obj, dtype=None, copy=True, order=None, subok=False, ndmin=0):
 #        self.a = a.__init__(self,obj, dtype, copy, order, subok, ndmin)
-#        
+#
 #    def __hash__(self):
 #        return hashlib.sha1(self.a)
-        
+
 
 class Band(object):
     '''
@@ -45,9 +45,9 @@ class Band(object):
         self.hGrid = self.hBlock/self.m
         self.sizes = (self.M,)*self.Dim
         self.dx = self.hGrid
-        
+
     def SelectBlock(self,surface = None):
-        
+
         if surface is None:
             surface = self.surface
         comm = self.comm
@@ -60,7 +60,7 @@ class Band(object):
         BlockCenterCar = self.BlockSub2CenterCarWithoutBand(subBlock)
         cp,_,_,_ = surface.cp(BlockCenterCar)
         dBlockCenter = self.norm1(cp-BlockCenterCar)
-        p = self.interpDegree 
+        p = self.interpDegree
         if p % 2 == 1:
             p = ( p + 1 ) / 2
         else:
@@ -70,20 +70,20 @@ class Band(object):
         lindBlockWithinBand = lindBlockWithinBand+Blockstart
         lBlockSize = lindBlockWithinBand.size
         numTotalBlockWBand = comm.allreduce(lBlockSize)
-        
-        
+
+
 
         numBlockWBandAssigned = numTotalBlockWBand // comm.size + int(comm.rank < (numTotalBlockWBand % comm.size))
-        
+
         lindBlockWBandFrom = PETSc.Vec().createWithArray(lindBlockWithinBand,comm=comm)
         self.gindBlockWBand = PETSc.Vec().createMPI((numBlockWBandAssigned,PETSc.DECIDE),comm=comm)
-        
-        
 
-        
 
-        
-        
+
+
+
+
+
 #        gsubBlockWBandFrom = PETSc.Vec().createMPI((self.Dim*lBlockize,PETSc.DECIDE),comm=comm)
 #        gsubBlockWBandFrom.setArray(lsubBlockWBand)
 #        self.gsubBlockWBand = PETSc.Vec().createMPI((self.Dim*self.numBlockWBandAssigned,PETSc.DECIDE),comm=comm)
@@ -91,8 +91,8 @@ class Band(object):
         if comm.rank == 0:
             BlockWBandStart = 0
         self.BlockWBandStart = BlockWBandStart
-        
-                
+
+
         LInd = PETSc.IS().createStride(numBlockWBandAssigned,\
                                        first=BlockWBandStart,\
                                        step=1,comm=comm)
@@ -100,16 +100,16 @@ class Band(object):
 
         self.numTotalBlockWBand = numTotalBlockWBand
         self.numBlockWBandAssigned = numBlockWBandAssigned
-        
+
         BlockWBandEnd = BlockWBandStart + numBlockWBandAssigned
         self.BlockWBandEnd = BlockWBandEnd
-        
-        
-        scatter = PETSc.Scatter().create(lindBlockWBandFrom,LInd,self.gindBlockWBand,None) 
+
+
+        scatter = PETSc.Scatter().create(lindBlockWBandFrom,LInd,self.gindBlockWBand,None)
         scatter.scatter(lindBlockWBandFrom,self.gindBlockWBand,PETSc.InsertMode.INSERT)
         #Natural order Index To Petsc order Index
         self.ni2pi = PETSc.AO().createMapping(self.gindBlockWBand.getArray().astype(np.int64))
-        
+
     def getCoordinatesWithGhost(self):
         '''Return the coordinates of local vector.'''
         # TODO: this may return repeated superfluous coordinates.
@@ -119,26 +119,26 @@ class Band(object):
         x *= (self.hBlock+self.hGrid*self.StencilWidth*2)/leng
         x -= (self.StencilWidth-1/2)*self.hGrid
         x = np.tile(x,(self.numBlockWBandAssigned,1))
-        
-        
+
+
         y = self.gindBlockWBand.getArray()
         y = self.BlockInd2CornerCarWithoutBand(y)
         y = np.tile(y,leng**self.Dim)
         y = y.reshape((-1,self.Dim))
-        
+
         return x + y
-    
+
     def computeCP(self):
         cp = self.getCoordinates()
         cp,_,_,_ = self.surface.cp(cp)
-        self.cp = cp        
+        self.cp = cp
     def test_initialu(self,f):
-        self.gvec.setArray(f(self.getCoordinates()))   
-        
-        
+        self.gvec.setArray(f(self.getCoordinates()))
+
+
     def initialu(self,f):
         self.gvec.setArray(f(self.cp))
-        
+
     def getCoordinates(self):
         '''Return the coordinates of global vector.'''
         leng =  self.m
@@ -147,14 +147,14 @@ class Band(object):
         x *= (self.hBlock)/leng
         x += self.hGrid/2
         x = np.tile(x,(self.numBlockWBandAssigned,1))
-        
-        
+
+
         y = self.gindBlockWBand.getArray()
         y = self.BlockInd2CornerCarWithoutBand(y)
         y = np.repeat(y,leng**self.Dim,axis=0)
-        
+
         return x + y
-        
+
     def findIndForIntpl(self,cp):
         '''find the indices of interpolation points'''
         #find base point first
@@ -171,14 +171,14 @@ class Band(object):
 #        corner = self.BlockSub2CornerCarWithoutBand(subBlock)
 
         subInBlock -= offset
-        
+
         offsetBlock = np.floor_divide(subInBlock,self.m)
         subInBlock = np.mod(subInBlock,self.m)
         subBlock += offsetBlock
-        
-        
-        
-        
+
+
+
+
         p = self.interpDegree + 1
         d = self.Dim
         x = np.arange(p**d)
@@ -191,24 +191,24 @@ class Band(object):
 #        x += subInBlock
         subInBlock += np.tile(x,(cp.shape[0],1))
         subBlock += np.floor_divide(subInBlock,self.m)
-        
+
 #        ind = np.where( x > self.m )
 #        offset[ind] = 1
         subInBlock = np.mod(subInBlock,self.m)
-        
+
         indBlock = self.BlockSub2IndWithoutBand(subBlock)
         indBlock = self.ni2pi.app2petsc(indBlock)
         ind = self.Sub2Ind(subInBlock, (self.m,)*d)
         ind += indBlock*self.m**d
-        return bp,ind.reshape((-1,p**d))        
+        return bp,ind.reshape((-1,p**d))
 
     def createGLVectors(self):
-        
+
         self.SelectBlock()
         self.computeCP()
-        
 
-        
+
+
         self.larray = np.zeros((self.numBlockWBandAssigned,)+\
                                (self.m+self.StencilWidth*2,)*self.Dim,order='F')
         self.lvec = PETSc.Vec().createWithArray(self.larray,comm=self.comm)
@@ -216,18 +216,18 @@ class Band(object):
         self.gvec = PETSc.Vec().createMPI((lsize,PETSc.DECIDE))
         self.gvec.setUp()
         self.wvec = self.gvec.copy()
-        
-        
+
+
 #        self.createIndicesHelper()
         tind = np.arange((self.m+self.StencilWidth*2)**self.Dim)
         tind = tind.reshape((self.m+self.StencilWidth*2,)*self.Dim,order='F')
-        
+
         for dim in xrange(self.Dim):
             tind = np.delete(tind,0,dim)
             tind = np.delete(tind,np.s_[-1],dim)
-            
+
         tind = tind.flatten(order='F')
-        
+
 #        ISList = []
 #        c = (self.m+self.StencilWidth*2)**self.Dim
 #        for i in xrange(self.BlockWBandStart,self.BlockWBandEnd):
@@ -239,11 +239,11 @@ class Band(object):
         ttind *= tt
         ttind = np.repeat(ttind, self.m**self.Dim)
         ttind = tind + ttind
-        
-            
+
+
         ISFrom = PETSc.IS().createGeneral(ttind,comm=self.comm)
         self.l2g = PETSc.Scatter().create(self.lvec,ISFrom,self.gvec,None)
-        
+
         #generate scatter global2local
         tind = np.arange(tt)
         tind = self.Ind2Sub(tind,(self.m+2*self.StencilWidth,)*self.Dim)
@@ -266,12 +266,12 @@ class Band(object):
         ISTo = PETSc.IS().createGeneral(ISTo)
         self.g2l = PETSc.Scatter().create(self.gvec,ISFrom,self.lvec,ISTo)
         return self.larray,self.lvec,self.gvec,self.wvec
-        
-        
-        
+
+
+
 #        self.gsubBlockWBand.setArray(self.asubBlockWBan[self.Dim*BlockWBandStart:self.Dim*BlockWBandEnd])
-        
-        
+
+
 #        gindBlockWBandFrom = PETSc.Vec().createMPI((lBlockize,PETSc.DECIDE))
 #        gindBlockWBandFrom.setArray(lindBlockWithinBand)
 #        self.gindBlockWBand = PETSc.Vec().createMPI((self.numBlockWBandAssigned,PETSc.DECIDE))
@@ -304,13 +304,13 @@ class Band(object):
         tozero,zvec = PETSc.Scatter.toZero(self.gvec)# return values are self.tozero, self.zvec
         tozero.scatter(gvec, zvec, PETSc.InsertMode.INSERT)
         return zvec
-        
+
     @staticmethod
     def toZeroStatic(gvec):
         tozero,zvec = PETSc.Scatter.toZero(gvec)
         tozero.scatter(gvec, zvec, PETSc.InsertMode.INSERT)
-        return zvec        
-         
+        return zvec
+
     def createAnyMat(self,rp,weights,NNZ = None):
         if NNZ is None:
             NNZ = (rp.shape[0],rp.shape[0]-1)
@@ -319,7 +319,7 @@ class Band(object):
         start = self.BlockWBandStart
         size = (self.m,)*self.Dim
         rpt = np.tile(rp,(tt,1))
-        
+
         m = PETSc.Mat().create(comm=self.comm)
         m.setSizes((self.wvec.sizes,self.gvec.sizes))
         m.setFromOptions()
@@ -342,7 +342,7 @@ class Band(object):
             nsub += offset
             nind = self.BlockSub2IndWithoutBand(nsub)
             pind = self.ni2pi.app2petsc(nind)
-            
+
             pind *= tt
             pind += indInBlock
 #            pind = pind.reshape((-1,shape0))
@@ -350,60 +350,60 @@ class Band(object):
                 m[index[i],pind[shape0*i:shape0*(i+1)]] = weights
         m.assemble()
         return m
-                
-            
-                  
-    def createExtensionMat(self,cp = None):     
-        '''create a real PETSc.Mat() for extension'''       
+
+
+
+    def createExtensionMat(self,cp = None):
+        '''create a real PETSc.Mat() for extension'''
         p = self.interpDegree + 1
         d = self.Dim
-        
+
         if cp is None:
             wvec = self.wvec
             cp = self.cp
         else:
             wvec = PETSc.Vec().createMPI((cp.shape[0],PETSc.DECIDE))
         gvec = self.gvec
-        
+
         extMat = PETSc.Mat().create(self.comm)
         extMat.setSizes((wvec.sizes,gvec.sizes))
         extMat.setFromOptions()
         extMat.setPreallocationNNZ((p**d,p**d))
 
-        
+
         Xgrid,ind = self.findIndForIntpl(cp)
         weights = buildInterpWeights(Xgrid,cp,self.hGrid,p)
-        
+
         (start,end) = extMat.getOwnershipRange()
         ranges = end - start
 
-  
+
         for i in xrange(ranges):
             extMat[i+start,ind[i]] = weights[i]
 
 
-                    
+
         extMat.assemble()
         return extMat
-        
-    def createExtensionMatForLoop(self,cp = None):     
-        '''create a real PETSc.Mat() for extension using for loop'''       
+
+    def createExtensionMatForLoop(self,cp = None):
+        '''create a real PETSc.Mat() for extension using for loop'''
         p = self.interpDegree + 1
         d = self.Dim
-        
+
         if cp is None:
             wvecsizes = self.wvec.sizes
             cp = self.cp
         else:
             wvecsizes = (cp.shape[0],PETSc.DECIDE)
         gvec = self.gvec
-        
+
         extMat = PETSc.Mat().create(self.comm)
         extMat.setSizes((wvecsizes,gvec.sizes))
         extMat.setFromOptions()
         extMat.setPreallocationNNZ((p**d,p**d))
-        
-        
+
+
         (start,end) = extMat.getOwnershipRange() #@UnusedVariable
 
         bsize = 1000
@@ -411,17 +411,17 @@ class Band(object):
             Xgrid,ind = self.findIndForIntpl(cp[i:i+bsize])
             weights = buildInterpWeights(Xgrid,cp[i:i+bsize],self.hGrid,p)
             ranges = weights.shape[0]
-            
-  
+
+
             for j in xrange(ranges):
                 extMat[j+start+i,ind[j]] = weights[j]
 
 
-                    
+
         extMat.assemble()
-        return extMat        
-        
-        
+        return extMat
+
+
 
     @staticmethod
     def Ind2Sub(index,size):
@@ -438,22 +438,22 @@ class Band(object):
             if ind < 0 or ind > total:
                 raise exceptions.IndexError('BlockInd2SubWithoutBand')
             return np.column_stack(np.unravel_index(ind,size,order='F'))[0]
-            
+
         else:
             if ind.any() < 0 or ind.any() > total:
                 raise exceptions.IndexError('BlockInd2SubWithoutBand')
             return np.column_stack(np.unravel_index(ind,size,order='F'))
-        
+
     @staticmethod
-    def Sub2Ind(tsub,size): 
+    def Sub2Ind(tsub,size):
         if tsub.dtype is not np.dtype('int'):
             sub = tsub.T.astype(np.int64)
         else:
             sub = tsub.T
-        return np.ravel_multi_index(sub,size,order='F')     
-                        
-                
-    
+        return np.ravel_multi_index(sub,size,order='F')
+
+
+
     def BlockInd2SubWithoutBand(self,index):
         if np.isscalar(index):
             ind = index
@@ -465,12 +465,12 @@ class Band(object):
             if ind < 0 or ind > self.M**self.Dim-1:
                 raise exceptions.IndexError('BlockInd2SubWithoutBand')
             return np.column_stack(np.unravel_index(ind,(self.M,)*self.Dim,order='F'))[0]
-            
+
         else:
             if ind.any() < 0 or ind.any() > self.M**self.Dim-1:
                 raise exceptions.IndexError('BlockInd2SubWithoutBand')
             return np.column_stack(np.unravel_index(ind,(self.M,)*self.Dim,order='F'))
-        
+
     def BlockSub2IndWithoutBand(self,tsub):
         if tsub.ndim == 1:
             sub = tsub.reshape((-1,self.Dim)).T
@@ -479,29 +479,29 @@ class Band(object):
         if sub.dtype is not np.dtype('int'):
             sub = sub.astype(np.int64)
         return np.ravel_multi_index(sub,(self.M,)*self.Dim,order='F')
-        
-        
-    def BlockSub2CenterCarWithoutBand(self,sub):       
+
+
+    def BlockSub2CenterCarWithoutBand(self,sub):
         return sub/self.M*4-2+self.hBlock/2
-    
+
     def BlockSub2CornerCarWithoutBand(self,sub):
         return sub/self.M*4-2
-    
+
     def BlockInd2CenterCarWithoutBand(self,ind):
         return self.BlockSub2CenterCarWithoutBand(self.BlockInd2SubWithoutBand(ind))
-    
+
     def BlockInd2CornerCarWithoutBand(self,ind):
         return self.BlockSub2CornerCarWithoutBand(self.BlockInd2SubWithoutBand(ind))
-    
-    
+
+
     @staticmethod
     def norm1(x):
         if x.ndim == 1:
             return np.absolute(x).max()
         return np.amax(np.absolute(x),axis=1)
-    
-    
-        
-        
-        
-        
+
+
+
+
+
+
