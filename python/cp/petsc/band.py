@@ -6,7 +6,7 @@ Created on Jul 29, 2012
 from __future__ import division
 from mpi4py import MPI
 from petsc4py import PETSc
-import scipy as sp
+import numpy as np
 import exceptions
 try:
     from cp.cpOps import buildInterpWeights
@@ -55,7 +55,7 @@ class Band(object):
         numBlockAssigned = numTotalBlock // comm.size + int(comm.rank < (numTotalBlock % comm.size))
         Blockstart = comm.exscan(numBlockAssigned)
         if comm.rank == 0:Blockstart = 0
-        indBlock = sp.arange(Blockstart,Blockstart+numBlockAssigned)
+        indBlock = np.arange(Blockstart,Blockstart+numBlockAssigned)
         subBlock = self.BlockInd2SubWithoutBand(indBlock)
         BlockCenterCar = self.BlockSub2CenterCarWithoutBand(subBlock)
         cp,_,_,_ = surface.cp(BlockCenterCar)
@@ -65,8 +65,8 @@ class Band(object):
             p = ( p + 1 ) / 2
         else:
             p = ( p + 2 ) / 2
-        bw = 1.1*((p+2)*self.hGrid+self.hBlock/2)#*sp.sqrt(self.Dim)
-        (lindBlockWithinBand,) = sp.where(dBlockCenter<bw)
+        bw = 1.1*((p+2)*self.hGrid+self.hBlock/2)#*np.sqrt(self.Dim)
+        (lindBlockWithinBand,) = np.where(dBlockCenter<bw)
         lindBlockWithinBand = lindBlockWithinBand+Blockstart
         lBlockSize = lindBlockWithinBand.size
         numTotalBlockWBand = comm.allreduce(lBlockSize)
@@ -108,22 +108,22 @@ class Band(object):
         scatter = PETSc.Scatter().create(lindBlockWBandFrom,LInd,self.gindBlockWBand,None) 
         scatter.scatter(lindBlockWBandFrom,self.gindBlockWBand,PETSc.InsertMode.INSERT)
         #Natural order Index To Petsc order Index
-        self.ni2pi = PETSc.AO().createMapping(self.gindBlockWBand.getArray().astype(sp.int64))
+        self.ni2pi = PETSc.AO().createMapping(self.gindBlockWBand.getArray().astype(np.int64))
         
     def getCoordinatesWithGhost(self):
         '''Return the coordinates of local vector.'''
         # TODO: this may return repeated superfluous coordinates.
         leng =  self.m+self.StencilWidth*2
-        x = sp.arange(leng**self.Dim)
-        x = self.Ind2Sub(x, (leng,)*self.Dim).astype(sp.double)
+        x = np.arange(leng**self.Dim)
+        x = self.Ind2Sub(x, (leng,)*self.Dim).astype(np.double)
         x *= (self.hBlock+self.hGrid*self.StencilWidth*2)/leng
         x -= (self.StencilWidth-1/2)*self.hGrid
-        x = sp.tile(x,(self.numBlockWBandAssigned,1))
+        x = np.tile(x,(self.numBlockWBandAssigned,1))
         
         
         y = self.gindBlockWBand.getArray()
         y = self.BlockInd2CornerCarWithoutBand(y)
-        y = sp.tile(y,leng**self.Dim)
+        y = np.tile(y,leng**self.Dim)
         y = y.reshape((-1,self.Dim))
         
         return x + y
@@ -142,16 +142,16 @@ class Band(object):
     def getCoordinates(self):
         '''Return the coordinates of global vector.'''
         leng =  self.m
-        x = sp.arange(leng**self.Dim)
-        x = self.Ind2Sub(x, (leng,)*self.Dim).astype(sp.double)
+        x = np.arange(leng**self.Dim)
+        x = self.Ind2Sub(x, (leng,)*self.Dim).astype(np.double)
         x *= (self.hBlock)/leng
         x += self.hGrid/2
-        x = sp.tile(x,(self.numBlockWBandAssigned,1))
+        x = np.tile(x,(self.numBlockWBandAssigned,1))
         
         
         y = self.gindBlockWBand.getArray()
         y = self.BlockInd2CornerCarWithoutBand(y)
-        y = sp.repeat(y,leng**self.Dim,axis=0)
+        y = np.repeat(y,leng**self.Dim,axis=0)
         
         return x + y
         
@@ -164,16 +164,16 @@ class Band(object):
             offset = p // 2
         else:
             offset = p // 2 - 1
-        subBlock = sp.floor_divide(cp+2-self.dx/2,self.dx)
+        subBlock = np.floor_divide(cp+2-self.dx/2,self.dx)
         bp = (subBlock-(offset-1/2))*self.dx - 2
-        subInBlock = sp.mod(subBlock,self.m)
-        subBlock = sp.floor_divide(subBlock,self.m)
+        subInBlock = np.mod(subBlock,self.m)
+        subBlock = np.floor_divide(subBlock,self.m)
 #        corner = self.BlockSub2CornerCarWithoutBand(subBlock)
 
         subInBlock -= offset
         
-        offsetBlock = sp.floor_divide(subInBlock,self.m)
-        subInBlock = sp.mod(subInBlock,self.m)
+        offsetBlock = np.floor_divide(subInBlock,self.m)
+        subInBlock = np.mod(subInBlock,self.m)
         subBlock += offsetBlock
         
         
@@ -181,20 +181,20 @@ class Band(object):
         
         p = self.interpDegree + 1
         d = self.Dim
-        x = sp.arange(p**d)
+        x = np.arange(p**d)
         x = self.Ind2Sub(x, (p,)*d)
-#        x = sp.tile(x,(cp.shape[0],1))
+#        x = np.tile(x,(cp.shape[0],1))
         #time consuming or memory consuming? choose one
-        subInBlock = sp.repeat(subInBlock,p**d,axis=0)
-        subBlock = sp.repeat(subBlock,p**d,axis=0)
-#        offset = sp.zeros(subBlock.shape)
+        subInBlock = np.repeat(subInBlock,p**d,axis=0)
+        subBlock = np.repeat(subBlock,p**d,axis=0)
+#        offset = np.zeros(subBlock.shape)
 #        x += subInBlock
-        subInBlock += sp.tile(x,(cp.shape[0],1))
-        subBlock += sp.floor_divide(subInBlock,self.m)
+        subInBlock += np.tile(x,(cp.shape[0],1))
+        subBlock += np.floor_divide(subInBlock,self.m)
         
-#        ind = sp.where( x > self.m )
+#        ind = np.where( x > self.m )
 #        offset[ind] = 1
-        subInBlock = sp.mod(subInBlock,self.m)
+        subInBlock = np.mod(subInBlock,self.m)
         
         indBlock = self.BlockSub2IndWithoutBand(subBlock)
         indBlock = self.ni2pi.app2petsc(indBlock)
@@ -209,7 +209,7 @@ class Band(object):
         
 
         
-        self.larray = sp.zeros((self.numBlockWBandAssigned,)+\
+        self.larray = np.zeros((self.numBlockWBandAssigned,)+\
                                (self.m+self.StencilWidth*2,)*self.Dim,order='F')
         self.lvec = PETSc.Vec().createWithArray(self.larray,comm=self.comm)
         lsize = self.numBlockWBandAssigned*self.m**self.Dim
@@ -219,12 +219,12 @@ class Band(object):
         
         
 #        self.createIndicesHelper()
-        tind = sp.arange((self.m+self.StencilWidth*2)**self.Dim)
+        tind = np.arange((self.m+self.StencilWidth*2)**self.Dim)
         tind = tind.reshape((self.m+self.StencilWidth*2,)*self.Dim,order='F')
         
         for dim in xrange(self.Dim):
-            tind = sp.delete(tind,0,dim)
-            tind = sp.delete(tind,sp.s_[-1],dim)
+            tind = np.delete(tind,0,dim)
+            tind = np.delete(tind,np.s_[-1],dim)
             
         tind = tind.flatten(order='F')
         
@@ -233,11 +233,11 @@ class Band(object):
 #        for i in xrange(self.BlockWBandStart,self.BlockWBandEnd):
 #            ti = i*c
 #            ISList.extend(list(tind+ti))
-        tind = sp.tile(tind,self.numBlockWBandAssigned)
-        ttind = sp.arange(self.BlockWBandStart,self.BlockWBandEnd)
+        tind = np.tile(tind,self.numBlockWBandAssigned)
+        ttind = np.arange(self.BlockWBandStart,self.BlockWBandEnd)
         tt = (self.m+2*self.StencilWidth)**self.Dim
         ttind *= tt
-        ttind = sp.repeat(ttind, self.m**self.Dim)
+        ttind = np.repeat(ttind, self.m**self.Dim)
         ttind = tind + ttind
         
             
@@ -245,21 +245,21 @@ class Band(object):
         self.l2g = PETSc.Scatter().create(self.lvec,ISFrom,self.gvec,None)
         
         #generate scatter global2local
-        tind = sp.arange(tt)
+        tind = np.arange(tt)
         tind = self.Ind2Sub(tind,(self.m+2*self.StencilWidth,)*self.Dim)
         tind -= self.StencilWidth
-        tind = sp.tile(tind,(self.numBlockWBandAssigned,1))
-        ttind = self.ni2pi.petsc2app(sp.arange(self.BlockWBandStart,self.BlockWBandEnd))
+        tind = np.tile(tind,(self.numBlockWBandAssigned,1))
+        ttind = self.ni2pi.petsc2app(np.arange(self.BlockWBandStart,self.BlockWBandEnd))
         ttind = self.BlockInd2SubWithoutBand(ttind)
-        ttind = sp.repeat(ttind,tt,axis=0)
+        ttind = np.repeat(ttind,tt,axis=0)
         ttind += tind/self.m
-        tind = sp.mod(tind,self.m)
+        tind = np.mod(tind,self.m)
         tind = self.Sub2Ind(tind, (self.m,)*self.Dim)
         ttind = self.BlockSub2IndWithoutBand(ttind)
         ttind = self.ni2pi.app2petsc(ttind)
         ttind *= self.m**self.Dim
         tind += ttind
-        (ind,) = sp.where(tind>=0)
+        (ind,) = np.where(tind>=0)
         tind = tind[ind]
         ISTo = ind+self.BlockWBandStart*tt
         ISFrom = PETSc.IS().createGeneral(tind)
@@ -284,13 +284,13 @@ class Band(object):
 #    def createIndicesHelper(self):
 #        toall,vsubBlockWBand = PETSc.Scatter().toAll(self.gsubBlockWBand)
 #        toall.scatter(self.gsubBlockWBand,vsubBlockWBand)
-#        asubBlockWBand = vsubBlockWBand.getArray().reshape(-1,self.Dim).astype(sp.int64)
+#        asubBlockWBand = vsubBlockWBand.getArray().reshape(-1,self.Dim).astype(np.int64)
 #        numTotalBlockWBand = self.numTotalBlockWBand
 #        self.sub2indWBand = {tuple(asubBlockWBand[i]):i for i in xrange(numTotalBlockWBand)}
 #        self.ind2subWBand = {i:asubBlockWBand[i] for i in xrange(numTotalBlockWBand)}
-#        x = sp.arange(3**self.Dim)
-#        x = sp.vstack(sp.unravel_index(x,(3,)*self.Dim,order='F')).T
-#        x -= sp.ones(self.Dim,dtype=sp.int64)
+#        x = np.arange(3**self.Dim)
+#        x = np.vstack(np.unravel_index(x,(3,)*self.Dim,order='F')).T
+#        x -= np.ones(self.Dim,dtype=np.int64)
 #        lBlockSize = self.numBlockWBandAssigned
 #        for i in xrange(lBlockSize):
 #            sub = self.ind2subWBand[i]
@@ -318,19 +318,19 @@ class Band(object):
         tt = self.m**self.Dim
         start = self.BlockWBandStart
         size = (self.m,)*self.Dim
-        rpt = sp.tile(rp,(tt,1))
+        rpt = np.tile(rp,(tt,1))
         
         m = PETSc.Mat().create(comm=self.comm)
         m.setSizes((self.wvec.sizes,self.gvec.sizes))
         m.setFromOptions()
         m.setPreallocationNNZ(NNZ)
-        ind = sp.arange(tt)
+        ind = np.arange(tt)
         tsubInBlock = self.Ind2Sub(ind, size)
-        tsubInBlock = sp.repeat(tsubInBlock,shape0,axis=0)
+        tsubInBlock = np.repeat(tsubInBlock,shape0,axis=0)
         tsubInBlock += rpt
-        offset = sp.floor_divide(tsubInBlock,self.m)
-        subInBlock = sp.mod(tsubInBlock,self.m)
-        ones = sp.ones(tt*shape0,dtype=sp.int64)
+        offset = np.floor_divide(tsubInBlock,self.m)
+        subInBlock = np.mod(tsubInBlock,self.m)
+        ones = np.ones(tt*shape0,dtype=np.int64)
         indInBlock = self.Sub2Ind(subInBlock, size)
         for block in xrange(self.numBlockWBandAssigned):
             tx = (block+start)*tt
@@ -425,60 +425,60 @@ class Band(object):
 
     @staticmethod
     def Ind2Sub(index,size):
-        if sp.isscalar(index):
-            ind = sp.int64(index)
+        if np.isscalar(index):
+            ind = np.int64(index)
         else:
             ind = index.copy()
-            if ind.dtype is not sp.dtype('int64'):
-                ind = ind.astype(sp.int64)
+            if ind.dtype is not np.dtype('int64'):
+                ind = ind.astype(np.int64)
         total = 1
         for i in size:
             total *= i
-        if sp.isscalar(ind):
+        if np.isscalar(ind):
             if ind < 0 or ind > total:
                 raise exceptions.IndexError('BlockInd2SubWithoutBand')
-            return sp.column_stack(sp.unravel_index(ind,size,order='F'))[0]
+            return np.column_stack(np.unravel_index(ind,size,order='F'))[0]
             
         else:
             if ind.any() < 0 or ind.any() > total:
                 raise exceptions.IndexError('BlockInd2SubWithoutBand')
-            return sp.column_stack(sp.unravel_index(ind,size,order='F'))
+            return np.column_stack(np.unravel_index(ind,size,order='F'))
         
     @staticmethod
     def Sub2Ind(tsub,size): 
-        if tsub.dtype is not sp.dtype('int'):
-            sub = tsub.T.astype(sp.int64)
+        if tsub.dtype is not np.dtype('int'):
+            sub = tsub.T.astype(np.int64)
         else:
             sub = tsub.T
-        return sp.ravel_multi_index(sub,size,order='F')     
+        return np.ravel_multi_index(sub,size,order='F')     
                         
                 
     
     def BlockInd2SubWithoutBand(self,index):
-        if sp.isscalar(index):
+        if np.isscalar(index):
             ind = index
         else:
             ind = index.copy()
-            if ind.dtype is not sp.dtype('int64'):
-                ind = ind.astype(sp.int64)
-        if sp.isscalar(ind):
+            if ind.dtype is not np.dtype('int64'):
+                ind = ind.astype(np.int64)
+        if np.isscalar(ind):
             if ind < 0 or ind > self.M**self.Dim-1:
                 raise exceptions.IndexError('BlockInd2SubWithoutBand')
-            return sp.column_stack(sp.unravel_index(ind,(self.M,)*self.Dim,order='F'))[0]
+            return np.column_stack(np.unravel_index(ind,(self.M,)*self.Dim,order='F'))[0]
             
         else:
             if ind.any() < 0 or ind.any() > self.M**self.Dim-1:
                 raise exceptions.IndexError('BlockInd2SubWithoutBand')
-            return sp.column_stack(sp.unravel_index(ind,(self.M,)*self.Dim,order='F'))
+            return np.column_stack(np.unravel_index(ind,(self.M,)*self.Dim,order='F'))
         
     def BlockSub2IndWithoutBand(self,tsub):
         if tsub.ndim == 1:
             sub = tsub.reshape((-1,self.Dim)).T
         else:
             sub = tsub.T
-        if sub.dtype is not sp.dtype('int'):
-            sub = sub.astype(sp.int64)
-        return sp.ravel_multi_index(sub,(self.M,)*self.Dim,order='F')
+        if sub.dtype is not np.dtype('int'):
+            sub = sub.astype(np.int64)
+        return np.ravel_multi_index(sub,(self.M,)*self.Dim,order='F')
         
         
     def BlockSub2CenterCarWithoutBand(self,sub):       
@@ -497,8 +497,8 @@ class Band(object):
     @staticmethod
     def norm1(x):
         if x.ndim == 1:
-            return sp.absolute(x).max()
-        return sp.amax(sp.absolute(x),axis=1)
+            return np.absolute(x).max()
+        return np.amax(np.absolute(x),axis=1)
     
     
         
