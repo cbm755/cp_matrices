@@ -8,10 +8,10 @@ function L = laplacian_nd_matrix(xs, order, band1, band2)
 %
 % Note only does ndgrid ordering.
 
-  if (nargin < 3)
+  if (nargin < 4)
     band2 = band1;
   end
-  if (nargin < 4)
+  if (nargin < 2)
     order = 2;
   end
 

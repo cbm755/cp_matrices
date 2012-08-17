@@ -36,9 +36,13 @@ function [pass, str] = test_nd_ops_vs_3d()
 
   E = interp3_matrix(x1d,y1d,z1d,  cpx, cpy, cpz, 3, band, true);
   En = interpn_matrix({x1d y1d z1d}, [cpx cpy cpz], 3, band);
-
   c = c + 1;
   pass(c) = nnz(E - En) == 0;
+
+  % same with cell-array
+  En2 = interpn_matrix({x1d y1d z1d}, {cpx cpy cpz}, 3, band);
+  c = c + 1;
+  pass(c) = nnz(En - En2) == 0;
 
   E = interp3_matrix(x1d,y1d,z1d,  cpx, cpy, cpz, 1, band, true);
   En = interpn_matrix({x1d y1d z1d}, [cpx cpy cpz], 1, band);

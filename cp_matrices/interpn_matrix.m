@@ -2,13 +2,16 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
 %INTERPN_MATRIX  Return a n-D interpolation matrix
 %   E = INTERPN_MATRIX(X, XI, P)
 %   E = INTERPN_MATRIX({X Y Z ... W}, [XI YI ZI ... WI], P)
-%   E = INTERPN_MATRIX({X Y Z ... W}, {XI YI ZI ... WI}, P)  (TODO)
 %   Build a matrix which interpolates grid data on a grid defined by
 %   the product of the lists X onto the points specified by columns
 %   of XI.
 %   Interpolation is done using degree P barycentric Lagrange
 %   interpolation.  E will be a 'size(XI,1)' by M sparse matrix
 %   where M is the product of the lengths of X, Y, Z, ..., W.
+%
+%   E = INTERPN_MATRIX({X Y Z ... W}, {XI YI ZI ... WI}, P)
+%   As above put you can specify a cell array of column vectors for
+%   the interpolation points.
 %
 %   E = INTERPN_MATRIX(X, XI, P, BAND)
 %   BAND is a list of linear indices into a (possibly fictious) n-D
@@ -26,30 +29,8 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
 %
 %   Does no error checking up the equispaced nature of x,y,z
 
-
-  if (1==0)  % TODO: none for now
-  % input checking
-  [temp1, temp2] = size(x);
-  if ~(  (ndims(x) == 2) && (temp1 == 1 || temp2 == 1)  )
-    error('x must be a vector, not e.g., meshgrid output');
-  end
-  [temp1, temp2] = size(y);
-  if ~(  (ndims(y) == 2) && (temp1 == 1 || temp2 == 1)  )
-    error('y must be a vector, not e.g., meshgrid output');
-  end
-  [temp1, temp2] = size(z);
-  if ~(  (ndims(z) == 2) && (temp1 == 1 || temp2 == 1)  )
-    error('z must be a vector, not e.g., meshgrid output');
-  end
-  if ~(  (ndims(xi) == 2) && (size(xi,2) == 1)  )
-    error('xi must be a column vector');
-  end
-  if ~(  (ndims(yi) == 2) && (size(yi,2) == 1)  )
-    error('yi must be a column vector');
-  end
-  if ~(  (ndims(zi) == 2) && (size(zi,2) == 1)  )
-    error('zi must be a column vector');
-  end
+  if ~iscell(xs)
+    error('expected a cell array of {x1d,y1d,etc}');
   end
 
   if (nargin == 2) || (isempty(p))
@@ -87,6 +68,17 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
 
   N = p+1;
   EXTSTENSZ = N^dim;
+
+
+  if iscell(xi)
+    % convert xi to a matrix of column vectors.  TODO: is it better to
+    % to change findGridInterpBasePt_vec to support cell array?
+    xi2 = zeros(length(xi{1}), dim);
+    for d=1:dim
+      xi2(:,d) = xi{d};
+    end
+    xi = xi2;
+  end
 
   Ni = length(xi(:,1));
 
@@ -153,14 +145,6 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
     end
   end
 
-  if (1==0)
-    disp('[testing] get back components:');
-    tic; [I,J,V] = find(Es); toc
-
-    disp('call "sparse" on smaller system:');
-    tic; Es2 = sparse(I, J, V, length(xi), length(band)); toc
-    E-Es2
-  end
 
   if (1==0)
     % TODO: do this outside in another function
