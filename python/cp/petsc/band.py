@@ -454,22 +454,9 @@ class Band(object):
 
 
 
-    def BlockInd2SubWithoutBand(self,index):
-        if np.isscalar(index):
-            ind = index
-        else:
-            ind = index.copy()
-            if ind.dtype is not np.dtype('int64'):
-                ind = ind.astype(np.int64)
-        if np.isscalar(ind):
-            if ind < 0 or ind > self.M**self.Dim-1:
-                raise exceptions.IndexError('BlockInd2SubWithoutBand')
-            return np.column_stack(np.unravel_index(ind,(self.M,)*self.Dim,order='F'))[0]
-
-        else:
-            if ind.any() < 0 or ind.any() > self.M**self.Dim-1:
-                raise exceptions.IndexError('BlockInd2SubWithoutBand')
-            return np.column_stack(np.unravel_index(ind,(self.M,)*self.Dim,order='F'))
+    def BlockInd2SubWithoutBand(self, indices):
+        indices = np.unravel_index(indices, (self.M,)*self.Dim, order='F')
+        return np.column_stack(indices)
 
     def BlockSub2IndWithoutBand(self,tsub):
         if tsub.ndim == 1:
