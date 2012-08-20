@@ -35,13 +35,12 @@ dx     storage for L   time
 %0.03125
 
 dx     storage for E1   for E2     time
-0.125     226 MiB      1668 MiB     7s, 51s 
+0.125     226 MiB      1668 MiB     7s, 51s
 0.0625    876 MiB      6515 Mib    30s, 225s
-0.03125                  26 GiB       , 1100s
-
+0.03125  3472 MiB     25910 MiB   146s, 1100s
 
 
 dx        cost of E1*u, E2*u
 0.125          , 0.5s
 0.0625     0.6s, 3.68s
-0.03125        , 19.6s
+0.03125    3.6s, 19.6s
