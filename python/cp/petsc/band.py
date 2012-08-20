@@ -452,10 +452,8 @@ class Band(object):
             sub = tsub.T
         return np.ravel_multi_index(sub,size,order='F')
 
-
-
     def BlockInd2SubWithoutBand(self, indices):
-        indices = np.unravel_index(indices, (self.M,)*self.Dim, order='F')
+        indices = np.unravel_index(indices.astype(np.int64), (self.M,)*self.Dim, order='F')
         return np.column_stack(indices)
 
     def BlockSub2IndWithoutBand(self,tsub):
