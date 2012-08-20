@@ -1,4 +1,4 @@
-
+addpath('../surfaces');
 
 dx = 0.1;
 
@@ -36,6 +36,7 @@ band = find(abs(dist) <= bw*dx);
 % store closest points in the band;
 cpx = cpx(band); cpy = cpy(band); cpz = cpz(band); cpw = cpw(band);
 xg = xx(band); yg = yy(band); zg = zz(band); wg = ww(band);
+dist = dist(band);
 u0 = u0(band);
 
 
