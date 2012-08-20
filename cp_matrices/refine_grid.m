@@ -24,7 +24,7 @@ function [varargout] = refine_grid(varargin)
 %
 %         cpf: cp function handle.
 %
-%         dx0: grid spacing of current grid.
+%         dx0: grid spacing of current grid.  Must be same in x and y.
 %
 %         x1d0,y1d0: the 1d grids, these form a "theoretical"
 %                    meshgid() (which is not created).

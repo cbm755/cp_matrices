@@ -28,6 +28,9 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
 %   the column space of the result (i.e., effects Ej).
 %
 %   Does no error checking up the equispaced nature of x,y,z
+%
+%   TODO: this should be modified to construct the Ei,Ej,Es and do
+%   banding that way: almost certainly less memory
 
   if ~iscell(xs)
     error('expected a cell array of {x1d,y1d,etc}');
@@ -168,7 +171,8 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
 
     if (makeBanded)
       logical2bandmap = sparse(band, 1, 1:length(band), M,1);
-      Ej = logical2bandmap(Ej);
+      % the resulting Ej is big sparse
+      Ej = full(logical2bandmap(Ej));
     end
   end
 end
