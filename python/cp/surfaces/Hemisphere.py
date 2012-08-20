@@ -58,6 +58,7 @@ class Hemisphere(ShapeWithBdy):
                                                       yy ,
                                                       np.zeros(xx.shape))) +
                                      self._center)
+            bdy[below_semicircle] = 1
         else:
             raise NotImplementedError(
                 'Dim {0} and higher not implemented'.format(dim)
