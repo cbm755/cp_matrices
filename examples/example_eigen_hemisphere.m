@@ -9,10 +9,6 @@
 % Brandman, Ruuth 2011].
 
 
-% adjust as appropriate
-addpath('../cp_matrices');
-addpath('../surfaces');
-
 dx = 0.2/2^1;  % grid spacing
 R=1; %Radius of the circle
 

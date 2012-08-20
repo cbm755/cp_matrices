@@ -4,6 +4,8 @@
 
 disp('Adding paths for cp_matrices');
 
-addpath('../surfaces');
 addpath('../cp_matrices');
-
+addpath('../surfaces');
+addpath('../surfaces/tri');
+addpath('../surfaces/readply');
+addpath('../surfaces/tri2cp');

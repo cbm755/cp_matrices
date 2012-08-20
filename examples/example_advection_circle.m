@@ -8,18 +8,7 @@
 % field tangent to the circle.
 
 
-%% Using cp_matrices
-
-% Include the cp_matrices folder (edit as appropriate)
-addpath('../cp_matrices');
-
-% add functions for finding the closest points
-addpath('../surfaces');
-
-
-
-%%
-% 2D example on a circle
+%% 2D example on a circle
 % Construct a grid in the embedding space
 
 dx = 0.05;                   % grid size

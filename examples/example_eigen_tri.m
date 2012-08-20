@@ -8,14 +8,6 @@
 % banded grid data from an external file
 
 
-% adjust as appropriate
-addpath('../cp_matrices');
-addpath('../surfaces');
-addpath('../surfaces/tri_pig');
-addpath('../surfaces/tri');
-addpath('../surfaces/readply');
-addpath('../surfaces/tri2cp');
-
 dx = 0.05;
 
 % ply file contains the triangles
