@@ -28,6 +28,52 @@ class Hemisphere(ShapeWithBdy):
         # TODO: superclass knows about dimension?
         #super(Hemisphere, self).__init__()
 
+    def closestPointToCartesianVec(self, x):
+        x = np.atleast_2d(x)
+        r = np.sqrt(np.sum((x - self._center)**2, axis=1))
+        xm = x.copy()
+        r_eq_0 = r == 0
+        xm[r_eq_0, 0] = self._center[0] + 1
+        r[r_eq_0] = 1
+        dim = self._dim
+        cpx = np.zeros(x.shape)
+        bdy = np.zeros(x.shape[0])
+        below_semicircle = xm[:, -1] < self._center[-1]
+        if dim == 2:
+            left = (xm[:, 0] <= self._center[0]) & below_semicircle
+            cpx[left] = self._center - np.array([self._radius, 0.])
+            bdy[left] = 1
+            right = ~left & below_semicircle
+            cpx[right] = self._center + np.array([self._radius, 0.])
+            bdy[right] = 2
+        elif dim == 3:
+            # Here it doesn't matter if xm[below_semicircle, *] has
+            # shape (0,) because adding a scalar "works" (ie, xx has
+            # also shape (0,))
+            xx = xm[below_semicircle, 0] - self._center[0]
+            yy = xm[below_semicircle, 1] - self._center[1]
+            th, _ = cart2pol(xx, yy)
+            xx, yy = pol2cart(th, self._radius)
+            cpx[below_semicircle] = (np.column_stack((xx,
+                                                      yy ,
+                                                      np.zeros(xx.shape))) +
+                                     self._center)
+        else:
+            raise NotImplementedError(
+                'Dim {0} and higher not implemented'.format(dim)
+                )
+        rest = ~below_semicircle
+        
+        # This is needed, if xm[rest] is empty (ie shape (0,)) trying
+        # to add an array results in a ValueError: operands could not
+        # be broadcast together
+        if rest.any():
+            c = (self._radius / r[rest])[:, np.newaxis]
+            cpx[rest] = c * (xm[rest] - self._center) + self._center
+            bdy[rest] = 0
+        dist = np.sqrt(np.sum((x - cpx)**2, axis=1))
+        return cpx, dist, bdy, {}
+        
     def closestPointToCartesian(self, x):
         r = np.linalg.norm(x - self._center, 2)
         if r==0:
