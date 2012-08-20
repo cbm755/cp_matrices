@@ -4,13 +4,9 @@
 % exp(-t)*cos(theta)
 
 
-%% Using cp_matrices
-
-% Include the cp_matrices folder (edit as appropriate)
-addpath('../cp_matrices');
-
-% add functions for finding the closest points
-addpath('../surfaces');
+% adjust as appropriate
+%addpath('../cp_matrices');
+%addpath('../surfaces');
 
 
 %% Construct a grid in the embedding space
