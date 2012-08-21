@@ -1,4 +1,4 @@
-function [Dc] = firstderiv_cen2_nd_matrices(xs, band1, band2)
+function [Dc] = firstderiv_cen2_nd_matrices(xs, band1, band2, invbandmap)
 %FIRSTDERIV_CEN2_ND_MATRICES  Build discrete first derivatives
 % Matrices for 1st-derivatives which are 2nd-order centered
 % differences in n dimensions.
@@ -16,6 +16,9 @@ function [Dc] = firstderiv_cen2_nd_matrices(xs, band1, band2)
 
   if (nargin < 3)
     band2 = band1;
+  end
+  if (nargin < 4)
+    invbandmap = [];
   end
 
   % TODO: input checking
@@ -35,6 +38,6 @@ function [Dc] = firstderiv_cen2_nd_matrices(xs, band1, band2)
     PTS = zeros(3, dim);
     PTS(1, n) = -1;
     PTS(3, n) = 1;
-    Dc{n} = helper_diff_matrixnd(NN, band1, band2, weights, PTS);
+    Dc{n} = helper_diff_matrixnd(NN, band1, band2, weights, PTS, invbandmap);
   end
 

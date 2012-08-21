@@ -1,4 +1,4 @@
-function [D2c] = secondderiv_cen2_nd_matrices(xs, band1, band2, order)
+function [D2c] = secondderiv_cen2_nd_matrices(xs, band1, band2, order, invbandmap)
 %SECONDDERIV_CEN2_ND_MATRICES  Build discrete first derivatives
 % Matrices for 2nd-derivatives which are (by default) 2nd-order
 % centered differences in n dimensions.
@@ -23,11 +23,14 @@ function [D2c] = secondderiv_cen2_nd_matrices(xs, band1, band2, order)
   if (nargin < 4)
     order = 2;
   end
+  if (nargin < 5)
+    invbandmap = [];
+  end
 
   % TODO: input checking
 
   dim = length(xs);
-  Ns = zeros(1, dim);
+  NN = zeros(1, dim);
   ddx = zeros(1, dim);
   for n=1:dim
     NN(n) = length(xs{n});
@@ -42,17 +45,17 @@ function [D2c] = secondderiv_cen2_nd_matrices(xs, band1, band2, order)
       PTS = zeros(3, dim);
       PTS(1, n) = -1;
       PTS(3, n) = 1;
-      D2c{n} = helper_diff_matrixnd(NN, band1, band2, weights, PTS);
+      D2c{n} = helper_diff_matrixnd(NN, band1, band2, weights, PTS, invbandmap);
     end
   elseif (order == 4)
     for n=1:dim
-      weights = [-1  16  -30  16  -1] / (12*ddx(n)^2);
+      weights = [-1/12  4/3  -2.5  4/3  -1/12] / ddx(n)^2;
       PTS = zeros(5, dim);
       PTS(1, n) = -2;
       PTS(2, n) = -1;
       PTS(4, n) = 1;
       PTS(5, n) = 2;
-      D2c{n} = helper_diff_matrixnd(NN, band1, band2, weights, PTS);
+      D2c{n} = helper_diff_matrixnd(NN, band1, band2, weights, PTS, invbandmap);
     end
   else
     error('only order 2 or 4 are supported');

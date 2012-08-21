@@ -1,4 +1,4 @@
-function L = laplacian_nd_matrix(xs, order, band1, band2)
+function L = laplacian_nd_matrix(xs, order, band1, band2, invbandmap)
 %LAPLACIAN_ND_MATRIX  Build discrete Laplacian in n-D
 % Supports 2nd- and 4th-order accurate
 %
@@ -14,15 +14,38 @@ function L = laplacian_nd_matrix(xs, order, band1, band2)
   if (nargin < 2)
     order = 2;
   end
+  if (nargin < 5)
+    % slight speedup to calculate this once and pass it around
+    invbandmap = make_invbandmap(xs, band2);
+  end
 
   dim = length(xs);
-
-  % just call the second deriv's
-  D2c = secondderiv_cen2_nd_matrices(xs, band1, band2, order);
-
-  % and add them up
-  L = D2c{1};
-  for n=2:dim
-    L = L + D2c{n};
+  NN = zeros(1, dim);
+  ddx = zeros(1, dim);
+  for n=1:dim
+    NN(n) = length(xs{n});
+    ddx(n) = xs{n}(2)-xs{n}(1);
   end
+
+
+  D2c = secondderiv_cen2_nd_matrices(xs, band1, band2, order, invbandmap);
+
+  dxAllEqual = all(ddx(2:end) == ddx(1));
+
+  % Add up all the second derivatives
+  if dxAllEqual
+    % TODO: ugly hack to reduce roundoff.  Better: modify the helper
+    % routine to use dx=1, then add, then divide by dx^2.
+    L = (ddx(1)^2)*D2c{1};
+    for n=2:dim
+      L = L + (ddx(n)^2)*D2c{n};
+    end
+    L = L / ddx(1)^2;
+  else
+    L = D2c{1};
+    for n=2:dim
+      L = L + D2c{n};
+    end
+  end
+
 

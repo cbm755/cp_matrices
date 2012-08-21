@@ -1,5 +1,5 @@
 function [Db, Df] = ...
-  firstderiv_upw1_nd_matrices(xs, band1, band2, use_ndgrid)
+  firstderiv_upw1_nd_matrices(xs, band1, band2, invbandmap)
 %FIRSTDERIV_UPW1_ND_MATRICES  Build discrete first derivatives
 % Matrices for 1st-derivatives which are 1st-order upwinded
 % differences in n dimensions.
@@ -15,6 +15,10 @@ function [Db, Df] = ...
   if (nargin < 3)
     band2 = band1;
   end
+  if (nargin < 4)
+    invbandmap = [];
+  end
+
 
   % TODO: input checking
 
@@ -33,11 +37,11 @@ function [Db, Df] = ...
     weights = [-1  1] / ddx(n);
     PTS = zeros(2, dim);
     PTS(1, n) = -1;
-    Db{n} = helper_diff_matrixnd(NN, band1, band2, weights, PTS);
+    Db{n} = helper_diff_matrixnd(NN, band1, band2, weights, PTS, invbandmap);
 
     weights = [-1  1] / ddx(n);
     PTS = zeros(2, dim);
     PTS(2, n) = 1;
-    Df{n} = helper_diff_matrixnd(NN, band1, band2, weights, PTS);
+    Df{n} = helper_diff_matrixnd(NN, band1, band2, weights, PTS, invbandmap);
   end
 

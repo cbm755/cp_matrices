@@ -14,8 +14,8 @@ function cpGrid = refine_gridnd(cpGrid0, bw)
   dist0 = cpGrid0.dist;
   band0 = cpGrid0.band;
   cpf = cpGrid0.cpfun;
-
-  dim = length(X1d0);
+  dim = cpGrid0.dim;
+  assert(dim == length(X1d0));
 
   relpt = zeros(1, dim);
   for d = 1:dim
@@ -128,6 +128,7 @@ function cpGrid = refine_gridnd(cpGrid0, bw)
   %  bdyg = [];
   %end
 
+  cpGrid.dim = dim;
   cpGrid.x1d = X1d;
   cpGrid.band = band;
   cpGrid.x = xg;

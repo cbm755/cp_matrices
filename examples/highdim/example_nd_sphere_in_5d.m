@@ -45,6 +45,7 @@ dist = dist(band);
 
 % TODO: just put in a cpgrid and call a banding routine?
 
+cpgrid1.dim = 5;
 cpgrid1.x1d = X1d;
 cpgrid1.band = band;
 cpgrid1.x = xg;
