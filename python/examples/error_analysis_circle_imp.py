@@ -69,10 +69,12 @@ if __name__ == '__main__':
         band = Band(surface,comm,opt)
         la,lv,gv,wv = band.createGLVectors()
         v = band.getCoordinates() 
-        vv = sp.array([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]])
-        weights = sp.array([-6,1,1,1,1,1,1])*(1/band.dx**2)
+        vv = sp.array([[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]])
+        weights = sp.array([1,1,1,1,1,1])*(1/band.dx**2)
         L = band.createAnyMat(vv, weights, (7,3))
         PETSc.Sys.Print('Laplacian')
+        
+
     
         
         M = band.createExtensionMat()
@@ -81,35 +83,75 @@ if __name__ == '__main__':
         band.initialu(initialu)
         PETSc.Sys.Print('Initial')
         
-        PETSc.Sys.Print('Begin to solve')
+        
         
         
         ts = PETSc.TS().create(comm=comm)
         ts.setProblemType(ts.ProblemType.LINEAR)
-        ts.setType(ts.Type.BEULER)
+        ts.setType(ts.Type.EULER)
+        
+
+#        ML = PETSc.Mat().createAIJ((gv.sizes,gv.sizes),comm = comm)
+#        ML = PETSc.Mat().create(comm=comm)        
+#        ML.setSizes((gv.sizes,gv.sizes))
+#        ML.setFromOptions()
+#        ML.setPreallocationNNZ([(band.interpDegree+2)**band.Dim,(band.interpDegree+2)**band.Dim])
+#        ML.setUp()
+        PETSc.Sys.Print('ML creating')
+#        opt = ML.Option.NEW_NONZERO_ALLOCATION_ERR    
+#        ML.setOption(opt, True)
+#        opt = ML.Option.NEW_NONZERO_LOCATION_ERR
+#        ML.setOption(opt, True)
+#        ML = M.matMultSymbolic(L)
+#
+#        
+#        M.matMultNumeric(L,result = ML)
+
+        LM = L.matMult(M)
+#        opt = ML.Option.NEW_NONZERO_ALLOCATION_ERR    
+#        ML.setOption(opt, True)
+#        opt = ML.Option.NEW_NONZERO_LOCATION_ERR
+#        ML.setOption(opt, True)
+#        ML.setFromOptions()
+
+        I = PETSc.Mat().create(comm=comm)
+        I.setSizes((gv.sizes,gv.sizes))
+        I.setFromOptions()
+        I.setPreallocationNNZ(1)
+        wv.set(1)
+        I.setDiagonal(wv)
+        I.assemble()
         
 
         
         
-        ML = M.matMultSymbolic(L)
-        M.matMult(L,result = ML)
-        
-        print 'ML created'
-        
-        
 #        ML.view()
+        
+        LM.axpy(-6,I)
+        
+        PETSc.Sys.Print('ML created')
         
         
           
         ts.setTime(0.0)
-        ts.setTimeStep(0.1*band.dx)
+        ts.setTimeStep(0.1 * band.dx ** 2)
         ts.setMaxTime(1)
-        ts.setMaxSteps(1000)
+        ts.setMaxSteps(30)
+        gv.set(1)
+        
+        LM.mult(gv,wv)
+        wv.axpy(-6,gv)
+        M.mult(wv,gv)
+        
+        PETSc.Sys.Print('wv inf-norm is {0}'.format(wv.norm(PETSc.NormType.INFINITY)))
+        PETSc.Sys.Print('gv inf-norm is {0}'.format(gv.norm(PETSc.NormType.INFINITY)))  
+        gv.set(1)
         ts.setSolution(gv)
         ts.setFromOptions()
         ts.setRHSFunction(PETSc.TS.computeRHSFunctionLinear,wv)
-        ts.setRHSJacobian(PETSc.TS.computeRHSJacobianConstant,ML,ML) 
+        ts.setRHSJacobian(PETSc.TS.computeRHSJacobianConstant,LM,LM) 
 #        ts.step()
+        PETSc.Sys.Print('Begin to solve')
         t = ts.solve(gv)
              
 
@@ -123,14 +165,18 @@ if __name__ == '__main__':
             ee = norm(cv-exu, sp.inf)
             error.append(ee)
             dx.append( band.dx )
+            
+        M.mult(gv,wv)
         
     
         
-        PETSc.Sys.Print('==================================')   
+        PETSc.Sys.Print('==================================')  
+        PETSc.Sys.Print('wv inf-norm is {0}'.format(wv.norm(PETSc.NormType.INFINITY))) 
         if comm.rank == 0: 
             print('maximal is {0}'.format(ee))
+            
         PETSc.Sys.Print('==================================')   
-        del band,v,mv,cv,M,L,ML,ts 
+        del band,v,mv,cv,M,L,LM,ts 
     if comm.rank == 0:
         import pickle
         ferror = open('error.pickle','w')
