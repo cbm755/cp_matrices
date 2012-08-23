@@ -269,34 +269,6 @@ class Band(object):
 
 
 
-#        self.gsubBlockWBand.setArray(self.asubBlockWBan[self.Dim*BlockWBandStart:self.Dim*BlockWBandEnd])
-
-
-#        gindBlockWBandFrom = PETSc.Vec().createMPI((lBlockize,PETSc.DECIDE))
-#        gindBlockWBandFrom.setArray(lindBlockWithinBand)
-#        self.gindBlockWBand = PETSc.Vec().createMPI((self.numBlockWBandAssigned,PETSc.DECIDE))
-
-#        PETSc.Sys.syncPrint('Process {0} got {1} Block'.format(comm.rank,lBlockize))
-#        PETSc.Sys.syncFlush()
-#        PETSc.Sys.Print('Total Block {0}'.format(self.numTotalBlockWBand))
-
-
-#    def createIndicesHelper(self):
-#        toall,vsubBlockWBand = PETSc.Scatter().toAll(self.gsubBlockWBand)
-#        toall.scatter(self.gsubBlockWBand,vsubBlockWBand)
-#        asubBlockWBand = vsubBlockWBand.getArray().reshape(-1,self.Dim).astype(np.int64)
-#        numTotalBlockWBand = self.numTotalBlockWBand
-#        self.sub2indWBand = {tuple(asubBlockWBand[i]):i for i in xrange(numTotalBlockWBand)}
-#        self.ind2subWBand = {i:asubBlockWBand[i] for i in xrange(numTotalBlockWBand)}
-#        x = np.arange(3**self.Dim)
-#        x = np.vstack(np.unravel_index(x,(3,)*self.Dim,order='F')).T
-#        x -= np.ones(self.Dim,dtype=np.int64)
-#        lBlockSize = self.numBlockWBandAssigned
-#        for i in xrange(lBlockSize):
-#            sub = self.ind2subWBand[i]
-#            for offset in x:
-#                tsub = tuple(sub + offset)
-
 
     def toZero(self,gvec = None):
         if gvec is None:
@@ -313,7 +285,7 @@ class Band(object):
 
     def createAnyMat(self,rp,weights,NNZ = None):
         if NNZ is None:
-            NNZ = (rp.shape[0],rp.shape[0]-1)
+            NNZ = (rp.shape[0],rp.shape[0])
         shape0 = rp.shape[0]
         tt = self.m**self.Dim
         start = self.BlockWBandStart
@@ -350,6 +322,50 @@ class Band(object):
                 m[index[i],pind[shape0*i:shape0*(i+1)]] = weights
         m.assemble()
         return m
+    
+    def createAnyMatGL(self, rp, weights, NNZ=None):
+        if NNZ is None:
+            NNZ = (rp.shape[0],0)
+        shape0 = rp.shape[0]
+        tt = self.m**self.Dim
+        ltt = (self.m + 2 * self.StencilWidth) ** self.Dim
+        start = self.BlockWBandStart
+        size = (self.m, ) * self.Dim
+        lsize = (self.m + 2 * self.StencilWidth, ) * self.Dim
+        rpt = np.tile(rp,(tt,1))
+
+        m = PETSc.Mat().create(comm = self.comm)
+        m.setSizes((self.gvec.sizes,self.lvec.sizes))
+        m.setFromOptions()
+        m.setPreallocationNNZ(NNZ)
+        
+        ind = np.arange(tt)
+        tsubInBlock = self.Ind2Sub(ind, size)
+        tsubInBlock = np.repeat(tsubInBlock,shape0,axis=0)
+        tsubInBlock += rpt
+        subInBlock = tsubInBlock + self.StencilWidth
+        ones = np.ones(tt*shape0,dtype=np.int64)
+        indInBlock = self.Sub2Ind(subInBlock, lsize)
+        
+        for block in xrange(self.numBlockWBandAssigned):
+            tx = (block + start) * tt
+            index = ind + tx
+            #petsc ->  natural -> sub -> +offset -> natural -> petsc
+#            nind = self.ni2pi.petsc2app(block + start)
+#            nind = ones*nind
+#            nsub = self.BlockInd2SubWithoutBand(nind)
+#            nind = self.BlockSub2IndWithoutBand(nsub)
+            pind = ones * (block + start)
+
+            pind *= ltt
+            pind += indInBlock
+#            pind = pind.reshape((-1,shape0))
+            for i in xrange(tt):
+                m[index[i],pind[shape0*i:shape0*(i+1)]] = weights
+        m.assemble()
+        return m
+    
+    
 
 
 

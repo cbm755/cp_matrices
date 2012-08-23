@@ -52,40 +52,21 @@ if __name__ == '__main__':
     opt = {'M':80,'m':5,'d':3}
     surface = MeshWrapper('eight.ply')
     pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
-    pl.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,scalars=surface.v[:,0],opacity = 1)
+    pl.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,scalars=surface.v[:,0],opacity = 0.5)
     comm = MPI.COMM_WORLD
     band = Band(surface,comm,opt)
     la,lv,gv,wv = band.createGLVectors()
     v = band.getCoordinates()
     centers = band.BlockInd2CenterCarWithoutBand(band.gindBlockWBand.getArray())
     pl.points3d(centers[:,0],centers[:,1],centers[:,2],mode='point')
-    dt = 0.3*band.dx**2
+    dt = 0.1*band.dx**2
     vv = sp.array([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]])
     weights = sp.array([-6,1,1,1,1,1,1])*(dt/band.dx**2)
     L = band.createAnyMat(vv, weights, (7,3))
     PETSc.Sys.Print('Laplacian')
 
-
-    
     M = band.createExtensionMatForLoop()
 
-    
-
-
-#    LM = M.copy()
-#    M.matMult(L,LM)
-#    ts = PETSc.TS().create(comm=comm)
-#    ts.setProblemType(ts.ProblemType.LINEAR)
-#    ts.setType(ts.Type.EULER)  
-#    ts.setTime(0.0)
-#    ts.setTimeStep(band.dx**2)
-#    ts.setMaxTime(1)
-#    ts.setMaxSteps(1000)
-#    ts.setSolution(gv)
-#    ts.setFromOptions()
-#    ts.setRHSFunction(None,wv)
-#    ts.setRHSJacobian(None,LM,LM)
-#    ts.solve(gv)
     band.initialu(initialu)
     PETSc.Sys.Print('Initial')
     plot3d_total(v,gv)

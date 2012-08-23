@@ -20,7 +20,7 @@ petsc4py.init(sys.argv)
 
 def test_initialu(cp):
     return sp.ones(cp.shape[0])#cp[:,0]
-def initialu(cp):
+def cpz(cp):
     return cp[:,2]
 
 def triplot(x,y,z,r=0.0002,title = 'band'):
@@ -39,6 +39,10 @@ def triplot(x,y,z,r=0.0002,title = 'band'):
     V = sp.arange(-10,10,dtype=sp.double)/10*z.max()
     pl.tricontour(triang, z,V)#, colors='k')
     pl.title(title)
+    
+def monitor(ts, i, t, x):
+    PETSc.Sys.Print(
+        'At {0} max-norm is {1}'.format(t, x.norm(PETSc.NormType.INFINITY)))
 
 if __name__ == '__main__':
     MBlocklist = [20,40,80,160]
@@ -73,46 +77,19 @@ if __name__ == '__main__':
         weights = sp.array([1,1,1,1,1,1])*(1/band.dx**2)
         L = band.createAnyMat(vv, weights, (7,3))
         PETSc.Sys.Print('Laplacian')
-        
 
-    
-        
         M = band.createExtensionMat()
         PETSc.Sys.Print('ExtensionMat built')
-    
-        band.initialu(initialu)
-        PETSc.Sys.Print('Initial')
-        
-        
-        
-        
+
         ts = PETSc.TS().create(comm=comm)
         ts.setProblemType(ts.ProblemType.LINEAR)
-        ts.setType(ts.Type.EULER)
+        ts.setType(ts.Type.BEULER)
         
 
-#        ML = PETSc.Mat().createAIJ((gv.sizes,gv.sizes),comm = comm)
-#        ML = PETSc.Mat().create(comm=comm)        
-#        ML.setSizes((gv.sizes,gv.sizes))
-#        ML.setFromOptions()
-#        ML.setPreallocationNNZ([(band.interpDegree+2)**band.Dim,(band.interpDegree+2)**band.Dim])
-#        ML.setUp()
-        PETSc.Sys.Print('ML creating')
-#        opt = ML.Option.NEW_NONZERO_ALLOCATION_ERR    
-#        ML.setOption(opt, True)
-#        opt = ML.Option.NEW_NONZERO_LOCATION_ERR
-#        ML.setOption(opt, True)
-#        ML = M.matMultSymbolic(L)
-#
-#        
-#        M.matMultNumeric(L,result = ML)
 
-        LM = L.matMult(M)
-#        opt = ML.Option.NEW_NONZERO_ALLOCATION_ERR    
-#        ML.setOption(opt, True)
-#        opt = ML.Option.NEW_NONZERO_LOCATION_ERR
-#        ML.setOption(opt, True)
-#        ML.setFromOptions()
+        PETSc.Sys.Print('ML creating')
+
+        LM = M.matMult(L)
 
         I = PETSc.Mat().create(comm=comm)
         I.setSizes((gv.sizes,gv.sizes))
@@ -121,35 +98,30 @@ if __name__ == '__main__':
         wv.set(1)
         I.setDiagonal(wv)
         I.assemble()
-        
 
         
-        
-#        ML.view()
-        
-        LM.axpy(-6,I)
+        LM.axpy(-6 / band.dx ** 2, I)
+        LM.mult(wv,gv)
         
         PETSc.Sys.Print('ML created')
-        
-        
-          
+
         ts.setTime(0.0)
-        ts.setTimeStep(0.1 * band.dx ** 2)
-        ts.setMaxTime(1)
-        ts.setMaxSteps(30)
+        ts.setTimeStep(0.01 * band.dx)
+        ts.setDuration(1)
         gv.set(1)
         
         LM.mult(gv,wv)
-        wv.axpy(-6,gv)
-        M.mult(wv,gv)
+
         
         PETSc.Sys.Print('wv inf-norm is {0}'.format(wv.norm(PETSc.NormType.INFINITY)))
-        PETSc.Sys.Print('gv inf-norm is {0}'.format(gv.norm(PETSc.NormType.INFINITY)))  
-        gv.set(1)
+        
+        
+        band.initialu(cpz)
         ts.setSolution(gv)
         ts.setFromOptions()
         ts.setRHSFunction(PETSc.TS.computeRHSFunctionLinear,wv)
-        ts.setRHSJacobian(PETSc.TS.computeRHSJacobianConstant,LM,LM) 
+        ts.setRHSJacobian(PETSc.TS.computeRHSJacobianConstant,LM,LM)
+        ts.setMonitor(monitor)
 #        ts.step()
         PETSc.Sys.Print('Begin to solve')
         t = ts.solve(gv)

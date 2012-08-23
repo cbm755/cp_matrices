@@ -20,7 +20,7 @@ def test_initialu(cp):
 def initialu(cp):
     return cp[:,0]
 
-def triplot(x,y,z,r=0.0002,title = 'band'):
+def triplot(x,y,z,r=0.001,title = 'band'):
 #    z = c-c.min()
 #    z /= z.max()
     triang = tri.Triangulation(x,y)
@@ -37,14 +37,14 @@ def triplot(x,y,z,r=0.0002,title = 'band'):
     pl.title(title)
 
 if __name__ == '__main__':
-    opt = {'M':30,'m':15,'d':2}
+    opt = {'M':40,'m':4,'d':2}
     surface = Sphere(center=sp.array([0.0, 0.0]))
 #    mlab.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,opacity = 0.2)
     comm = MPI.COMM_WORLD
     band = Band(surface,comm,opt)
     la,lv,gv,wv = band.createGLVectors()
     v = band.getCoordinates() 
-    dt = 0.3*band.dx**2
+    dt = 0.1*band.dx**2
     vv = sp.array([[0,0],[1,0],[-1,0],[0,1],[0,-1]])
     weights = sp.array([-4,1,1,1,1])*(dt/band.dx**2)
     L = band.createAnyMat(vv, weights, (5,2))
