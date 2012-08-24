@@ -9,6 +9,7 @@ ctypedef np.double_t DTYPEdouble_t
 DTYPEint = np.int
 ctypedef np.int_t DTYPEint_t
 
+@cython.cdivision(True)
 cdef ProjectOnSegment(double * c1, double * c2, double * c3, double p1, double p2, double p3, double q1, double q2, double q3):
     """copied from steve's C code"""
     #double *c1, *c2, *c3  <-- return values
@@ -35,6 +36,7 @@ cdef ProjectOnSegment(double * c1, double * c2, double * c3, double p1, double p
     c2[0] = p2+lamb_star*qmp2
     c3[0] = p3+lamb_star*qmp3
 
+@cython.cdivision(True)
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef FindClosestPointToOneTri(double a1, double a2, double a3, np.ndarray[int, ndim=1] aface, np.ndarray[double, ndim=2] vertex):
