@@ -11,6 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   build_petsc_etc
 
 
 Indices and tables
