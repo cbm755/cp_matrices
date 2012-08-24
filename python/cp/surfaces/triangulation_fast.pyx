@@ -33,7 +33,7 @@ cdef inline void ProjectOnSegment(double * c1, double * c2, double * c3, double 
 @cython.cdivision(True)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef FindClosestPointToOneTri(double a1, double a2, double a3, int[::1] aface, double[:,::1] vertex):
+cdef void FindClosestPointToOneTri(double a1, double a2, double a3, int[::1] aface, double[:,::1] vertex, double * dd_, double * t1, double * t2, double * t3):
     """ copied from steve's C code """
     #double a1, a2, a3
     #double *c1, *c2, *c3   <-- mutable, pointers in C code, we will return them instead
@@ -140,7 +140,10 @@ cdef FindClosestPointToOneTri(double a1, double a2, double a3, int[::1] aface, d
     c1 += vertex[index_p, 0]
     c2 += vertex[index_p, 1]
     c3 += vertex[index_p, 2]
-    return (dd,c1,c2,c3)
+    dd_[0] = dd
+    t1[0] = c1
+    t2[0] = c2
+    t3[0] = c3
 
 def FindClosestPointToTriSet(double a1, double a2, double a3, int[:, ::1] Faces, double[:, ::1] Vertices):
     cdef double dd_min = np.inf
@@ -149,7 +152,7 @@ def FindClosestPointToTriSet(double a1, double a2, double a3, int[:, ::1] Faces,
     cdef int[::1] F
     for i in range(n):
         F = Faces[i, :]
-        dd, t1, t2, t3 = FindClosestPointToOneTri(a1, a2, a3, F, Vertices)
+        FindClosestPointToOneTri(a1, a2, a3, F, Vertices, &dd, &t1, &t2, &t3)
         if dd < dd_min:
             dd_min = dd
             c1 = t1
