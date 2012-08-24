@@ -153,18 +153,17 @@ cdef FindClosestPointToOneTri(double a1, double a2, double a3, int[::1] aface, d
     return (dd,c1,c2,c3)
 
 
-
-def FindClosestPointToTriSet(a1, a2, a3, Faces, Vertices):
+def FindClosestPointToTriSet(double a1, double a2, double a3, int[:, ::1] Faces, double[:, ::1] Vertices):
     cdef double dd_min = np.inf
     cdef double dd, c1, c2, c3, t1, t2, t3
+    cdef Py_ssize_t i, n = len(Faces)
     cdef int[::1] F
-    for F in Faces:
-        (dd,t1,t2,t3) = FindClosestPointToOneTri(a1,a2,a3, F, Vertices)
-        if dd<dd_min:
-            #minF = F
+    for i in range(n):
+        F = Faces[i, :]
+        dd, t1, t2, t3 = FindClosestPointToOneTri(a1, a2, a3, F, Vertices)
+        if dd < dd_min:
             dd_min = dd
             c1 = t1
             c2 = t2
             c3 = t3
-    #print "minF = " + str(minF)
-    return (dd_min,c1,c2,c3)
+    return dd_min, c1, c2, c3
