@@ -10,7 +10,7 @@ DTYPEint = np.int
 ctypedef np.int_t DTYPEint_t
 
 @cython.cdivision(True)
-cdef ProjectOnSegment(double * c1, double * c2, double * c3, double p1, double p2, double p3, double q1, double q2, double q3):
+cdef inline ProjectOnSegment(double * c1, double * c2, double * c3, double p1, double p2, double p3, double q1, double q2, double q3):
     """copied from steve's C code"""
     #double *c1, *c2, *c3  <-- return values
     #double p1, p2, p3
