@@ -94,22 +94,18 @@ cdef FindClosestPointToOneTri(double a1, double a2, double a3, int[::1] aface, d
     if ((lamb<0) and (mu<0) and (lamb+mu<=1)):
         c1 = c2 = c3 = 0.0
     elif ((lamb>=0) and (mu<0) and (lamb+mu<=1)):
-        # some acceleration possible using cython
-        #(c1,c2,c3) = tri.C_ProjectOnSegment(c1,c2,c3,0.,0.,0.,q1,q2,q3)
         ProjectOnSegment(&c1,&c2,&c3,0.,0.,0.,q1,q2,q3)
     elif ((lamb>=0) and (mu<0) and (lamb+mu>1)):
         c1 = q1
         c2 = q2
         c3 = q3
     elif ((lamb>=0) and (mu>=0) and (lamb+mu>1)):
-        #(c1,c2,c3) = tri.C_ProjectOnSegment(c1,c2,c3,q1,q2,q3,r1,r2,r3)
         ProjectOnSegment(&c1,&c2,&c3,q1,q2,q3,r1,r2,r3)
     elif ((lamb<0) and (mu>=0) and (lamb+mu>1)):
         c1 = r1
         c2 = r2
         c3 = r3
     elif ((lamb<0) and (mu>=0) and (lamb+mu<=1)):
-        #(c1,c2,c3) = tri.C_ProjectOnSegment(c1,c2,c3,r1,r2,r3,0.,0.,0.)
         ProjectOnSegment(&c1,&c2,&c3,r1,r2,r3,0.,0.,0.)
     elif ((lamb>=0) and (mu>=0) and (lamb+mu<=1)):
         # /* do nothing */
@@ -151,7 +147,6 @@ cdef FindClosestPointToOneTri(double a1, double a2, double a3, int[::1] aface, d
     c2 += vertex[index_p, 1]
     c3 += vertex[index_p, 2]
     return (dd,c1,c2,c3)
-
 
 def FindClosestPointToTriSet(double a1, double a2, double a3, int[:, ::1] Faces, double[:, ::1] Vertices):
     cdef double dd_min = np.inf
