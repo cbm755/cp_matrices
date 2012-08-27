@@ -580,54 +580,37 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
 
     st = time()
     print "building Eplot"
-    #Lextend = g.Lextend[level]
-    #Levolve = g.Levolve[level]
-    #G = g.Grids[level]
 
     dx = Levolve[0].dx
-    #relpt = g.basicPt
     N = Points.shape[0]
     progout = 10 ** (ceil(log10(N))-1)
-
-    #EPlot = lil_matrix( (N,len(Lextend)), dtype=type(dx) )
 
     xbaseptIndex = findGridInterpBasePt(Points, dx, relpt, EXTSTENP)
     Xgrid = np.array([G[tuple(xbaseptIndex_i)].gridpt for xbaseptIndex_i in xbaseptIndex])
     interpWeights = buildInterpWeights(Xgrid, Points, dx, EXTSTENWIDTH)
     
-    # make empty lists for i,j and a_{ij}
-    ii, jj, aij = np.arange(N)[:, np.newaxis] * np.ones(len(interpStencil)), [], np.empty((N, len(interpStencil)))
+    ii = np.arange(N)[:, np.newaxis] * np.ones(len(interpStencil))
+    jj = []
+    aij = np.empty((N, len(interpStencil)))
     gii_all_all = xbaseptIndex[:, np.newaxis, :] + interpStencil[np.newaxis, ...]
     for i in xrange(N):
         if i % progout == 0:
             print "  Eplot row " + str(i)
         # find floor of x,y,z in uband and the CP, these are the only
         # two things we need to construct this row of E
-        #x = Points[i]
-        # TODO: could cache the baseptI
-        #Bpt = VertexBpt[i]
-        #if uband.isBpt[Bpt] != 1:
-        #    raise NameError("should be a Bpt!!")
     
         # For a single point, the second option (using G[tuple...]) is
         # ~4x faster, but it can't be vectorized and thus, for
         # thousands of points it gets 50x slower than the first
         # line. Of course, this won't work for weird grids (eg, non
         # uniform). Are they possible?  Any way, I can find Xgrid for
-        # over a million points in 1s in my laptop, so in the mean
-        # time we can vectorize findGridInterpBasePt and
-        # buildInterpWeights and keep this in a pure Python loop.
+        # over a million points in 1s in my laptop
         #Xgrid = xbaseptIndex * dx + relpt
         #Xgrid = G[tuple(xbaseptIndex[i])].gridpt
 
-        # interpWeights
-        #aij[i] = buildInterpWeights(Xgrid, x, dx, EXTSTENWIDTH)
-        
-        #gii_all = xbaseptIndex[i] + interpStencil
         gii_all = gii_all_all[i]
         for s, gii in enumerate(gii_all):
             nn = G[tuple(gii)]
-            #mm = Levolve.index(nn)
             # Previous works but is quadratic, see above in the
             # diff code.  Levolve and Lextend have the same
             # indices so we use index in extend here
@@ -640,11 +623,6 @@ def buildEPlotMatrix(G, Levolve, Lextend, Points, interp_degree, PointsBpt = Non
             # TODO: may not even be in extend!?  can this even happen?
             if mm >= len(Lextend):
                 raise NameError("Outside Lextend, report")
-            
-            #EPlot[i,mm] = interpWeights[s]
-            # ii.extend([i]*stencilsize)
-            # jj.extend(n.diffpts)
-            # aij.extend(diffWeights)
             
             jj.append(mm)
 
