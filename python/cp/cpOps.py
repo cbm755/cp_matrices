@@ -317,11 +317,11 @@ stencil hypercube.  It is a 2D/3D/etc index, measured relative to
     whole grid)
     """
     if p % 2 == 0:  # even
-        I = np.round( (x-relpt) / dx ).astype(int) + 1
-        B = I - p/2 - 1
+        I = np.round((x-relpt) / dx).astype(int)
+        B = I - p/2
     else:  # odd
-        I = np.floor( (x-relpt) / dx ).astype(int) + 1
-        B = I - (p - 1)/2 - 1
+        I = np.floor((x-relpt) / dx).astype(int)
+        B = I - (p - 1)/2
     return B
 
 

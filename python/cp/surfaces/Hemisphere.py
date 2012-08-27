@@ -8,7 +8,6 @@ TODO: WIP
 """
 import numpy as np
 
-
 from Surface import ShapeWithBdy
 from coordinate_transform import cart2pol, pol2cart, sph2cart
 
