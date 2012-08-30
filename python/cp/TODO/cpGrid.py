@@ -258,14 +258,14 @@ class CPGrid:
         #EXTSTENP = 3
         #EXTSTENWIDTH = EXTSTENP + 1
         if dim == 2:
-            for j in range(0, PAR_EXTSTENWIDTH):
-                for i in range (0, PAR_EXTSTENWIDTH):
+            for i in range(PAR_EXTSTENWIDTH):
+                for j in range (PAR_EXTSTENWIDTH):
                     self.InterpStencil.append(np.array([i,j]))
         elif dim == 3:
-            for k in range(0, PAR_EXTSTENWIDTH):
-                for j in range(0, PAR_EXTSTENWIDTH):
-                    for i in range(0, PAR_EXTSTENWIDTH):
-                        self.InterpStencil.append(np.array([i,j,k]) )
+            for i in range(PAR_EXTSTENWIDTH):
+                for j in range(PAR_EXTSTENWIDTH):
+                    for k in range(PAR_EXTSTENWIDTH):
+                        self.InterpStencil.append(np.array([i,j,k]))
         else:
             raise NameError('dim ' + str(dim) + ' not implemented')
 
