@@ -499,13 +499,13 @@ def buildInterpWeights(Xgrid, X, dx, EXTSTENWIDTH):
 
     #print extWeights.dtype, xweights.dtype, yweights.dtype
     if dim == 2:
-        # loop in the same order as elsewhere and compute weights as
-        # products of above
-        extWeights = (yweights[..., np.newaxis] * xweights[:, np.newaxis, :]).reshape(yweights.shape[0], -1)
+        # loop thinking in C memory layout, ie the latest dimension
+        # varies the fastest
+        extWeights = (xweights[..., np.newaxis] * yweights[:, np.newaxis, :]).reshape(yweights.shape[0], -1)
     elif dim == 3:
-        extWeights = (zweights[..., np.newaxis, np.newaxis] *  # z varies the slowest, so put it in the first dimension
+        extWeights = (xweights[..., np.newaxis, np.newaxis] *  # x varies the slowest, so put it in the first dimension
                       yweights[:, np.newaxis, :, np.newaxis] *
-                      xweights[:, np.newaxis, np.newaxis, :]).reshape(yweights.shape[0], -1)  # x varies the fastest, put it in the last dimension
+                      zweights[:, np.newaxis, np.newaxis, :]).reshape(yweights.shape[0], -1)  # z varies the fastest, put it in the last dimension
     else:
         raise NotImplementedError('Dimension not implemented yet.')
 
