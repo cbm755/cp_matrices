@@ -152,7 +152,7 @@ def bandwidth(dx, dim, p=3, diff_stencil_arm=1):
     return lambda_
 
 def build_vertices2faces(faces):
-    """Dict that maps each vertex to the indexes of all its faces."""
+    """Dict that maps each vertex to the indices of all its faces."""
     vertices2faces = defaultdict(list)
     for i, face in enumerate(faces):
         for vertex in face:
@@ -160,14 +160,40 @@ def build_vertices2faces(faces):
     return vertices2faces
 
 def refine(index_cp, grid_fine, vertex2faces, vertices, faces):
+    """Actual closest points to a triangulated surface.
+
+    Given the closest vertex to any point, finds the actual closest
+    point in the triangulated surface.
+
+    For each given point, whose closest point we want to find, the
+    algorithm finds the closest point to all the faces adjacent to the
+    closest vertex, and then selects the minimum.
+
+    Input
+    -----
+    index_cp : array
+               Contains the indices of the closest vertices
+    grid_fine : array
+                Points whose closest points we want to find
+    vertex2faces : dict
+                   Given by build_vertices2faces
+    vertices, faces : arrays, given by load_ply
+
+    Output
+    ------
+    cp : array of shape (npoints, 4)
+         Coordinates of the closest points, and squareddistance from
+         its original point.
+         cp[:, 0] is the squared distance (redundant information)
+         cp[:, 1:] are the coordinates of the closest points
+    """
     N = len(index_cp)
     cp = np.empty((N, 4), dtype=np.float64)
     for i, (index_of_cp, point) in enumerate(izip(index_cp, grid_fine)):
-        faces_indexes_that_share_that_vertex = vertex2faces[index_of_cp]
-        #possible_faces = faces[faces_indexes_that_share_that_vertex]
-        # Much faster using np.take
+        face_indices_that_share_that_vertex = vertex2faces[index_of_cp]
+        # Much faster using np.take than fancy indexing
         possible_faces = np.take(faces,
-                                 faces_indexes_that_share_that_vertex,
+                                 face_indices_that_share_that_vertex,
                                  axis=0)
         # Cythonize this and it gets way faster
         cp[i] = FindClosestPointToTriSet(point[0], point[1], point[2],
