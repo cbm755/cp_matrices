@@ -46,8 +46,8 @@ function [E,Ej,Es] = interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
     error('yi must be a column vector');
   end
 
-  if (nargin == 4) || (isempty(p))
-    p = 3;
+  if (nargin == 4)
+    p = [];
     makeBanded = false;
     use_ndgrid = false;
   elseif (nargin == 5)
@@ -60,6 +60,10 @@ function [E,Ej,Es] = interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
     if isempty(band) makeBanded = false; else makeBanded = true; end
   else
     error('unexpected inputs');
+  end
+
+  if (isempty(p))
+    p = 3;
   end
 
   if (nargout > 1)

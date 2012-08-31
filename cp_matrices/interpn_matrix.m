@@ -36,15 +36,18 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
     error('expected a cell array of {x1d,y1d,etc}');
   end
 
-  if (nargin == 2) || (isempty(p))
-    p = 3;
-    makeBanded = false;
+  if (nargin == 2)
+    p = [];
   elseif (nargin == 3)
     makeBanded = false;
   elseif (nargin == 4)
     if isempty(band) makeBanded = false; else makeBanded = true; end
   else
     error('unexpected inputs');
+  end
+
+  if (isempty(p))
+    p = 3;
   end
 
   if (nargout > 1)
