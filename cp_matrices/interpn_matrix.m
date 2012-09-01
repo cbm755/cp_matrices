@@ -1,4 +1,4 @@
-function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
+function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
 %INTERPN_MATRIX  Return a n-D interpolation matrix
 %   E = INTERPN_MATRIX(X, XI, P)
 %   E = INTERPN_MATRIX({X Y Z ... W}, [XI YI ZI ... WI], P)
@@ -16,8 +16,7 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
 %   E = INTERPN_MATRIX(X, XI, P, BAND)
 %   BAND is a list of linear indices into a (possibly fictious) n-D
 %   array of points constructed with *ndgrid*.  Here the columns of E
-%   that are not in BAND are discarded.  This is done by first
-%   constructing E as above.  E will be a 'size(XI,1)' by
+%   that are not in BAND are discarded.  E will be a 'size(XI,1)' by
 %   'length(BAND)' sparse matrix.
 %
 %   [Ei,Ej,Es] = INTERPN_MATRIX(...)
@@ -27,27 +26,25 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
 %   constructing the matrix.  If BAND is passed or not determines
 %   the column space of the result (i.e., effects Ej).
 %
-%   Does no error checking up the equispaced nature of x,y,z
+%   E = INTERPN_MATRIX(X, XI, P, BAND, INVBANDMAP)
+%   If you have an inverse band map, you can pass it as the last
+%   argument to avoid reconstructing it
 %
-%   TODO: this should be modified to construct the Ei,Ej,Es and do
-%   banding that way: almost certainly less memory
+%   This code assumes the grid is equispaced but it does not do
+%   error checking on this.
 
   if ~iscell(xs)
     error('expected a cell array of {x1d,y1d,etc}');
   end
 
-  if (nargin == 2)
-    p = [];
-  elseif (nargin == 3)
-    makeBanded = false;
-  elseif (nargin == 4)
-    if isempty(band) makeBanded = false; else makeBanded = true; end
-  else
-    error('unexpected inputs');
+  if (nargin < 5)
+    invbandmap = [];
   end
-
-  if (isempty(p))
-    p = 3;
+  if (nargin < 4)
+    band = [];
+  end
+  if (nargin < 3)
+    p = [];
   end
 
   if (nargout > 1)
@@ -55,6 +52,17 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
   else
     makeListOutput = false;
   end
+
+  if (isempty(p))
+    p = 3;  % default interp degree
+  end
+
+  if isempty(band)
+    makeBanded = false;
+  else
+    makeBanded = true;
+  end
+
 
   T = tic;
   dim = length(xs);
@@ -67,14 +75,16 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
     ptL(d) = xs{d}(1);
   end
   M = prod(Ns);
-
   if (M > 1e15)
     error('too big to use doubles as indicies: implement int64 indexing')
   end
 
-  N = p+1;
-  EXTSTENSZ = N^dim;
+  if makeBanded && isempty(invbandmap)
+    invbandmap = make_invbandmap(Ns, band);
+  end
 
+  Nsten = p+1;
+  EXTSTENSZ = (Nsten)^dim;
 
   if iscell(xi)
     % convert xi to a matrix of column vectors.  TODO: is it better to
@@ -88,66 +98,49 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
 
   Ni = length(xi(:,1));
 
-  %tic
   Ei = repmat((1:Ni)',1,EXTSTENSZ);
   Ej = zeros(size(Ei));
-  weights = zeros(size(Ei));
-  %toc
+  Es = zeros(size(Ei));
 
-  %tic
-  % this used to be a call to buildInterpWeights but now most of
-  % that is done here
   [Ibpt, Xgrid] = findGridInterpBasePt_vec(xi, p, ptL, ddx);
   xw = {};
   for d=1:dim
-    xw{d} = LagrangeWeights1D_vec(Xgrid(:,d), xi(:,d), ddx(d), N);
+    xw{d} = LagrangeWeights1D_vec(Xgrid(:,d), xi(:,d), ddx(d), Nsten);
   end
-  %toc
 
-  NN = N*ones(1,d);
-  %tic
+  NN = Nsten*ones(1,d);
   for s=1:prod(NN);
-    ii = myind2sub(NN, s);  % need *not* match meshgrid/ndgrid usage
+    [ii{1:dim}] = ind2sub(NN, s);
     %weights(:,s) = xw(:,i) .* yw(:,j) .* zw(:,k);
-    temp = xw{1}(:,ii(1));
+    temp = xw{1}(:,ii{1});
     for d=2:dim
-      temp = temp .* xw{d}(:,ii(d));
+      temp = temp .* xw{d}(:,ii{d});
     end
-    weights(:,s) = temp;
+    Es(:,s) = temp;
 
     for d=1:dim
-      gi{d} = (Ibpt(:,d) + ii(d) - 1);
+      gi{d} = (Ibpt(:,d) + ii{d} - 1);
     end
 
-    % all these do the same, but last one is fastest.  Although sub2ind
-    % presumably has safety checks...
-    %ind = (gk-1)*(Nx*Ny) + (gi-1)*Ny + gj;
-    ind = sub2ind(Ns, gi{:});
-    %ind = round((gk-1)*(Nx*Ny) + (gi-1)*(Ny) + gj-1 + 1);
-    Ej(:,s) = ind;
+    Ej(:,s) = sub2ind(Ns, gi{:});
   end
-  %toc
   T1 = toc(T);
   %fprintf('done new Ei,Ej,weights, total time: %g\n', T1);
 
 
-  % TODO: is there any advantage to keeping Ei as matrices?  Then each
-  % column corresponds to the same point in the stencil...
-  if ~makeListOutput
-    %tic
-    E = sparse(Ei(:), Ej(:), weights(:), Ni, M);
-    %T2 = toc;
-    %fprintf('call to "sparse" time: %g\n', toc);
-
-    if (makeBanded)
-      nnzEfull = nnz(E);
-      E = E(:,band);
-
-      if nnz(E) < nnzEfull
-        % sanity check: the columns outside of band should all be
-        % zero.  TODO: should be an error?
-        warning('non-zero coefficients discarded by banding');
+  % TODO: old memory hungry implementation: this is faster but not
+  % practical in high dimension.  Deprecated?  (see helper_diff_nd)
+  if (1==0)
+    if ~makeListOutput
+      E = sparse(Ei(:), Ej(:), Es(:), Ni, M);
+      if (makeBanded)
+        nnzEfull = nnz(E);
+        E = E(:,band);
+        if nnz(E) < nnzEfull
+          warning('non-zero coefficients discarded by banding');
+        end
       end
+      return
     end
   end
 
@@ -155,40 +148,24 @@ function [E,Ej,Es] = interpn_matrix(xs, xi, p, band)
   if (1==0)
     % TODO: do this outside in another function
     disp('banding 2: this way finds innerband');
-    %tic
-    %innerband = unique(Ej(:));
-    %toc
-    tic
     [innerband,I,J] = unique(Ej(:));
-    toc
-    tic
     Es3 = sparse(Ei(:), J, weights(:), length(xi),length(innerband));
-    toc
-    %keyboard
   end
 
-  if (makeListOutput)
-    E = Ei(:);   % first output is called E
-    Ej = Ej(:);
-    Es = weights(:);
+  Ei = Ei(:);
+  Ej = Ej(:);
+  Es = Es(:);
 
-    if (makeBanded)
-      logical2bandmap = sparse(band, 1, 1:length(band), M,1);
-      % the resulting Ej is big sparse
-      Ej = full(logical2bandmap(Ej));
-    end
+  if (makeBanded)
+    Ej = invbandmap(Ej);
+    numcols = length(band);
+  else
+    numcols = M;
   end
-end
 
-
-function A = myind2sub(siz, ndx)
-% ndx is the linear index
-  n = length(siz);
-  k = [1 cumprod(siz(1:end-1))];
-  for i = n:-1:1,
-    vi = rem(ndx-1, k(i)) + 1;
-    vj = (ndx - vi)/k(i) + 1;
-    A(i) = vj;
-    ndx = vi;
+  % make the matrix unless user wants list output
+  if ~makeListOutput
+    Ei = sparse(Ei, Ej, Es, Ni, numcols);
   end
 end
+

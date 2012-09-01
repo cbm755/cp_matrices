@@ -59,7 +59,7 @@ disp('refining once');
 cpgrid2 = refine_gridnd(cpgrid1, bw);
 
 %disp('refining again');
-cpgrid3 = refine_gridnd(cpgrid2, bw);
+%cpgrid3 = refine_gridnd(cpgrid2, bw);
 
 cpgrid = cpgrid2;
 
@@ -72,9 +72,11 @@ L = laplacian_nd_matrix(cpgrid.x1d, 2, cpgrid.band);
 toc
 
 tic
-%E1 = interpn_matrix(X1d, cpX, 1, band);
 [Ei,Ej,Es] = interpn_matrix(cpgrid.x1d, cpXtemp, 1, cpgrid.band);
 toc
+
+% TODO: can call directly now
+%E1 = interpn_matrix(cpgrid.x1d, cpXtemp, 1, cpgrid.band);
 
 tic
 E1 = sparse(Ei, Ej, Es, length(cpgrid.band), length(cpgrid.band));

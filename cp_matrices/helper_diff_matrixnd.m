@@ -6,8 +6,6 @@ function L = helper_diff_matrixnd(NN, band1, band2, weights, PTS, invbandmap)
 
   SaveMemOverSpeed = true;
 
-  % otherwise, here is the faster version which uses more memory
-
   dim = length(NN);
 
   StencilSize = length(weights);
@@ -23,17 +21,25 @@ function L = helper_diff_matrixnd(NN, band1, band2, weights, PTS, invbandmap)
 
 
   if SaveMemOverSpeed
+    %% efficient use of memory, but slightly slower
 
     if isempty(invbandmap)
-      % TODO: better to use a centralized implementation
-      %invbandmap = make_invbandmap(NN, band)
-      logical2bandmap = sparse(band2, 1, 1:length(band2), prod(NN),1);
-      invbandmap = @(x) full(logical2bandmap(x));
+      invbandmap = make_invbandmap(NN, band2);
+      % TODO: delete later
+      %logical2bandmap = sparse(band2, 1, 1:length(band2), prod(NN),1);
+      %invbandmap = @(x) full(logical2bandmap(x));
     end
+
     for c = 1:StencilSize
       for d=1:dim
         gi{d} = ijk{d} + PTS(c,d);
+        I = find((gi{d} <= 0) | (gi{d} > NN(d)));
+        if ~isempty(I)
+          error('currently requires some padding between band and box');
+        end
       end
+      % sub2ind here needs to find all the stencil points in the
+      % box of size NN.
       Lj(:,c) = invbandmap(sub2ind(NN, gi{:}));
       Ls(:,c) = weights(c);
     end

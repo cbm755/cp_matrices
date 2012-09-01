@@ -31,6 +31,8 @@ function w = weno4_interp(cp, f, x, makeCache, opt)
 %
 %   TODO: support calling without a "cpgrid"?
 %   TODO: dual-band support.
+%   TODO: with invbandmap instead of findInBand()... does caching
+%   still give benefit?  (think it will)
 
   if (nargin < 5)
     opt = [];

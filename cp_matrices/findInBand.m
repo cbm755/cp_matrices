@@ -12,6 +12,9 @@ function A = findInBand(I, band, meshgridsz)
 %   TODO: is this generally useful?  what features should it have?
 %   error checking?
 %   TODO: should also return the "index permutation" so u(I) = A*u.
+%
+%   TODO: same as make_invbandmap()?  Merge these two.  This approach
+%   can use a lot of memory, check if its faster.
 
   % a fast vectorized approach, build the big matrix and then
   % discard columns

@@ -1,4 +1,3 @@
-addpath('../surfaces');
 
 dx = 0.1;
 
@@ -65,7 +64,7 @@ figure(3); clf;
 
 
 %% Time-stepping for the heat equation
-Tf = 10;
+Tf = 2;
 %dt = 0.2*dx^2;
 dt = 0.5*dx;
 numtimesteps = ceil(Tf/dt)
@@ -75,7 +74,7 @@ dt = Tf / numtimesteps
 u = u0;
 
 
-lambda = -2*dim/dx^2;
+lambda = 2*dim/dx^2;
 I = speye(size(L));
 M1 = E1*L - lambda*(I - E3);
 A = I - dt*M1;
