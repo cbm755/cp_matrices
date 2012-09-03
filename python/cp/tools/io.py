@@ -2,9 +2,26 @@ import numpy as np
 
 
 def load_ply(fname):
-    """Loads ascii and binary ply files. The standard allows/disallows
-    things that are (not) accepted here, but it works well enough for
-    my purposes, and it's rather fast (even more reading binary).
+    """Loads ascii and binary ply files.
+
+    Input
+    -----
+    fname : file name or file handle
+
+    Output
+    ------
+    vertices : array of shape (npoints, 3)
+               The coordinates of each vertex. Has dtype float64
+    faces : array of shape (nfaces, 3)
+            Contains the vertices' indices of each face. That is,
+            vertices[faces[i]] gives you the coordinates of the
+            vertices in the i-th face. Has dtype int32
+
+    Notes
+    -----
+    The standard (dis)allows things that are (not) accepted here, but
+    it works well enough for my purposes, and it's rather fast (even
+    more reading binary).
 
     If your file is not correctly loaded, open it in MeshLab, and save
     it as a .ply file (binary is faster, more compact, ascii is easier
@@ -13,6 +30,7 @@ def load_ply(fname):
 
     More information about the format:
     http://paulbourke.net/dataformats/ply/"""
+    
     # Accept file names and file handles
     if isinstance(fname, basestring):
         fh = open(fname)

@@ -3,13 +3,8 @@ cimport numpy as np
 cimport cython
 
 
-DTYPEdouble = np.double
-ctypedef np.double_t DTYPEdouble_t
-
-DTYPEint = np.int
-ctypedef np.int_t DTYPEint_t
-
-cdef ProjectOnSegment(double * c1, double * c2, double * c3, double p1, double p2, double p3, double q1, double q2, double q3):
+@cython.cdivision(True)
+cdef inline void ProjectOnSegment(double * c1, double * c2, double * c3, double p1, double p2, double p3, double q1, double q2, double q3):
     """copied from steve's C code"""
     #double *c1, *c2, *c3  <-- return values
     #double p1, p2, p3
@@ -35,9 +30,10 @@ cdef ProjectOnSegment(double * c1, double * c2, double * c3, double p1, double p
     c2[0] = p2+lamb_star*qmp2
     c3[0] = p3+lamb_star*qmp3
 
+@cython.cdivision(True)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef FindClosestPointToOneTri(double a1, double a2, double a3, np.ndarray[int, ndim=1] aface, np.ndarray[double, ndim=2] vertex):
+cdef void FindClosestPointToOneTri(double a1, double a2, double a3, int[::1] aface, double[:,::1] vertex, double * dd_, double * t1, double * t2, double * t3):
     """ copied from steve's C code """
     #double a1, a2, a3
     #double *c1, *c2, *c3   <-- mutable, pointers in C code, we will return them instead
@@ -92,30 +88,26 @@ cdef FindClosestPointToOneTri(double a1, double a2, double a3, np.ndarray[int, n
     if ((lamb<0) and (mu<0) and (lamb+mu<=1)):
         c1 = c2 = c3 = 0.0
     elif ((lamb>=0) and (mu<0) and (lamb+mu<=1)):
-        # some acceleration possible using cython
-        #(c1,c2,c3) = tri.C_ProjectOnSegment(c1,c2,c3,0.,0.,0.,q1,q2,q3)
         ProjectOnSegment(&c1,&c2,&c3,0.,0.,0.,q1,q2,q3)
     elif ((lamb>=0) and (mu<0) and (lamb+mu>1)):
         c1 = q1
         c2 = q2
         c3 = q3
     elif ((lamb>=0) and (mu>=0) and (lamb+mu>1)):
-        #(c1,c2,c3) = tri.C_ProjectOnSegment(c1,c2,c3,q1,q2,q3,r1,r2,r3)
         ProjectOnSegment(&c1,&c2,&c3,q1,q2,q3,r1,r2,r3)
     elif ((lamb<0) and (mu>=0) and (lamb+mu>1)):
         c1 = r1
         c2 = r2
         c3 = r3
     elif ((lamb<0) and (mu>=0) and (lamb+mu<=1)):
-        #(c1,c2,c3) = tri.C_ProjectOnSegment(c1,c2,c3,r1,r2,r3,0.,0.,0.)
         ProjectOnSegment(&c1,&c2,&c3,r1,r2,r3,0.,0.,0.)
     elif ((lamb>=0) and (mu>=0) and (lamb+mu<=1)):
         # /* do nothing */
-        True
-    else:
-        print("non-enumerated case.\n")
-        print("lamb mu %g %g\n", lamb, mu)
-        raise NameError('case should not occur')
+        pass
+#    else:
+#        print("non-enumerated case.\n")
+#        print("lamb mu %g %g\n", lamb, mu)
+#        raise NameError('case should not occur')
 
     #/* Calculate sqr distance( */
     cdef double dd  = (a1-c1)*(a1-c1)+(a2-c2)*(a2-c2)+(a3-c3)*(a3-c3)
@@ -148,22 +140,22 @@ cdef FindClosestPointToOneTri(double a1, double a2, double a3, np.ndarray[int, n
     c1 += vertex[index_p, 0]
     c2 += vertex[index_p, 1]
     c3 += vertex[index_p, 2]
-    return (dd,c1,c2,c3)
+    dd_[0] = dd
+    t1[0] = c1
+    t2[0] = c2
+    t3[0] = c3
 
-
-
-def FindClosestPointToTriSet(a1, a2, a3, Faces, Vertices):
-    from numpy import inf
-    #dd_min = 1.0e42  # just a big number
-    cdef double dd_min = inf
+def FindClosestPointToTriSet(double a1, double a2, double a3, int[:, ::1] Faces, double[:, ::1] Vertices):
+    cdef double dd_min = np.inf
     cdef double dd, c1, c2, c3, t1, t2, t3
-    for F in Faces:
-        (dd,t1,t2,t3) = FindClosestPointToOneTri(a1,a2,a3, F, Vertices)
-        if dd<dd_min:
-            #minF = F
+    cdef Py_ssize_t i, n = len(Faces)
+    cdef int[::1] F
+    for i in range(n):
+        F = Faces[i, :]
+        FindClosestPointToOneTri(a1, a2, a3, F, Vertices, &dd, &t1, &t2, &t3)
+        if dd < dd_min:
             dd_min = dd
             c1 = t1
             c2 = t2
             c3 = t3
-    #print "minF = " + str(minF)
-    return (dd_min,c1,c2,c3)
+    return dd_min, c1, c2, c3
