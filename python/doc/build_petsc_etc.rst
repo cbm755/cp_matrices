@@ -44,6 +44,13 @@ PETSc
    make PETSC_DIR=$HOME/code/petsc-3.3/ PETSC_ARCH=linux64 all
    make PETSC_DIR=$HOME/code/petsc-3.3/ PETSC_ARCH=linux64 test
 
+I used --with-debugging=1.  I also edited my .bashrc file to add::
+
+   export PETSC_DIR=$HOME/code/petsc-3.3/
+   export PETSC_ARCH=linux64
+
+
+
 PETSc4py
 ########
 
