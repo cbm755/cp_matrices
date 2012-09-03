@@ -7,15 +7,17 @@ ext_modules = [Extension('cp.surfaces.triangulation_fast',
                          ["cp/surfaces/triangulation_fast.pyx"])]
 
 setup(
-    name="cp",
-    version="0.2dev",
-    packages=["cp",
-              "cp.tools",
-              "cp.petsc",
-              "cp.surfaces",
-              "cp.tests",],
-    package_data={'cp.tests': ['data/*']},
-    cmdclass = {'build_ext': build_ext},
+    name = "cp",
+    version = "0.2dev",
+    packages = ["cp",
+                "cp.tools",
+                "cp.petsc",
+                "cp.surfaces",
+                "cp.tests",
+                ],
+    package_data = {'cp.tests': ['data/*']},
     ext_modules = ext_modules,
-    include_dirs = [np.get_include()]
+    cmdclass = {'build_ext': build_ext},
+    include_dirs = [np.get_include()],
+    requires=['numpy >= 1.6', 'scipy', 'matplotlib >= 1', 'cython >= 0.16']
 )
