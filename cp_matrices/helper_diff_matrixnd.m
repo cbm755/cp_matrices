@@ -24,10 +24,7 @@ function L = helper_diff_matrixnd(NN, band1, band2, weights, PTS, invbandmap)
     %% efficient use of memory, but slightly slower
 
     if isempty(invbandmap)
-      invbandmap = make_invbandmap(NN, band2);
-      % TODO: delete later
-      %logical2bandmap = sparse(band2, 1, 1:length(band2), prod(NN),1);
-      %invbandmap = @(x) full(logical2bandmap(x));
+      invbandmap = make_invbandmap(prod(NN), band2);
     end
 
     for c = 1:StencilSize

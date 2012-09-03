@@ -15,7 +15,8 @@ yy = yy(:);
 
 band = unique(ceil(length(xx)*rand(20,1)));
 
-invband = make_invbandmap(x1d, y1d, band);
+M = length(x1d)*length(y1d);
+invband = make_invbandmap(M, band);
 
 c = c + 1;
 pass(c) = invband(band(1)) == 1;
@@ -32,12 +33,6 @@ c = c + 1; pass(c) = yg(end) == yy(b);
 [j,i] = ind2sub([12,10], b);
 c = c + 1; pass(c) = x1d(i) == xx(b);
 c = c + 1; pass(c) = y1d(j) == yy(b);
-
-
-%% 2D using NN
-invband = make_invbandmap([length(x1d) length(y1d)], band);
-c = c + 1;
-pass(c) = all(invband(band) == (1:length(band))');
 
 
 
@@ -77,16 +72,12 @@ zz = zz(:);
 
 band = unique(ceil(length(xx)*rand(20,1)));
 
-invband = make_invbandmap(x1d, y1d, z1d, band);
+M = length(x1d)*length(y1d)*length(z1d);
+invband = make_invbandmap(M, band);
 
 c = c + 1;
 pass(c) = all(invband(band) == (1:length(band))');
 
-
-%% 3D using NN form
-invband = make_invbandmap([length(x1d) length(y1d) length(z1d)], band);
-c = c + 1;
-pass(c) = all(invband(band) == (1:length(band))');
 
 
 %% 3D using cpgrid
@@ -138,7 +129,8 @@ pass(c) = all(invband(band) == (1:length(band))');
 
 
 %% 4D using NN form
-invband = make_invbandmap([length(x1d) length(y1d) length(z1d) length(w1d)], band);
+M = length(x1d)*length(y1d)*length(z1d)*length(w1d);
+invband = make_invbandmap(M, band);
 c = c + 1;
 pass(c) = all(invband(band) == (1:length(band))');
 

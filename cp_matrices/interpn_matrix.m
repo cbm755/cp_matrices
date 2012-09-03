@@ -80,7 +80,7 @@ function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
   end
 
   if makeBanded && isempty(invbandmap)
-    invbandmap = make_invbandmap(Ns, band);
+    invbandmap = make_invbandmap(M, band);
   end
 
   Nsten = p+1;

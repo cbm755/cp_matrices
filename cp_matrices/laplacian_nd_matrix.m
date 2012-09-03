@@ -14,10 +14,6 @@ function L = laplacian_nd_matrix(xs, order, band1, band2, invbandmap)
   if (nargin < 2)
     order = 2;
   end
-  if (nargin < 5)
-    % slight speedup to calculate this once and pass it around
-    invbandmap = make_invbandmap(xs, band2);
-  end
 
   dim = length(xs);
   NN = zeros(1, dim);
@@ -27,6 +23,10 @@ function L = laplacian_nd_matrix(xs, order, band1, band2, invbandmap)
     ddx(n) = xs{n}(2)-xs{n}(1);
   end
 
+  if (nargin < 5)
+    % slight speedup to calculate this once and pass it around
+    invbandmap = make_invbandmap(prod(NN), band2);
+  end
 
   D2c = secondderiv_cen2_nd_matrices(xs, band1, band2, order, invbandmap);
 
