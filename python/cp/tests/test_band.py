@@ -68,7 +68,11 @@ class TestBand(unittest.TestCase):
         lx = self.bnd.BlockSub2CenterCarWithoutBand(\
                                                     self.bnd.BlockInd2SubWithoutBand(self.bnd.gindBlockWBand.getArray()))
         try:
-            from mayavi import mlab
+            try:
+                from mayavi import mlab
+            except ImportError:
+                from enthought.mayavi import mlab
+
             if self.comm.rank == 0:
                 mlab.figure()
                 mlab.points3d(x[:,0],x[:,1],x[:,2])

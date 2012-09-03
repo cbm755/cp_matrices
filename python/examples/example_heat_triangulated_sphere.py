@@ -5,6 +5,11 @@ from cp.tools.io import load_ply
 from cp.mesh_surface import Mesh
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
 
+try:
+    from mayavi import mlab
+except ImportError:
+    from enthought.mayavi import mlab
+
 
 v, f = load_ply('cp/tests/data/sphere_refined.ply')
 m = Mesh(v, f)
@@ -32,8 +37,6 @@ initial_u = u.copy()
 E = build_interp_matrix(int_grid, cp, dx, p, ll, virtual_grid_shape)
 L = build_diff_matrix(int_grid, dx, virtual_grid_shape)
 
-###
-from mayavi import mlab
 s = mlab.points3d(cp[:,0], cp[:,1], cp[:,2], initial_u)
 mlab.colorbar()
 Tf = 1

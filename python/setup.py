@@ -17,5 +17,6 @@ setup(
     package_data={'cp.tests': ['data/*']},
     cmdclass = {'build_ext': build_ext},
     ext_modules = ext_modules,
-    include_dirs = [np.get_include()]
+    include_dirs = [np.get_include()],
+    requires=['numpy','scipy','matplotlib','Cython']
 )
