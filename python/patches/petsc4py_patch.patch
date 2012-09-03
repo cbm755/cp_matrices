@@ -1,0 +1,50 @@
+# HG changeset patch
+# User Jorge Cañardo Alastuey <jorgecanardo@gmail.com>
+# Date 1345133433 -3600
+# Node ID 1efc3d991761192ec5b5d44a54e5c6167277bfa8
+# Parent  0a54ec28e2682ba03987c65749c01dcf8f405388
+wrap needed functions
+
+diff -r 0a54ec28e268 -r 1efc3d991761 src/PETSc/TS.pyx
+--- a/src/PETSc/TS.pyx	Thu Jul 26 14:12:45 2012 -0300
++++ b/src/PETSc/TS.pyx	Thu Aug 16 17:10:33 2012 +0100
+@@ -139,6 +139,10 @@
+         cdef PetscReal time = asReal(t)
+         CHKERR( TSComputeRHSFunction(self.ts, time, x.vec, f.vec) )
+ 
++    def computeRHSFunctionLinear(self, t, Vec x not None, Vec f not None):
++        cdef PetscReal time = asReal(t)
++        CHKERR( TSComputeRHSFunctionLinear(self.ts, time, x.vec, f.vec, NULL) )
++
+     def computeRHSJacobian(self, t, Vec x not None, Mat J not None, Mat P=None):
+         cdef PetscReal time = asReal(t)
+         cdef PetscMat *jmat = &J.mat, *pmat = &J.mat
+@@ -148,6 +152,15 @@
+                                      jmat, pmat, &flag) )
+         return flag
+ 
++    def computeRHSJacobianConstant(self, t, Vec x not None, Mat J not None, Mat P=None):
++        cdef PetscReal time = asReal(t)
++        cdef PetscMat *jmat = &J.mat, *pmat = &J.mat
++        if P is not None: pmat = &P.mat
++        cdef PetscMatStructure flag = MAT_DIFFERENT_NONZERO_PATTERN
++        CHKERR( TSComputeRHSJacobianConstant(self.ts, time, x.vec,
++                                             jmat, pmat, &flag, NULL) )
++        return flag
++
+     def getRHSFunction(self):
+         cdef Vec f = Vec()
+         CHKERR( TSGetRHSFunction(self.ts, &f.vec, NULL, NULL) )
+diff -r 0a54ec28e268 -r 1efc3d991761 src/PETSc/petscts.pxi
+--- a/src/PETSc/petscts.pxi	Thu Jul 26 14:12:45 2012 -0300
++++ b/src/PETSc/petscts.pxi	Thu Aug 16 17:10:33 2012 +0100
+@@ -103,7 +103,9 @@
+     int TSSetDM(PetscTS,PetscDM)
+ 
+     int TSComputeRHSFunction(PetscTS,PetscReal,PetscVec,PetscVec)
++    int TSComputeRHSFunctionLinear(PetscTS,PetscReal,PetscVec,PetscVec,void*)
+     int TSComputeRHSJacobian(PetscTS,PetscReal,PetscVec,PetscMat*,PetscMat*,PetscMatStructure*)
++    int TSComputeRHSJacobianConstant(PetscTS,PetscReal,PetscVec,PetscMat*,PetscMat*,PetscMatStructure*,void*)
+     int TSComputeIFunction(PetscTS,PetscReal,PetscVec,PetscVec,PetscVec,PetscBool)
+     int TSComputeIJacobian(PetscTS,PetscReal,PetscVec,PetscVec,PetscReal,PetscMat*,PetscMat*,PetscMatStructure*,PetscBool)
+ 
