@@ -6,6 +6,11 @@ from cp.mesh_surface import Mesh
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
 from cp.surfaces.coordinate_transform import cart2sph, sph2cart
 
+try:
+    from mayavi import mlab
+except ImportError:
+    from enthought.mayavi import mlab
+
 
 v, f = load_ply('cp/tests/data/sphere_refined.ply')
 m = Mesh(v, f)
@@ -37,7 +42,6 @@ initial_u = u.copy()
 E = build_interp_matrix(int_grid, cp, dx, p, ll, virtual_grid_shape)
 L = build_diff_matrix(int_grid, dx, virtual_grid_shape)
 
-###
 Tf = 1
 dt = 0.1 * np.min(dx)**2
 numtimesteps = int(Tf // dt + 1)
