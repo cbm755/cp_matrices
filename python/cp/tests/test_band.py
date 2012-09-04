@@ -8,18 +8,17 @@ from __future__ import division
 import unittest
 import exceptions
 
-try:
-    from cp.surfaces import Sphere as Surface
-    from cp.petsc.band import Band
-    from mpi4py import MPI
-    import petsc4py
-    import sys
-    from petsc4py import PETSc
-    petsc4py.init(sys.argv)
-    from numpy import array as a
-    import numpy.testing as npt
-except Exception as exp:
-    print exp
+
+from cp.surfaces import Sphere as Surface
+from cp.petsc.band import Band
+from mpi4py import MPI
+import petsc4py
+import sys
+from petsc4py import PETSc
+petsc4py.init(sys.argv)
+from numpy import array as a
+import numpy.testing as npt
+
 
 class TestBand(unittest.TestCase):
 
@@ -68,7 +67,11 @@ class TestBand(unittest.TestCase):
         lx = self.bnd.BlockSub2CenterCarWithoutBand(\
                                                     self.bnd.BlockInd2SubWithoutBand(self.bnd.gindBlockWBand.getArray()))
         try:
-            from mayavi import mlab
+            try:
+                from mayavi import mlab
+            except ImportError:
+                from enthought.mayavi import mlab
+
             if self.comm.rank == 0:
                 mlab.figure()
                 mlab.points3d(x[:,0],x[:,1],x[:,2])

@@ -3,8 +3,12 @@ from math import sqrt
 from collections import defaultdict
 
 import numpy as np
-from mayavi import mlab
 from scipy.spatial import cKDTree
+try:
+    from mayavi import mlab
+except ImportError:
+    from enthought.mayavi import mlab
+
 
 #from parallel_kdquery import cKDTree_MP
 from cp.tools.io import load_ply
