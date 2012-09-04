@@ -100,7 +100,7 @@ function w = weno4_interp3d_cached(Cache, f, opt)
   dy = Cache.dy;
   dz = Cache.dz;
 
-  tic
+  %tic
   u = {};
   v = {};
   for k=1:4
@@ -110,7 +110,7 @@ function w = weno4_interp3d_cached(Cache, f, opt)
     v{k} = helper1d(u{1}, u{2}, u{3}, u{4}, yi, dy, y, opt);
   end
   w = helper1d(v{1}, v{2}, v{3}, v{4}, zi, dz, z, opt);
-  toc
+  %toc
 
 end
 
@@ -128,13 +128,13 @@ function w = weno4_interp2d_cached(Cache, f, opt)
   dx = Cache.dx;
   dy = Cache.dy;
 
-  tic
+  %tic
   u = {};
   for j=1:4
     u{j} = helper1d(C{1,j}*f, C{2,j}*f, C{3,j}*f, C{4,j}*f, xi, dx, x, opt);
   end
   w = helper1d(u{1}, u{2}, u{3}, u{4}, yi, dy, y, opt);
-  toc
+  %toc
 end
 
 
@@ -193,11 +193,11 @@ function Cache = weno4_interp3d_makecache(cp, f, xyz)
 
   B = findInBand(I, cp.band, Nx*Ny*Nz);
 
-  tic
+  %tic
   [E W N S U D] = neighbourMatrices(cp, cp.band, cp.band);
-  toc
+  %toc
 
-  tic
+  %tic
   C = {};
   I = speye(size(W));
   T1 = {W,I,E,E*E};
@@ -210,7 +210,7 @@ function Cache = weno4_interp3d_makecache(cp, f, xyz)
       end
     end
   end
-  toc
+  %toc
 
   Cache.C = C;
   Cache.xi = xi;
@@ -251,9 +251,9 @@ function Cache = weno4_interp2d_makecache(cp, f, xyz)
   B = findInBand(I, cp.band, Nx*Ny);
 
   [E W N S] = neighbourMatrices(cp, cp.band, cp.band);
-  toc
+  %toc
 
-  tic
+  %tic
   C = {};
   I = speye(size(W));
   T1 = {W,I,E,E*E};
@@ -264,7 +264,7 @@ function Cache = weno4_interp2d_makecache(cp, f, xyz)
       C{i,j} = B*T1{i}*T2{j};
     end
   end
-  toc
+  %toc
 
   Cache.C = C;
   Cache.xi = xi;
@@ -280,7 +280,7 @@ end
 function w = weno4_interp2d(cp, f, xyz, opt)
 %WENO4_INTERP2D  nonlinear WENO interpolation 2D
 
-  tic
+  %tic
   x1d = cp.x1d;
   y1d = cp.y1d;
   Nx = length(x1d);
@@ -306,19 +306,19 @@ function w = weno4_interp2d(cp, f, xyz, opt)
   B = findInBand(I, cp.band, Nx*Ny);
 
   [E W N S] = neighbourMatrices(cp, cp.band, cp.band);
-  preptime = toc;
+  %preptime = toc;
 
   % some duplicated work because many interpolation points will have the
   % same basepoint
-  tic
+  %tic
   g = S*f;     u1 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x, opt);
   g = f;       u2 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x, opt);
   g = N*f;     u3 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x, opt);
   g = N*(N*f); u4 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x, opt);
 
   w = helper1d(u1, u2, u3, u4, yi, dy, y, opt);
-  wenotime = toc;
-  fprintf('weno4: preptime=%g, wenotime=%g\n', preptime, wenotime)
+  %wenotime = toc;
+  %fprintf('weno4: preptime=%g, wenotime=%g\n', preptime, wenotime)
 end
 
 
@@ -326,7 +326,7 @@ end
 function w = weno4_interp3d(cp, f, xyz, opt)
 %WENO4_INTERP3D  nonlinear WENO interpolation 3D
 
-  tic
+  %tic
   x1d = cp.x1d;
   y1d = cp.y1d;
   z1d = cp.z1d;
@@ -357,12 +357,12 @@ function w = weno4_interp3d(cp, f, xyz, opt)
   B = findInBand(I, cp.band, Nx*Ny*Nz);
 
   [E W N S U D] = neighbourMatrices(cp, cp.band, cp.band);
-  preptime = toc;
+  %preptime = toc;
 
   % some duplicated work because many interpolation points will have the
   % same basepoint
 
-  tic
+  %tic
   g = D*(S*f);     u1 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x, opt);
   g = D*f;         u2 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x, opt);
   g = D*(N*f);     u3 = helper1d(B*(W*g), B*g, B*(E*g), B*(E*(E*g)), xi, dx, x, opt);
@@ -388,7 +388,6 @@ function w = weno4_interp3d(cp, f, xyz, opt)
   w4 = helper1d(u1, u2, u3, u4, yi, dy, y, opt);
 
   w = helper1d(w1, w2, w3, w4, zi, dz, z, opt);
-  wenotime = toc;
-
-  fprintf('weno4: preptime=%g, wenotime=%g\n', preptime, wenotime)
+  %wenotime = toc;
+  %fprintf('weno4: preptime=%g, wenotime=%g\n', preptime, wenotime)
 end
