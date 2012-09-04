@@ -18,7 +18,7 @@ def initialu(cp):
     return rlt
 
 if __name__ == '__main__':
-    surface = MeshWrapper('eight_refined.ply')
+    surface = MeshWrapper('eight.ply')
     pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
     pl.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,scalars=initialu(surface.v))
 #    pl.points3d(surface.v[:,0],surface.v[:,1],surface.v[:,2],initialu(surface.v),mode='point')
