@@ -39,7 +39,6 @@ def triplot(x,y,z,r=0.001,title = 'band'):
 if __name__ == '__main__':
     opt = {'M':40,'m':4,'d':2}
     surface = Sphere(center=sp.array([0.0, 0.0]))
-#    mlab.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,opacity = 0.2)
     comm = MPI.COMM_WORLD
     band = Band(surface,comm,opt)
     la,lv,gv,wv = band.createGLVectors()
@@ -52,56 +51,22 @@ if __name__ == '__main__':
     band.test_initialu(test_initialu)
     L.mult(gv,wv)
     c = wv.getArray()
-#    wv.view()
     triplot(v[:,0],v[:,1],c,title='Lu')
-#    wv.view()
+
     
     M = band.createExtensionMat()
     PETSc.Sys.Print('ExtensionMat built')
-#    band.initialu(initialu)
+
     
     M.mult(gv,wv)
     c = wv.getArray()
     triplot(v[:,0],v[:,1],c,title='Mu')
-#    (ind,) = sp.where(c>1.000000000001)
-#    print 'nonzero terms>>1'
-#    for i in ind:
-#        b = M[i,:]
-#        print i
-#        print b[b.nonzero()[0]]
-#        print M[i,:].sum()
-    
-#    (ind,) = sp.where(c<0.999999999999)
-#    print 'nonzero terms<<1'
-#    for i in ind:
-#        b = M[i,:]
-#        print i
-#        print b[b.nonzero()[0]]
-#        print M[i,:].sum()
+
 
     c = gv.getArray()
 
-#    c -= c.min()
-#    c /= c.max()
-#    gv.view()
-#    pl.scatter(v[:,0],v[:,1],c=c)
-#    pl.axis('equal')
     triplot(v[:,0],v[:,1],c,title='initial u')
 
-#    LM = M.copy()
-#    M.matMult(L,LM)
-#    ts = PETSc.TS().create(comm=comm)
-#    ts.setProblemType(ts.ProblemType.LINEAR)
-#    ts.setType(ts.Type.EULER)  
-#    ts.setTime(0.0)
-#    ts.setTimeStep(band.dx**2)
-#    ts.setMaxTime(1)
-#    ts.setMaxSteps(1000)
-#    ts.setSolution(gv)
-#    ts.setFromOptions()
-#    ts.setRHSFunction(None,wv)
-#    ts.setRHSJacobian(None,LM,LM)
-#    ts.solve(gv)
     band.initialu(initialu)
     PETSc.Sys.Print('Initial')
     nextt = 0.1
@@ -112,18 +77,9 @@ if __name__ == '__main__':
         if t > nextt:
             nextt += 0.1
             PETSc.Sys.Print('time is {0}'.format(t))
-#    L.mult(gv,wv)
-#    M.mult(wv,gv)    
 
-#    mlab.points3d(v[:,0],v[:,1],wv.getArray(),mode = 'point')
-#    mlab.show()
-#    wv.view()
-#    pl.figure()
     c = gv.getArray()
-#    gv.view()
-#    c /= c.max()
-#    pl.scatter(v[:,0],v[:,1],c=c)
-#    pl.axis('equal')
+
 
     triplot(v[:,0],v[:,1],c,title = 'Result')
     pl.show()

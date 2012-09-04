@@ -4,10 +4,9 @@ Created on Aug 10, 2012
 @author: nullas
 '''
 import scipy as sp
-#from mayavi import mlab as pl
+from mayavi import mlab as pl
 from mpi4py import MPI
 from cp.surfaces.MeshWrapper import MeshWrapper
-from cp.surfaces.Sphere import Sphere
 from cp.petsc.band import Band
 import sys
 import petsc4py
@@ -62,42 +61,19 @@ def outputBin(gv):
 
 if __name__ == '__main__':
     opt = {'M':100,'m':5,'d':3}
-    surface = MeshWrapper('eight_refined.ply')
-#    pl.figure(bgcolor=(1,1,1),fgcolor=(0.5,0.5,0.5))
-#    pl.triangular_mesh(surface.v[:,0],surface.v[:,1],surface.v[:,2],surface.f,scalars=surface.v[:,0],opacity = 1)
+    surface = MeshWrapper('eight.ply')
     comm = MPI.COMM_WORLD
     band = Band(surface,comm,opt)
     la,lv,gv,wv = band.createGLVectors()
     v = band.getCoordinates()
     centers = band.BlockInd2CenterCarWithoutBand(band.gindBlockWBand.getArray())
-#    pl.points3d(centers[:,0],centers[:,1],centers[:,2],mode='point')
     dt = 0.1*band.dx**2
     vv = sp.array([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]])
     weights = sp.array([-6,1,1,1,1,1,1])*(dt/band.dx**2)
     L = band.createAnyMat(vv, weights, (7,3))
     PETSc.Sys.Print('Laplacian')
 
-
-    
     M = band.createExtensionMatForLoop()
-
-    
-
-
-#    LM = M.copy()
-#    M.matMult(L,LM)
-#    ts = PETSc.TS().create(comm=comm)
-#    ts.setProblemType(ts.ProblemType.LINEAR)
-#    ts.setType(ts.Type.EULER)  
-#    ts.setTime(0.0)
-#    ts.setTimeStep(band.dx**2)
-#    ts.setMaxTime(1)
-#    ts.setMaxSteps(1000)
-#    ts.setSolution(gv)
-#    ts.setFromOptions()
-#    ts.setRHSFunction(None,wv)
-#    ts.setRHSJacobian(None,LM,LM)
-#    ts.solve(gv)
     band.initialu(initialu)
     PETSc.Sys.Print('Initial')
     plot3d_total(v,gv)
@@ -113,32 +89,20 @@ if __name__ == '__main__':
     PETSc.Sys.Print('End to solve.')
     
     v = surface.v
-
     vsize = v.shape[0]
-    PETSc.Sys.syncPrint('vsize is {0}'.format(vsize))
-    PETSc.Sys.syncFlush()
-    print PETSc.COMM_WORLD.size
-    print comm.rank
     vAssigned = vsize // comm.size + int(comm.rank < (vsize % comm.size))
-    print 'why???'
-    PETSc.Sys.syncPrint('vAssigned is {0}'.format(vAssigned))
-    PETSc.Sys.syncFlush()
     vstart = comm.exscan(vAssigned)
     PETSc.Sys.syncPrint(vAssigned)
     PETSc.Sys.syncFlush()
     if comm.rank == 0:
         vstart = 0
-    PETSc.Sys.syncPrint('[{0}] starts at {1}'.format(comm.rank,vstart))
-    PETSc.Sys.syncFlush()
+        
     mv = band.createExtensionMatForLoop(cp=v[vstart:vstart+vAssigned])
     PETSc.Sys.syncPrint('build extMat')
     PETSc.Sys.syncFlush()
     cv = mv.getVecLeft()
     mv.mult(gv,cv)
     outputBin(cv)
-    
-    plot3dformesh(v,cv,surface.f)
-#    pl.show()
     PETSc.Sys.Print('maximal is {0}'.format(gv.max()[1]))    
 del band,v   
     
