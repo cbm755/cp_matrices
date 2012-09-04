@@ -185,25 +185,7 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
     Es = weights(:);
 
     if (makeBanded)
-      % Build a mapping from logical grid to the band, various ways to do
-      % this.
-      switch 1
-        case 1  % lowest memory usage (sparse column vector)
-          logical2bandmap = sparse(band, 1, 1:length(band), M,1);
-        case 2
-          logical2bandmap = sparse(band, 1, 1:length(band), M,1);
-          % transposing it will use much more memory (4*Nx*Ny*Nz bytes)
-          % but applying the operator is faster
-          logical2bandmap = logical2bandmap';
-        case 3  % construct the transpose directly, similar to 2 I think
-          logical2bandmap = sparse(1, band, 1:length(band), 1,M);
-        case 4  % use a dense map: fastest but most memory
-          logical2bandmap = zeros(M,1);
-          logical2bandmap(band) = 1:length(band);
-      end
-
+      invbandmap = make_invbandmap(M, band);
       Ej = logical2bandmap(Ej);
     end
-
   end
-end

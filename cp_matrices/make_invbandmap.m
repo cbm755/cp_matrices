@@ -59,7 +59,6 @@ function invbandmap = make_invbandmap(M, band)
     end
   end
 
-
   if ~(isscalar(M))
     % list of lengths provided
     M = prod(varargin{1});
@@ -69,5 +68,25 @@ function invbandmap = make_invbandmap(M, band)
   sparselin2bandmap = sparse(band, 1, 1:length(band), M,1);
   % the full() is here because the result is "big sparse"
   invbandmap = @(i) full(sparselin2bandmap(i));
+
+
+
+  % Build a mapping from logical grid to the band, various ways to do
+  % this.  Here are the approaches I tried:
+  %switch 1
+  %  case 1  % lowest memory usage (sparse column vector)
+  %    logical2bandmap = sparse(band, 1, 1:length(band), M,1);
+  %  case 2
+  %    logical2bandmap = sparse(band, 1, 1:length(band), M,1);
+  %    % transposing it will use much more memory (4*Nx*Ny*Nz bytes)
+  %    % but applying the operator is faster
+  %    logical2bandmap = logical2bandmap';
+  %  case 3  % construct the transpose directly, similar to 2 I think
+  %    logical2bandmap = sparse(1, band, 1:length(band), 1,M);
+  %  case 4  % use a dense map: fastest but most memory
+  %    logical2bandmap = zeros(M,1);
+  %    logical2bandmap(band) = 1:length(band);
+  %end
+  %Ej = logical2bandmap(Ej);
 
 
