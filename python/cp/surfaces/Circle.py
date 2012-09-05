@@ -33,7 +33,7 @@ class Circle(Surface):
         Parameterized form (for plotting)
         """
         th = np.linspace(0, 2*np.pi, num=rez)
-        circ = self._radius * np.exp(1j*th)
-        X = np.real(circ) + self._center[0]
-        Y = np.imag(circ) + self._center[1]
+        circ = self.radius * np.exp(1j*th)
+        X = np.real(circ) + self.center[0]
+        Y = np.imag(circ) + self.center[1]
         return X, Y
