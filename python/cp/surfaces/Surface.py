@@ -1,180 +1,123 @@
+from math import sqrt
+
 import numpy as np
 
+
 class Surface(object):
-    def __init__(self):
-        print 'base class constructor'
-
-    def closestPointToCartesian(self, x):
-        raise NotImplementedError('Should be implemented in subclass')
-        #cp = numpy.zeros(x.shape)
-        #dist = numpy.linalg.norm(x-cp,2)
-        #return cp,dist,bdy,{}
-
-    def cpwrap(self, x):
-        return self.closestPointToCartesian(self, x)
-    #def closestPointToPolar(self, x):
-
-
-    def getBB(self):
-        """
-        Return a bounding box for the object.
-        
-        Could be overridden by subclasses.
-        """
-        return self._bb
-
-
-    def viztest(self, extra_bb=1.3):
-        if self._dim == 2:
-            self._viztest2d(extra_bb=extra_bb)
-        elif self._dim == 3:
-            self._viztest3d(extra_bb=extra_bb)
+    def closest_point(self, x):
+        raise NotImplementedError("Should be implemented in subclass")
+    
+    def grid(self, num_blocks_per_dim=100, levels=2, p=3, diff_stencil_arm=1):
+        grid, initial_dx = build_grid(num_blocks_per_dim,
+                                      2 * self.bounding_box[0],
+                                      2 * self.bounding_box[1])
+        grid = grid.reshape((self.dim, -1)).T
+        final_dx = initial_dx / 3.**(levels-1)
+        final_bandwidth = np.max(bandwidth(final_dx,
+                                           p=p,
+                                           diff_stencil_arm=diff_stencil_arm,
+                                           dim=self.dim))
+        level_dx = initial_dx.copy()
+        if levels > 1:
+            level_bandwidth = sqrt(np.dot(level_dx, level_dx)) / 2. +\
+              np.max(bandwidth(level_dx,
+                               p=p,
+                               diff_stencil_arm=diff_stencil_arm,
+                               dim=self.dim))
         else:
-            raise NotImplementedError('Only 2d and 3d viz tests implemented')
+            level_bandwidth = final_bandwidth
+        offsets = np.mgrid[tuple(
+            slice(-1, 1, complex(0, 3)) for _ in xrange(self.dim)
+            )].reshape((self.dim, -1))
+        for i in xrange(levels):
+            print "level_dx", level_dx
+            print "level_bandwidth", level_bandwidth
+            # index if triangulated surface, else cp
+            index, dist, grid = self._new_level(grid, level_dx, level_bandwidth)
+            # Last loop
+            if i >= (levels-1) or levels == 1:
+                pass  # Exits the loop, we're done
+            else:
+                level_dx = initial_dx / 3.**(i+1)
+                # Last but one loop (the case levels==1 is handled by
+                # the if above the loop)
+                if i == (levels-2):  
+                    level_bandwidth = final_bandwidth
+                # Next loop is not the final one: different bandwidth
+                else:
+                    level_bandwidth = (sqrt(np.dot(level_dx, level_dx)) / 2. +
+                                       np.max(bandwidth(level_dx,
+                                                        p=p,
+                                                        diff_stencil_arm=diff_stencil_arm,
+                                                        dim=self.dim)))
+                # Refine the grid
+                grid = (grid[..., np.newaxis] +
+                        (offsets * level_dx[:, np.newaxis])[np.newaxis, ...])
+                grid = grid.transpose((0, 2, 1)).reshape((-1, self.dim))
 
-    def _viztest2d(self, extra_bb):
-        import matplotlib.pyplot as plt
+        # index if triangulated surface, else cp
+        return index, dist, grid, final_dx
 
-        if self._hasParam:
-            X, Y = self.ParamGrid()
-            plt.plot(X, Y, 'k-')
-
-        a, b = self.getBB()
-        ll = (b+a)/2 - (extra_bb)*(b-a)/2
-        rr = (b+a)/2 + (extra_bb)*(b-a)/2
-        #xx = numpy.random.uniform(bb[0], bb[1], (100,2))
-        for i in xrange(100):
-            # TODO: here we assume the object lives in [-2,2]^2
-            # TODO: maybe each object could record a boundingbox
-            #x = 4*numpy.random.random((2)) - 2
-            x = np.random.uniform(ll, rr)
-            cp, dist, bdy, other = self.cp(x)
-            col = [0.4, 0.4, 0.4]
-            np.plot([x[0], cp[0]], [x[1], cp[1]], '-', color=col)
-            np.plot([cp[0]], [cp[1]], 'o', color=col)
-        plt.show()
-
-    def _viztest3d(self, extra_bb):
-        """
-        3D vizualization of CPRep for obj
-        """
-        try:
-            from mayavi import mlab
-        except ImportError:
-            from enthought.mayavi import mlab
-
-        f = mlab.figure(1, fgcolor=(0, 0, 0), bgcolor=(1, 1, 1), size=(640,640))
-        mlab.clf()
-
-        if self._hasParam:
-            L = self.ParamGrid()
-            x, y, z = L
-            #print x,y,z
-            #s = mlab.mesh(xb, yb, zb, scalars=real((Eplot_bulb*E*uxx).reshape(xb.shape)))
-            # TODO: mayavi bug, opacity<1
-            s = mlab.mesh(x, y, z, scalars=z, opacity=1.0)
-
-        a, b = self.getBB()
-        ll = (b+a)/2 - (extra_bb)*(b-a)/2
-        rr = (b+a)/2 + (extra_bb)*(b-a)/2
-        for i in xrange(40):
-            x = np.random.uniform(ll, rr)
-            cp, dist, bdy, other = self.cp(x)
-            colt = (0.5,0.5,0.5)
-            op = 0.3
-            l = mlab.plot3d([x[0],cp[0]], [x[1],cp[1]], [x[2], cp[2]], color=colt, opacity=op, tube_radius=0.1)
-        #mlab.title('3d viz test')
-        mlab.show()
-
+    def _new_level(self, grid, level_dx, level_bandwidth):
+        cp, dist, _, _ = self.closest_point(grid)
+        is_within_bandwidth = dist <= level_bandwidth
+        cp = cp[is_within_bandwidth]
+        grid = grid[is_within_bandwidth]
+        dist = dist[is_within_bandwidth]
+        return cp, dist, grid
 
 class ShapeWithBdy(Surface):
-    def _viztest2d(self, extra_bb):
-        import matplotlib.pyplot as plt
+    pass
 
-        if self._hasParam:
-            X, Y = self.ParamGrid()
-            plt.plot(X, Y, 'k-')
+def build_grid(n, ll, ur, filled=True):
+    """
+    Makes a multi-dimensional coarse grid.
 
-        a, b = self.getBB()
-        ll = (b+a)/2 - (extra_bb)*(b-a)/2
-        rr = (b+a)/2 + (extra_bb)*(b-a)/2
-        for i in xrange(100):
-            x = np.random.uniform(ll, rr)
-            cp, dist, bdy, other = self.cp(x)
-            if bdy==0:
-                col = [0.4, 0.4, 0.4]
-            elif bdy==1:
-                col = 'r'
-            elif bdy==2:
-                col = 'b'
-            else:
-                # TODO:
-                print bdy
-                raise NameError('should do something for other bdy values')
-            plt.plot([x[0], cp[0]], [x[1],cp[1]], '-', color=col)
-            plt.plot([cp[0]], [cp[1]], 'o', color=col)
-        plt.axis('scaled')
-        plt.show()
+    It does not special-case the 2D case.
 
+    Input
+    -----
+    n : scalar
+        number of blocks in each dimension
+    ll : array-like
+         "lowest, left most" corner of the mesh
+    ur : array-like
+         "upper most, right most" corner of the mesh
+    filled : bool, default is True
+             whether to return a filled or an open grid
 
-    def _viztest3d(self):
-        """
-        3D vizualization of CPRep for obj with boundary
-        """
-        try:
-            from mayavi import mlab
-        except ImportError:
-            from enthought.mayavi import mlab
-        f = mlab.figure(1, fgcolor=(0, 0, 0), bgcolor=(1, 1, 1), size=(500,700))
-        mlab.clf()
+    Output
+    ------
+    grid : array
+           desired grid
+    dx : array
+         grid spacing
+    """
+    ll, ur = np.asarray(ll, dtype=np.float64), np.asarray(ur, dtype=np.float64)
+    f = np.mgrid if filled else np.ogrid
+    grid = f[tuple(slice(ll_i, ur_i, complex(0, n))
+                   for ll_i, ur_i in zip(ll, ur))]
+    dx = (ur - ll) / (n-1)
+    return grid, dx
 
-        #s = mlab.mesh(xb, yb, zb, scalars=real(evec_b.reshape(xb.shape)))
-        #l = mlab.plot3d(xs, ys, zs, real(evec_s))
-        #mlab.title(str(ii) + ' ew=' + str(eval), size=0.2)
+def bandwidth(dx, dim, p=3, diff_stencil_arm=1):
+    """Bandwith value.
 
-        #mlab.show()
-        #mlab.savefig('b_horn' + str(ii) + '_' + str(eval) + '.png')
-        #s = mlab.mesh(xb, yb, zb, scalars=real((Eplot_bulb*E*uxx).reshape(xb.shape)))
-        #l = mlab.plot3d(xs, ys, zs, real((Eplot_stem*E*uxx).reshape(xs.shape)))
-
-        #(x1,y1),(x2,y2),(x3,y3) = mesh2d(resolution=3)
-
-        # TODO: is has param:
-        if self._hasParam:
-            L = self.ParamGrid()
-            x, y, z = L
-            #print x,y,z
-            #s = mlab.mesh(xb, yb, zb, scalars=real((Eplot_bulb*E*uxx).reshape(xb.shape)))
-            # TODO: mayavi bug, opacity<1
-            s = mlab.mesh(x, y, z, scalars=z, opacity=1.0)
-
-        a, b = self.getBB()
-        ll = (b+a)/2 - (extra_bb)*(b-a)/2
-        rr = (b+a)/2 + (extra_bb)*(b-a)/2
-        for i in xrange(200):
-            x = np.random.uniform( ll, rr )
-            cp, dist, bdy, other = self.cp(x)
-            drawplot = False
-            if bdy==1:
-                if np.random.random(1) < 1.0:
-                    drawplot = True
-                    col = 'g'
-                    colt = (0.5,1,.2)
-                    op = 0.9
-            elif bdy==2:
-                if np.random.random(1) < 1.0:
-                    drawplot = True
-                    col = 'b'
-                    colt = (.2,.5,1)
-                    op = 0.9
-            else:
-                if (np.random.random(1) < 0.5) and (dist <= max((b-a)/10)):
-                    drawplot = True
-                    col = 'k'
-                    colt = (0.5,0.5,0.5)
-                    op = 0.3
-            if drawplot:
-                l = mlab.plot3d([x[0],cp[0]], [x[1],cp[1]], [x[2], cp[2]], color=colt, opacity=op)#, tube_radius=0.1)
-        #mlab.title('3d viz test')
-        mlab.show()
-
+    Input
+    -----
+    dx : scalar or array
+         grid spacing
+    p : scalar
+        interpolation order
+    diff_stencil_arm : scalar, default is 1 (second order centered
+                       difference Laplacian)
+                       lenght of the differencing stencil arm
+        
+    Reference
+    ---------
+    Ruuth & Merriman
+    """
+    # 1.0001 is a security factor
+    lambda_ = 1.0001 * sqrt((dim-1.0)*((p+1)/2.0)**2 + 
+                        (diff_stencil_arm + (p+1)/2.0)**2) * dx
+    return lambda_
