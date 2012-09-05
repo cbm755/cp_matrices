@@ -5,9 +5,9 @@ implicit Closest Point Method matrix operators on it.
 
 import numpy as np
 
-import cpGrid
+from cp import cpGrid
 reload(cpGrid)
-import cpOps
+from cp import cpOps
 reload(cpOps)
 
 #import pylab
@@ -30,7 +30,7 @@ from time import time
 # cp_hemisphere.init(center=a([0,0,0]), radius=SURF_SR)
 # cpfun_inner = cp_hemisphere.cp_hemisphere
 
-import surfaces
+from cp import surfaces
 
 q2 = surfaces.Hemisphere()
 # wrap the object in CPBar, for accurately imposing boundary
