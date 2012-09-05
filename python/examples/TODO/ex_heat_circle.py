@@ -27,13 +27,13 @@ initialdx = 4.
 # Maximum levels of refinement
 maxlevel = 4
 
-TreeGrid = cpGrid.CPGrid('Spamname', circle.cp, circle._dim, x0,
+TreeGrid = cpGrid.CPGrid('Spamname', circle.closest_point, circle.dim, x0,
                          initialdx, interp_degree=3, levels=maxlevel+1)
 
 
 # Circle parametrization in cartesian coordinates, for example for
 # plotting
-x, y = circle.ParamGrid(64)
+x, y = circle.parametric_grid(64)
 PlotPts = np.vstack((x.ravel(), y.ravel(),)).T
 
 TreeGrid.findStencilSets(maxlevel)
