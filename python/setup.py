@@ -19,5 +19,5 @@ setup(
     ext_modules = ext_modules,
     cmdclass = {'build_ext': build_ext},
     include_dirs = [np.get_include()],
-    requires=['numpy >= 1.6', 'scipy', 'matplotlib >= 1', 'cython >= 0.16']
+    requires=['numpy (>=1.6)', 'scipy', 'matplotlib (>=1.0)', 'cython (>=0.16)']
 )
