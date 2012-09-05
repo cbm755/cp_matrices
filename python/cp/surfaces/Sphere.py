@@ -3,24 +3,23 @@ Closest point function for a sphere.
 
 Works in multidimensions.
 """
-from Surface import Surface
+import numpy as np
 
-from numpy import array as a
-from scipy.linalg import norm
-from scipy import sum as spsum
-from scipy import sqrt,where,zeros
+from Surface import Surface
 
 
 class Sphere(Surface):
-    def __init__(self, center=a([0.0, 0.0, 0.0]), radius=1.0):
-        self._center = center
-        self._radius = radius
-        self._dim = len(center)
-        self._bb = [center - radius, center + radius]
-        if ((self._dim == 2) or (self._dim == 3)):
+    def __init__(self, center=np.array([0.0, 0.0, 0.0]), radius=1.0):
+        self.center = center
+        self.radius = radius
+        self.dim = len(center)
+        self.bounding_box = [center - radius, center + radius]
+        if (self.dim == 2) or (self.dim == 3):
             self._hasParam = True
-        # TODO: superclass knows about dimension?
-        #super(Hemisphere, self).__init__()
+
+    def closest_point(self, x):
+        """The actual implementation has not been cleaned up."""
+        return self.closestPointToCartesian(x)
 
     def closestPointToCartesian(self, x):
         """
@@ -28,23 +27,23 @@ class Sphere(Surface):
         "clean" and one has to be careful with the details (copy is
         necessary for the computation of distance for example)
         """
-        SURF_CEN = self._center
-        SURF_SR = self._radius
+        SURF_CEN = self.center
+        SURF_SR = self.radius
         
         if x.ndim == 1:
             cpx = x-SURF_CEN
-            r = norm(cpx)
+            r = np.linalg.norm(cpx)
             if r == 0:
                 cpx[0] += 1
                 r = 1
             cpx = SURF_SR/r*cpx + SURF_CEN
-            d = norm(cpx-x)
+            d = np.linalg.norm(cpx-x)
             return cpx,d,0,{}
             
         cpx = x-SURF_CEN
-        r = sqrt(spsum(pow(cpx,2),axis=1))
+        r = np.sqrt(np.sum(pow(cpx,2),axis=1))
         if (r.any()==0):
-            ind = where(r == 0)
+            ind = np.where(r == 0)
             cpx[ind,0] = SURF_SR
             r[ind] = SURF_SR
 
@@ -53,25 +52,21 @@ class Sphere(Surface):
         for dim in range(x.shape[1]):
             cpx[:,dim] *= r
         cpx += SURF_CEN
-        dist = sqrt(spsum(pow(cpx - x, 2),axis=1))
-        return cpx, dist, zeros(x.ndim), {}
+        dist = np.sqrt(np.sum(pow(cpx - x, 2),axis=1))
+        return cpx, dist, np.zeros(x.ndim), {}
 
     cp = closestPointToCartesian
 
-    def ParamGrid(self, rez=20):
+    def parametric_grid(self, rez=20):
         """ Return a mesh, for example for plotting with mlab
         """
-        #import numpy as np
-        from numpy import pi,sin,cos,outer,ones,size,linspace
-        rad = self._radius
-        cen = self._center
         # parametric variables
         #u=np.r_[0:2*pi:10j]
         #v=np.r_[0:0.5*pi:10j]
-        th = linspace(0, 2*pi, num=2*rez, endpoint=True)
-        phi = linspace(0, 1*pi, num=rez, endpoint=True)
-        x = rad*outer(cos(th), sin(phi)) + cen[0]
-        y = rad*outer(sin(th), sin(phi)) + cen[1]
-        z = rad*outer(ones(size(th)),cos(phi)) + cen[2]
+        th = np.linspace(0, 2*np.pi, 2*rez, True)
+        phi = np.linspace(0, 1*np.pi, rez, True)
+        x = self.radius*np.outer(np.cos(th), np.sin(phi)) + self.center[0]
+        y = self.radius*np.outer(np.sin(th), np.sin(phi)) + self.center[1]
+        z = self.radius*np.outer(np.ones(th.size), np.cos(phi)) + self.center[2]
         # TODO: return a list?  In case we have multiple components
-        return x,y,z
+        return x, y, z
