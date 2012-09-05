@@ -4,15 +4,15 @@ from collections import defaultdict
 
 import numpy as np
 from scipy.spatial import cKDTree
+#from parallel_kdquery import cKDTree_MP
 try:
     from mayavi import mlab
 except ImportError:
     from enthought.mayavi import mlab
 
-
-#from parallel_kdquery import cKDTree_MP
 from cp.tools.io import load_ply
 from cp.surfaces.triangulation_fast import FindClosestPointToTriSet
+
 
 class Mesh(object):
     """Mesh that knows how to compute its closest point representation."""
