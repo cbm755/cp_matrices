@@ -94,14 +94,14 @@ Notes and TODO
 
 Colin: on my 32-bit machine I get an error about casting::
 
-Traceback (most recent call last):
-  File "examples/cpm_heat_surface_ex.py", line 73, in <module>
-    la,lv,gv,wv = band.createGLVectors()
-  File "/home/cbm/work/cp_matrices-structure/python/cp/petsc/band.py", line 207, in createGLVectors
-    self.SelectBlock()
-  File "/home/cbm/work/cp_matrices-structure/python/cp/petsc/band.py", line 111, in SelectBlock
-    self.ni2pi = PETSc.AO().createMapping(self.gindBlockWBand.getArray().astype(np.int64))
-  File "AO.pyx", line 80, in petsc4py.PETSc.AO.createMapping (src/petsc4py.PETSc.c:135898)
-  File "arraynpy.pxi", line 117, in petsc4py.PETSc.iarray_i (src/petsc4py.PETSc.c:6626)
-  File "arraynpy.pxi", line 110, in petsc4py.PETSc.iarray (src/petsc4py.PETSc.c:6534)
-TypeError: array cannot be safely cast to required type
+    Traceback (most recent call last):
+      File "examples/cpm_heat_surface_ex.py", line 73, in <module>
+        la,lv,gv,wv = band.createGLVectors()
+     File "/home/cbm/work/cp_matrices-structure/python/cp/petsc/band.py", line 207, in createGLVectors
+        self.SelectBlock()
+      File "/home/cbm/work/cp_matrices-structure/python/cp/petsc/band.py", line 111, in SelectBlock
+        self.ni2pi = PETSc.AO().createMapping(self.gindBlockWBand.getArray().astype(np.int64))
+      File "AO.pyx", line 80, in petsc4py.PETSc.AO.createMapping (src/petsc4py.PETSc.c:135898)
+      File "arraynpy.pxi", line 117, in petsc4py.PETSc.iarray_i (src/petsc4py.PETSc.c:6626)
+      File "arraynpy.pxi", line 110, in petsc4py.PETSc.iarray (src/petsc4py.PETSc.c:6534)
+    TypeError: array cannot be safely cast to required type

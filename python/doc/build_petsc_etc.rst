@@ -46,7 +46,8 @@ PETSc
    cd petsc-3.3/
    export PETSC_ARCH=linux64  # or something else
    export PETSC_DIR="$HOME/code/petsc-3.3/"  # Adjust accordingly
-   patch src/dm/ao/impls/mapping/aomapping.c ../cp_matrices/python/patches/petsc.patch
+   patch src/dm/ao/impls/mapping/aomapping.c ../cp_matrices/python/patches/petsc.patc
+   patch src/dm/ao/impls/mapping/aomapping.c ../cp_matrices/python/patches/petsc_2.patch
 
 For the configure step, you can disable generating documentation using
 ``--with-c2html=0``. ``--with-64-bit-indices`` is needed in 64 bit
@@ -98,4 +99,4 @@ NumPy
 If you choose to build your own numpy, do that before building
 petsc4py.
 
-Thats's it!
+Thats's it! You can now follow the instructions to run the example.
