@@ -5,14 +5,15 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
 %   the product of the lists X, Y and Z onto the points specified by
 %   the lists XI, YI, ZI.  Interpolation is done using degree P
 %   barycentric Lagrange interpolation.  E will be a length(XI) times
-%   length(X)*length(Y)*length(Z) sparse matrix.
+%   length(X)*length(Y)*length(Z) sparse matrix.  If P is omitted or
+%   set to [] it defaults to 3.
 %
 %   E = INTERP3_MATRIX(X,Y,Z, XI,YI,ZI, P, BAND)
 %   BAND is a list of linear indices into a (possibly fictious) 3D
 %   array of points constructed with meshgrid.  Here the columns of E
 %   that are not in BAND are discarded.  This is done by first
 %   constructing E as above.  E will be a length(XI) times
-%   length(BAND) sparse matrix.
+%   length(BAND) sparse matrix.  If BAND is [], no banding is done.
 %
 %   [Ei,Ej,Es] = INTERP3_MATRIX(X,Y,Z, XI,YI,ZI, P)
 %   [Ei,Ej,Es] = INTERP3_MATRIX(X,Y,Z, XI,YI,ZI, P, BAND)
@@ -20,25 +21,18 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
 %   (like in FEM).  This is efficient and avoids the overhead of
 %   constructing the matrix.  If BAND is passed or not determines
 %   the column space of the result (i.e., effects Ej).
-%   (TODO: with BAND currently not implemented).
 %
-%   Does no error checking up the equispaced nature of x,y,z
+%   INTERP2_MATRIX(X, Y, XI, YI, P, BAND, true)
+%      Uses ndgrid instead of meshgrid ordering.
 %
-%   Notes: this is faster vectorized replacement for INTERP3_MATRIX_OLDLOOP.
+%   Notes:
+%      This is faster replacement for INTERP2_MATRIX_OLDLOOP.
+%      Inputs X and Y must be equispaced but this is not checked.
 
 
   % input checking
-  [temp1, temp2] = size(x);
-  if ~(  (ndims(x) == 2) && (temp1 == 1 || temp2 == 1)  )
-    error('x must be a vector, not e.g., meshgrid output');
-  end
-  [temp1, temp2] = size(y);
-  if ~(  (ndims(y) == 2) && (temp1 == 1 || temp2 == 1)  )
-    error('y must be a vector, not e.g., meshgrid output');
-  end
-  [temp1, temp2] = size(z);
-  if ~(  (ndims(z) == 2) && (temp1 == 1 || temp2 == 1)  )
-    error('z must be a vector, not e.g., meshgrid output');
+  if (~isvector(x)) || (~isvector(y)) || (~isvector(z))
+    error('x, y and z must be vectors, not e.g., meshgrid output');
   end
   if ~(  (ndims(xi) == 2) && (size(xi,2) == 1)  )
     error('xi must be a column vector');
@@ -51,19 +45,23 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
   end
 
   if (nargin == 6)
-    p = 3
+    p = [];
     makeBanded = false;
     use_ndgrid = false;
   elseif (nargin == 7)
     makeBanded = false;
     use_ndgrid = false;
   elseif (nargin == 8)
-    makeBanded = true;
+    if isempty(band) makeBanded = false; else makeBanded = true; end
     use_ndgrid = false;
   elseif (nargin == 9)
-    makeBanded = true;
+    if isempty(band) makeBanded = false; else makeBanded = true; end
   else
     error('unexpected inputs');
+  end
+
+  if (isempty(p))
+    p = 3;
   end
 
   if (nargout > 1)
@@ -72,18 +70,15 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
     makeListOutput = false;
   end
 
-  if makeBanded && makeListOutput
-    error('currently cannot make both Banded and Ei,Ej,Es output');
-  end
-
   T = tic;
   dx = x(2)-x(1);   Nx = length(x);
   dy = y(2)-y(1);   Ny = length(y);
   dz = z(2)-z(1);   Nz = length(z);
   ddx = [dx  dy  dz];
   ptL = [x(1) y(1) z(1)];
+  M = Nx*Ny*Nz;
 
-  if (Nx * Ny * Nz > 1e15)
+  if (M > 1e15)
     error('too big to use doubles as indicies: implement int64 indexing')
   end
 
@@ -143,38 +138,20 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
   % TODO: is there any advantage to keeping Ei as matrices?  Then each
   % column corresponds to the same point in the stencil...
   if ~makeListOutput
-    tic
-    E = sparse(Ei(:), Ej(:), weights(:), length(xi), Nx*Ny*Nz);
-    T2 = toc;
+    %tic
+    E = sparse(Ei(:), Ej(:), weights(:), length(xi), M);
+    %T2 = toc;
     %fprintf('call to "sparse" time: %g\n', toc);
-  end
-  % Straightening them first doesn't make it faster
-  %tic
-  %Ei = Ei(:);
-  %Ej = Ej(:);
-  %weights = weights(:);
-  %toc
-  %tic
-  %E = sparse(Ei, Ej, weights, length(xi), Nx*Ny*Nz);
-  %toc
 
-  if (makeBanded)
-    %disp('band the large matrix:');
-    if (1==1)
-      %tic
+    if (makeBanded)
+      nnzEfull = nnz(E);
       E = E(:,band);
-      %toc
-    else
-      % sanity check: the columns outside of band should all be zero
-      tic
-      Esparse = E(:,band);
-      Eout = E(:,setdiff(1:(Nx*Ny*Nz),band));
-      if (nnz(Eout) > 0)
-        nnz(Eout)
-        warning('Lost some non-zero coefficients (from outside the innerband)');
+
+      if nnz(E) < nnzEfull
+        % sanity check: the columns outside of band should all be
+        % zero.  TODO: should be an error?
+        warning('non-zero coefficients discarded by banding');
       end
-      E = Esparse;
-      toc
     end
   end
 
@@ -206,5 +183,9 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
     E = Ei(:);   % first output is called E
     Ej = Ej(:);
     Es = weights(:);
+
+    if (makeBanded)
+      invbandmap = make_invbandmap(M, band);
+      Ej = logical2bandmap(Ej);
+    end
   end
-end

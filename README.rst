@@ -11,3 +11,15 @@ Status
 ------
 This is work in process, so the usual disclaimers apply.
 
+
+Other people's code
+-------------------
+readply:
+    MATLAB functions to read and write 3D data PLY files
+    by Pascal Getreuer 2004
+
+ba_interp:
+    TODO: fast matlab interpolation
+    TODO: add author
+
+any others?

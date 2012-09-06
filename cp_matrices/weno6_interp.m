@@ -106,7 +106,7 @@ function w = weno6_interp2d(Cache, f, opt)
   dx = Cache.dx;
   dy = Cache.dy;
 
-  tic
+  %tic
   u = {};
   for j=1:6
     u{j} = helper1d( ...
@@ -114,7 +114,7 @@ function w = weno6_interp2d(Cache, f, opt)
         xi, dx, x, opt);
   end
   w = helper1d({u{1}, u{2}, u{3}, u{4}, u{5}, u{6}}, yi, dy, y, opt);
-  toc
+  %toc
 end
 
 
@@ -134,7 +134,7 @@ function w = weno6_interp3d(Cache, f, opt)
   dy = Cache.dy;
   dz = Cache.dz;
 
-  tic
+  %tic
   u = {};
   v = {};
   for k=1:6
@@ -146,7 +146,7 @@ function w = weno6_interp3d(Cache, f, opt)
     v{k} = helper1d({u{1}, u{2}, u{3}, u{4}, u{5}, u{6}}, yi, dy, y, opt);
   end
   w = helper1d({v{1}, v{2}, v{3}, v{4}, v{5}, v{6}}, zi, dz, z, opt);
-  toc
+  %toc
 end
 
 
@@ -269,7 +269,7 @@ function Cache = weno6_interp3d_makecache(cp, f, xyz)
 
   [E W N S U D] = neighbourMatrices(cp, cp.band, cp.band);
 
-  tic
+  %tic
   C = {};
   I = speye(size(W));
   T1 = {W*W, W, I, E, E*E, E*E*E};
@@ -282,7 +282,7 @@ function Cache = weno6_interp3d_makecache(cp, f, xyz)
       end
     end
   end
-  toc
+  %toc
 
   Cache.C = C;
   Cache.xi = xi;
@@ -323,7 +323,7 @@ function Cache = weno6_interp2d_makecache(cp, f, xyz)
 
   [E W N S] = neighbourMatrices(cp, cp.band, cp.band);
 
-  tic
+  %tic
   C = {};
   I = speye(size(W));
   T1 = {W*W, W, I, E, E*E, E*E*E};
@@ -333,7 +333,7 @@ function Cache = weno6_interp2d_makecache(cp, f, xyz)
       C{i,j} = B*T1{i}*T2{j};
     end
   end
-  toc
+  %toc
 
   Cache.C = C;
   Cache.xi = xi;

@@ -9,7 +9,7 @@ function [pass, str] = test_difforder_bulk3d_ndgrid2()
   dx = dx/2;  dy = dy/2;  dz = dz/2;
   errs2 = helper1(dx,dy,dz);
 
-  orders = errs1 ./ errs2
+  orders = errs1 ./ errs2;
 
   % mixing meshgrid and ndgrid should give consistency only on the
   % operators that are independ on z.

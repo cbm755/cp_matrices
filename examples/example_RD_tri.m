@@ -4,13 +4,6 @@
 % matrices, and differentiation matrices.
 
 
-% adjust as appropriate
-addpath('../cp_matrices');
-addpath('../surfaces');
-addpath('../surfaces/tri');
-addpath('../surfaces/readply');
-addpath('../surfaces/tri2cp');
-
 loaddata = 1;
 
 if (loaddata == 1)

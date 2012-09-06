@@ -7,14 +7,6 @@
 % with initial conditions u = cos(4*theta)
 
 
-%% Using cp_matrices
-
-% Include the cp_matrices folder (edit as appropriate)
-addpath('../cp_matrices');
-
-% add functions for finding the closest points
-addpath('../surfaces');
-
 
 %%
 % 3D example on a sphere
