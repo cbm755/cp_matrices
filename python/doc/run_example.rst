@@ -27,14 +27,18 @@ Prepare the mesh
     cd python
     cp /pathto/yourmesh.ply eight.ply
 
-The file name should be eight.ply if you don't want to change the code.
+The file name should be eight.ply if you don't want to change the code.  You can also put it in::
+
+    python/cp/tests/data/eight.ply
+
+(All of this is in a state of flux: no more ply files in the git repo for now please.)
 
 All above should be done in both of the computing server and the local
 machine. The "Get the solution" part is of course time-consuming, and 
 only needs to done on the computing server.
 
 
-Get the soltuion
+Get the solution
 ###############
 
 ::
@@ -46,6 +50,11 @@ Get the soltuion
 
 After the long of computation, two files "gv.dat" and "gv.dat.info" will
 be generated. Copy the gv.dat to local machine to plot the solution.
+
+Colin says: on my Fedora laptop, I have to do::
+
+PYTHONPATH="$PYTHONPATH:." mpiexec -n 4 python examples/cpm_heat_surface_ex.py 
+
 
 Copy the solution
 ###############
@@ -65,3 +74,20 @@ Plot the solution
     cd code/cp_matrices/python
     python2.7 examples/plot_mesh.py
 
+
+Notes and TODO
+################
+
+Colin: on my 32-bit machine I get an error about casting::
+
+Traceback (most recent call last):
+  File "examples/cpm_heat_surface_ex.py", line 73, in <module>
+    la,lv,gv,wv = band.createGLVectors()
+  File "/home/cbm/work/cp_matrices-structure/python/cp/petsc/band.py", line 207, in createGLVectors
+    self.SelectBlock()
+  File "/home/cbm/work/cp_matrices-structure/python/cp/petsc/band.py", line 111, in SelectBlock
+    self.ni2pi = PETSc.AO().createMapping(self.gindBlockWBand.getArray().astype(np.int64))
+  File "AO.pyx", line 80, in petsc4py.PETSc.AO.createMapping (src/petsc4py.PETSc.c:135898)
+  File "arraynpy.pxi", line 117, in petsc4py.PETSc.iarray_i (src/petsc4py.PETSc.c:6626)
+  File "arraynpy.pxi", line 110, in petsc4py.PETSc.iarray (src/petsc4py.PETSc.c:6534)
+TypeError: array cannot be safely cast to required type

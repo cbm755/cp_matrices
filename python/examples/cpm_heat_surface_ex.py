@@ -4,7 +4,10 @@ Created on Aug 10, 2012
 @author: nullas
 '''
 import scipy as sp
-from mayavi import mlab as pl
+try:
+    from mayavi import mlab as pl
+except ImportError:
+    from enthought.mayavi import mlab as pl
 from mpi4py import MPI
 from cp.surfaces.MeshWrapper import MeshWrapper
 from cp.petsc.band import Band
@@ -61,7 +64,12 @@ def outputBin(gv):
 
 if __name__ == '__main__':
     opt = {'M':100,'m':5,'d':3}
-    surface = MeshWrapper('eight.ply')
+    try:
+        surface = MeshWrapper('eight.ply')
+        #surface = MeshWrapper('eight_refined.ply')
+    except IOError:
+        surface = MeshWrapper('cp/tests/data/eight.ply')
+        #surface = MeshWrapper('cp/tests/data/eight_refined.ply')
     comm = MPI.COMM_WORLD
     band = Band(surface,comm,opt)
     la,lv,gv,wv = band.createGLVectors()
