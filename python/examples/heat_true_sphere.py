@@ -10,7 +10,7 @@ from cp.build_matrices import build_interp_matrix, build_diff_matrix
 from cp.surfaces.coordinate_transform import cart2sph
 
 
-PLOT = True
+PLOT = False
 
 s = Sphere()
 
@@ -20,7 +20,10 @@ dim = 3
 
 # As a byproduct of finding the banded grid, we already have its
 # closest points, so we don't really have to call s.closest_point()
-cp, distance, grid, dx = s.grid(num_blocks=41, levels=1)
+cp, distance, grid, dx = s.grid(num_blocks_per_dim=41,
+                                   levels=1,
+                                   p=p,
+                                   diff_stencil_arm=diff_stencil_arm)
 cp2, distance2, _, _ = s.closest_point(grid)
 assert np.allclose(cp, cp2)
 assert np.allclose(distance, distance2)
