@@ -27,14 +27,16 @@ Prepare the mesh
     cd python
     cp /pathto/yourmesh.ply eight.ply
 
-The file name should be eight.ply if you don't want to change the code.  You can also put it in::
+The file name should be eight.ply if you don't want to change the
+code.  You can also put it in::
 
     python/cp/tests/data/eight.ply
 
-(All of this is in a state of flux: no more ply files in the git repo for now please.)
+(All of this is in a state of flux: no more ply files in the git repo
+for now please.)
 
 All above should be done in both of the computing server and the local
-machine. The "Get the solution" part is of course time-consuming, and 
+machine. The "Get the solution" part is of course time-consuming, and
 only needs to done on the computing server.
 
 
@@ -48,13 +50,24 @@ Get the solution
     mpiexec -n 24 python2.7 examples/cpm_heat_surface_ex.py
     # "24" should be the number of the processors.
 
-After the long of computation, two files "gv.dat" and "gv.dat.info" will
-be generated. Copy the gv.dat to local machine to plot the solution.
+After the long of computation, two files "gv.dat" and "gv.dat.info"
+will be generated. Copy the gv.dat to local machine to plot the
+solution.
 
 Colin says: on my Fedora laptop, I have to do::
 
 PYTHONPATH="$PYTHONPATH:." mpiexec -n 4 python examples/cpm_heat_surface_ex.py 
 
+I (Jorge) think another way to solve it is by installing the cp
+package. Something like::
+
+    python setup.py install --user --record installed_files.txt
+
+and then::
+
+    cat installed_files.txt | xargs rm -rf
+
+to remove the package if needed.
 
 Copy the solution
 ###############
@@ -74,6 +87,7 @@ Plot the solution
     cd code/cp_matrices/python
     python2.7 examples/plot_mesh.py
 
+I've successfully arrived here.
 
 Notes and TODO
 ################

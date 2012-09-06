@@ -49,8 +49,9 @@ PETSc
    patch src/dm/ao/impls/mapping/aomapping.c ../cp_matrices/python/patches/petsc.patch
 
 For the configure step, you can disable generating documentation using
-`--with-c2html=0`. `--with-64-bit-indices` is needed in 64 bit OSes as
-far as I know (ie, I need it in my laptop, workstation and cyclops)
+``--with-c2html=0``. ``--with-64-bit-indices`` is needed in 64 bit
+OSes as far as I know (ie, I need it in my laptop, workstation and
+cyclops)::
 
    ./configure --with-shared-libraries --with-64-bit-indices --with-debugging=1
    make PETSC_DIR=$HOME/code/petsc-3.3/ PETSC_ARCH=linux64 all
@@ -80,9 +81,7 @@ http://code.google.com/p/petsc4py/source/browse/docs/source/install.rst
 mpi4py
 ######
 
-Again, if you can't use pip.
-
-::
+Again, if you can't use pip::
 
    curl -O https://mpi4py.googlecode.com/files/mpi4py-1.3.tar.gz
    tar -zxf mpi4py-1.3.tar.gz
@@ -96,7 +95,7 @@ http://mpi4py.scipy.org/docs/usrman/install.html
 NumPy
 #####
 
-If you choose to build your own numpy, do that before building petsc4py.
+If you choose to build your own numpy, do that before building
+petsc4py.
 
-Thats's it! Everything but petsc could easily be installed through pip
-if you control your machine...
+Thats's it!
