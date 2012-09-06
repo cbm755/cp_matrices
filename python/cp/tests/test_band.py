@@ -7,7 +7,7 @@ from __future__ import division
 
 import unittest
 import exceptions
-
+from nose.plugins.attrib import attr
 
 from cp.surfaces import Sphere as Surface
 from cp.petsc.band import Band
@@ -56,7 +56,8 @@ class TestBand(unittest.TestCase):
             rslt = self.bnd.BlockSub2CenterCarWithoutBand(sub)
             npt.assert_array_equal(rslt, right)
 
-            
+   
+    @attr(visual=1)
     def testVisually(self):
         '''blocks selected visually.'''
 #        if self.comm.rank == 0:
