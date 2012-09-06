@@ -70,3 +70,20 @@ def build_interp_matrix(int_band, cp, dx, p, ll, shape):
     E = coo_matrix((Es.ravel(), (Ei.ravel(), Ej.ravel())),
                    (cp.shape[0], reduce(mul, shape))).tocsr()
     return E[:, np.ravel_multi_index(int_band.T, shape)]
+
+def build_linear_diagonal_splitting(L, E):
+    """Computes the DEstab matrix.
+
+    Implements stable modification of the implicit Closest Point
+    Method procedure, see formulat (2.8) in [ICPM].
+    """
+    import scipy.sparse
+
+    usz, lsz = L.shape
+    Ldiagv = L.diagonal()
+    Ldiag = scipy.sparse.spdiags(Ldiagv, 0, usz, usz)
+    Ldiagpad = scipy.sparse.spdiags(Ldiagv, 0, usz, lsz)
+    # sparse matrices, so this is matrix-matrix multiplication, not
+    # elementwise.
+    M = Ldiag + (L - Ldiagpad)*E
+    return M
