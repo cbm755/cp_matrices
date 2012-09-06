@@ -1,5 +1,9 @@
 """Solves the heat equation on a triangulated sphere."""
 import numpy as np
+try:
+    from mayavi import mlab
+except ImportError:
+    from enthought.mayavi import mlab
 
 from cp.surfaces import Mesh
 # Since our mesh is a sphere, we'll take advantage of its
@@ -10,10 +14,6 @@ from cp.build_matrices import build_interp_matrix, build_diff_matrix
 # TODO: move coordinate_transform out of cp.surfaces (maybe to
 # cp.tools?)
 from cp.surfaces.coordinate_transform import cart2sph
-try:
-    from mayavi import mlab
-except ImportError:
-    from enthought.mayavi import mlab
 
 
 PLOT = False
