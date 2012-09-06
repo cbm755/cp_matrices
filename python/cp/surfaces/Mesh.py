@@ -39,15 +39,18 @@ class Mesh(Surface):
         dist = dist[is_within_bandwidth]
         return index, dist, grid
 
-    def _refine(self, index, grid):
-        res = refine(index, grid, self.vertices2faces,
+    def _refine(self, grid, index):
+        res = refine(grid, index, self.vertices2faces,
                      self.vertices, self.faces)
         cp = res[:, 1:]
         dist = np.sqrt(res[:, 0])
         return cp, dist
     
-    def closest_point(self, index, grid):
-        cp, dist = self._refine(index, grid)
+    def closest_point(self, grid, index):
+        """index is returned by self.grid. It contains information
+        about the closest vertices.
+        """
+        cp, dist = self._refine(grid, index)
         return cp, dist, 0, {}
 
 def build_vertices2faces(faces):
@@ -58,7 +61,7 @@ def build_vertices2faces(faces):
             vertices2faces[vertex].append(i)
     return vertices2faces
 
-def refine(index_cp, grid_fine, vertex2faces, vertices, faces):
+def refine(grid_fine, index_cp, vertex2faces, vertices, faces):
     """Actual closest points to a triangulated surface.
 
     Given the closest vertex to any point, finds the actual closest

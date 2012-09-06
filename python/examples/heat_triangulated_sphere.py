@@ -16,7 +16,7 @@ from cp.build_matrices import build_interp_matrix, build_diff_matrix
 from cp.surfaces.coordinate_transform import cart2sph
 
 
-PLOT = False
+PLOT = True
 
 # Load vertices and faces, and instatiate surface
 v, f = load_ply('cp/tests/data/sphere_refined.ply')
@@ -30,7 +30,7 @@ index, distance, grid, dx = m.grid(num_blocks_per_dim=41,
                                    levels=1,
                                    p=p,
                                    diff_stencil_arm=diff_stencil_arm)
-cp, dist, _, _ = m.closest_point(index, grid)
+cp, dist, _, _ = m.closest_point(grid, index)
 
 # The points in `grid` can be thought to be a subset of a virtual grid
 # (for instance, the result of meshgrid). `ll` is the lower left
@@ -70,10 +70,7 @@ Eplot = build_interp_matrix(int_grid,
                             np.column_stack((xp.ravel(),
                                              yp.ravel(),
                                              zp.ravel())),
-                            dx,
-                            p,
-                            ll,
-                            virtual_grid_shape)
+                            dx, p, ll, virtual_grid_shape)
 
 if PLOT:
     # Plotting code. Build a pipeline to be able to change the data later.

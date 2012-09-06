@@ -55,8 +55,6 @@ class Sphere(Surface):
         dist = np.sqrt(np.sum(pow(cpx - x, 2),axis=1))
         return cpx, dist, np.zeros(x.ndim), {}
 
-    cp = closestPointToCartesian
-
     def parametric_grid(self, rez=20):
         """ Return a mesh, for example for plotting with mlab
         """
