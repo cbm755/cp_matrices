@@ -1,10 +1,14 @@
+"""Solves the heat equation on a triangulated sphere."""
 import numpy as np
 
 from cp.surfaces import Mesh
-# Since our mesh is a sphere, we'll use its parametric_plot method
+# Since our mesh is a sphere, we'll take advantage of its
+# parametric_plot method
 from cp.surfaces import Sphere
 from cp.tools.io import load_ply
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
+# TODO: move coordinate_transform out of cp.surfaces (maybe to
+# cp.tools?)
 from cp.surfaces.coordinate_transform import cart2sph
 try:
     from mayavi import mlab
@@ -12,6 +16,9 @@ except ImportError:
     from enthought.mayavi import mlab
 
 
+PLOT = False
+
+# Load vertices and faces, and instatiate surface
 v, f = load_ply('cp/tests/data/sphere_refined.ply')
 m = Mesh(v, f)
 
@@ -41,7 +48,7 @@ int_grid = np.round((grid - ll) / dx).astype(np.int)
 # To set the initial conditions I directly set a value for each grid
 # point. Another option would be to set the values in the vertices,
 # then interpolate to get the values in each closest point (using
-# scipy.interpolate.griddata) and finally extending that to the whole
+# scipy.interpolate.griddata) and finally extend that to the whole
 # grid
 th, phi, r = cart2sph(grid[:, 0], grid[:, 1], grid[:, 2])
 u = np.cos(phi + np.pi / 2)
@@ -56,11 +63,6 @@ E = build_interp_matrix(int_grid, cp, dx, p, ll, virtual_grid_shape)
 # use stencils.py, and give the stencil as a parameter
 L = build_diff_matrix(int_grid, dx, virtual_grid_shape)
 
-# 
-Tf = 1
-dt = 0.1 * np.min(dx)**2
-numtimesteps = int(Tf // dt + 1)
-err = []  # To store the error at each timestep
 # Points in the surface of the sphere, used por plotting
 xp, yp, zp = Sphere().parametric_grid(65)
 _, phi_plot, _ = cart2sph(xp, yp, zp)
@@ -73,24 +75,31 @@ Eplot = build_interp_matrix(int_grid,
                             ll,
                             virtual_grid_shape)
 
-# Plotting code. Build a pipeline to be able to change the data later.
-src = mlab.pipeline.grid_source(xp, yp, zp,
-                                scalars=(Eplot * u).reshape(xp.shape))
-normals = mlab.pipeline.poly_data_normals(src)
-surf = mlab.pipeline.surface(normals)
-mlab.colorbar()
+if PLOT:
+    # Plotting code. Build a pipeline to be able to change the data later.
+    src = mlab.pipeline.grid_source(xp, yp, zp,
+                                    scalars=(Eplot * u).reshape(xp.shape))
+    normals = mlab.pipeline.poly_data_normals(src)
+    surf = mlab.pipeline.surface(normals)
+    mlab.colorbar()
 
+Tf = 2
+dt = 0.1 * np.min(dx)**2
+numtimesteps = int(Tf // dt + 1)
+errors = []  # To store the error at each timestep
 # Explicit Forward Euler time stepping
 for kt in xrange(numtimesteps):
     unew = u + dt * (L*u)
     u = E*unew
     t = kt * dt
-    if not kt%10:
-        print round(float(kt) / numtimesteps, 2)
+    if not kt%100 or kt == (numtimesteps-1):
+        print "time: {0:2f}, {1:2f} %".format(t, float(kt) / numtimesteps)
         sphplot = Eplot * u
         true_solution = np.exp(-2*t) * np.cos(phi_plot + np.pi / 2)
-        err.append(np.abs(true_solution - sphplot.reshape(xp.shape)).sum() / np.abs(true_solution).sum())
-        src.data.point_data.scalars = sphplot
-        src.data.point_data.scalars.name = 'scalars'
-        src.data.modified()
-        
+        step_error = (np.abs(true_solution - sphplot.reshape(xp.shape)).sum() /
+                      np.abs(true_solution).sum())
+        errors.append(step_error)
+        if PLOT:
+            src.data.point_data.scalars = sphplot
+            src.data.point_data.scalars.name = 'scalars'
+            src.data.modified()
