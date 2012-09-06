@@ -77,7 +77,8 @@ def buildDiffMatrix(Levolve, Lextend):
 
 def _buildDiffMatrix_lil_slow(Levolve, Lextend):
     """
-    generate the matrix D using lil_matrix
+    Generate the matrix D using lil_matrix
+    
     Deprecated, slower than coo_matrix
     """
     from math import log10,ceil
