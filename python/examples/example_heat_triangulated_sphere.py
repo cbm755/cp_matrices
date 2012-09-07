@@ -51,7 +51,6 @@ th_plot, phi_plot = np.mgrid[-np.pi:np.pi:65j,
                              -np.pi/2:np.pi/2:65j].reshape((2, -1))
 xp, yp, zp = sph2cart(th_plot, phi_plot, 1)
 Eplot = build_interp_matrix(int_grid, np.column_stack((xp, yp, zp)), dx, p, ll, virtual_grid_shape)
-from mayavi import mlab
 s = mlab.points3d(xp, yp, zp, Eplot * u)
 mlab.colorbar()
 
