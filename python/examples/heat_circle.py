@@ -4,6 +4,8 @@ import numpy as np
 from cp.surfaces import Circle
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
 from cp.surfaces.coordinate_transform import cart2pol
+import pickle
+
 
 s = Circle()
 
@@ -67,3 +69,14 @@ for kt in xrange(numtimesteps):
         #    src.data.point_data.scalars = sphplot
         #    src.data.point_data.scalars.name = 'scalars'
         #    src.data.modified()
+
+
+print 'saving matrices to petsc format on disk'
+import cp.tools.convert_scipy_matrix_to_petsc as con
+reload(con)
+con.convert_scipy_matrix_to_petsc(L, 'Lmatrix.dat')
+con.convert_scipy_matrix_to_petsc(E, 'Ematrix.dat')
+
+final_u = u
+print 'saving dx, ICs, soln to disk'
+pickle.dump((dx,initial_u, final_u), file('non_petsc_data.pickle','w'))
