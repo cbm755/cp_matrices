@@ -18,7 +18,11 @@ class Sphere(Surface):
             self._hasParam = True
 
     def closest_point(self, x):
-        """TODO: The actual implementation has not been cleaned up."""
+        """TODO: The actual implementation has not been cleaned up.
+
+        It has to be a function that accepts arrays of shape
+        (n_points, dim)
+        """
         return self.closestPointToCartesian(x)
 
     def closestPointToCartesian(self, x):

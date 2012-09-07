@@ -35,12 +35,6 @@ virtual_grid_shape = np.abs(ur-ll) / dx + 1
 # The (i,j,...) indices of the grid points, taking `ll` as origin.
 int_grid = np.round((grid - ll) / dx).astype(np.int)
 
-# Initial conditions
-th, phi, r = cart2sph(grid[:, 0], grid[:, 1], grid[:, 2])
-u = np.cos(phi + np.pi / 2)
-# Let's keep a copy of the initial conditions
-initial_u = u.copy()
-
 # Build interpolation and differential matrix.
 E = build_interp_matrix(int_grid, cp, dx, p, ll, virtual_grid_shape)
 L = build_diff_matrix(int_grid, dx, virtual_grid_shape)
@@ -58,7 +52,8 @@ vertical_res, horizontal_res = image.shape
 # Image limits
 xmin, xmax = -1.5, 1.5
 ymin, ymax = -1.5, 1.5
-xi = np.round(horizontal_res * (grid[:, 0] - xmin) / (xmax - xmin)).astype(np.int)
+xi = np.round(horizontal_res * (grid[:, 0] - xmin) /
+              (xmax - xmin)).astype(np.int)
 yi = (vertical_res - np.round(vertical_res * (grid[:, 1] - ymin) /
                              (ymax - ymin))).astype(np.int)
 # Forcing functions
@@ -72,7 +67,6 @@ chi = E * chi
 chi = (chi > 0.9).astype(np.int)
 
 xp, yp, zp = s.parametric_grid(256)
-_, phi_plot, _ = cart2sph(xp, yp, zp)
 Eplot = build_interp_matrix(int_grid,
                             np.column_stack((xp.ravel(),
                                              yp.ravel(),
@@ -94,7 +88,6 @@ f = lambda u, v: -u * v**2 + F * (1 - u)
 g = lambda u, v: u * v**2 - (F+kk) * v
 
 # Initial conditions - small perturbation from steady state
-th, r, _ = cart2pol(*grid.T)
 pert = 0.5 * np.exp(-(10*(grid[:,2] - 1))**2) + 0.5 * np.random.randn(grid.shape[0])
 u0 = 1 - pert
 v0 = 0 + 0.5 * pert
@@ -116,7 +109,7 @@ lambda_ = 4 * nuu / (dx.min()**2)
 Au = nuu * E * L - lambda_ * (I - E)
 Av = nuv * E * L - lambda_ * (I - E)
 
-Tf = 5000
+Tf = 3000
 dt = 0.1 * (1. / max(nuu, nuv)) * np.min(dx)**2
 print "dt", dt
 numtimesteps = int(Tf // dt + 1)
@@ -125,7 +118,7 @@ for kt in xrange(numtimesteps):
     if kt < 10:  # No forcing
         unew = u + dt * (E * f(u,v) + Au * u)
         vnew = v + dt * (E * g(u, v) + Av * v)
-    elif kt < 3000:  # Turn on first forcing function
+    else:  # Turn on forcing function
         unew = u + dt * (E * f(u, v) + Au*u + gslam * chi * (u-0.3))
         vnew = v + dt * (E * g(u, v) + Av*v + gslam * chi * (v-0.6))
     u = unew.copy()
