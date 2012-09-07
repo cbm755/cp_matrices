@@ -1,4 +1,4 @@
-"""Solves the heat equation on a true sphere."""
+"""Controlled patterns on a true sphere."""
 import numpy as np
 from scipy.sparse import eye
 import matplotlib.pyplot as plt
