@@ -1,22 +1,15 @@
 """Solves the heat equation on a true sphere."""
 import numpy as np
-try:
-    from mayavi import mlab
-except ImportError:
-    from enthought.mayavi import mlab
 
-from cp.surfaces import Sphere
+from cp.surfaces import Circle
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
-from cp.surfaces.coordinate_transform import cart2sph
+from cp.surfaces.coordinate_transform import cart2pol
 
-
-PLOT = False
-
-s = Sphere()
+s = Circle()
 
 p = 3
 diff_stencil_arm = 1
-dim = 3
+dim = 2
 
 # As a byproduct of finding the banded grid, we already have its
 # closest points, so we don't really have to call s.closest_point()
@@ -37,8 +30,8 @@ virtual_grid_shape = np.abs(ur-ll) / dx + 1
 int_grid = np.round((grid - ll) / dx).astype(np.int)
 
 # Initial conditions
-th, phi, r = cart2sph(grid[:, 0], grid[:, 1], grid[:, 2])
-u = np.cos(phi + np.pi / 2)
+th, r = cart2pol(grid[:, 0], grid[:, 1])
+u = np.cos(th + np.pi / 2)
 # Let's keep a copy of the initial conditions
 initial_u = u.copy()
 
@@ -47,21 +40,12 @@ E = build_interp_matrix(int_grid, cp, dx, p, ll, virtual_grid_shape)
 L = build_diff_matrix(int_grid, dx, virtual_grid_shape)
 
 
-xp, yp, zp = s.parametric_grid(65)
-_, phi_plot, _ = cart2sph(xp, yp, zp)
+xp, yp = s.parametric_grid(65)
+th_plot, _ = cart2pol(xp, yp)
 Eplot = build_interp_matrix(int_grid,
                             np.column_stack((xp.ravel(),
-                                             yp.ravel(),
-                                             zp.ravel())),
+                                             yp.ravel())),
                             dx, p, ll, virtual_grid_shape)
-
-if PLOT:
-    # Plotting code. Build a pipeline to be able to change the data later.
-    src = mlab.pipeline.grid_source(xp, yp, zp,
-                                    scalars=(Eplot * u).reshape(xp.shape))
-    normals = mlab.pipeline.poly_data_normals(src)
-    surf = mlab.pipeline.surface(normals)
-    mlab.colorbar()
 
 
 Tf = 2
@@ -74,13 +58,12 @@ for kt in xrange(numtimesteps):
     u = E*unew
     t = kt * dt
     if not kt%100 or kt == (numtimesteps-1):
-        print "time: {0:2f}, {1:2f} %".format(t, float(kt) / numtimesteps)
-        sphplot = Eplot * u
-        true_solution = np.exp(-2*t) * np.cos(phi_plot + np.pi / 2)
-        step_error = (np.abs(true_solution - sphplot.reshape(xp.shape)).sum() /
-                      np.abs(true_solution).sum())
-        errors.append(step_error)
-        if PLOT:
-            src.data.point_data.scalars = sphplot
-            src.data.point_data.scalars.name = 'scalars'
-            src.data.modified()
+        uplot = Eplot * u
+        true_solution = np.exp(-t) * np.cos(th_plot + np.pi / 2)
+        max_error = (np.abs(true_solution - uplot)).max()
+        print "time: {0:2f} ({1:2.2f}%), err={2:g}".format(t, 100*float(kt) / numtimesteps, max_error)
+        #errors.append(step_error)
+        #if PLOT:
+        #    src.data.point_data.scalars = sphplot
+        #    src.data.point_data.scalars.name = 'scalars'
+        #    src.data.modified()

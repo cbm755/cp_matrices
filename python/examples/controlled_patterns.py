@@ -28,8 +28,8 @@ cp, distance, grid, dx = s.grid(num_blocks_per_dim=41,
                                    diff_stencil_arm=diff_stencil_arm)
 
 # Corners of the virtual grid, superset of `grid`
-ll = np.array(3 * [grid.min()]) - 3 * dx
-ur = np.array(3 * [grid.max()]) + 3 * dx
+ll = np.array(dim * [grid.min()]) - 3 * dx
+ur = np.array(dim * [grid.max()]) + 3 * dx
 virtual_grid_shape = np.abs(ur-ll) / dx + 1
 
 # The (i,j,...) indices of the grid points, taking `ll` as origin.
