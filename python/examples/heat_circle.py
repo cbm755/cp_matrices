@@ -76,10 +76,9 @@ print "Serial code time=", timeit.default_timer() - start_time
 
 
 print 'saving matrices to petsc format on disk'
-import cp.tools.convert_scipy_matrix_to_petsc as con
-reload(con)
-con.convert_scipy_matrix_to_petsc(L, 'Lmatrix.dat')
-con.convert_scipy_matrix_to_petsc(E, 'Ematrix.dat')
+import cp.tools.scipy_petsc_conversions as conv
+conv.save_scipy_to_petsc_ondisk(L, 'Lmatrix.dat')
+conv.save_scipy_to_petsc_ondisk(E, 'Ematrix.dat')
 
 final_u = u
 print 'saving dx, ICs, soln to disk'
