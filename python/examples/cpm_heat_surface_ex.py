@@ -3,7 +3,7 @@ Created on Aug 10, 2012
 
 @author: nullas
 '''
-import scipy as sp
+import numpy as np
 try:
     from mayavi import mlab as pl
 except ImportError:
@@ -20,10 +20,10 @@ petsc4py.init(sys.argv)
 
 
 def test_initialu(cp):
-    return sp.ones(cp.shape[0])#cp[:,0]
+    return np.ones(cp.shape[0])#cp[:,0]
 def initialu(cp):
-    rlt = sp.ones(cp.shape[0])
-    (ind,) = sp.where(2.3*cp[:,0]+cp[:,2] > 0)
+    rlt = np.ones(cp.shape[0])
+    (ind,) = np.where(2.3*cp[:,0]+cp[:,2] > 0)
     rlt[ind] = 0
     return rlt
 
@@ -72,12 +72,13 @@ if __name__ == '__main__':
         #surface = MeshWrapper('cp/tests/data/eight_refined.ply')
     comm = MPI.COMM_WORLD
     band = Band(surface,comm,opt)
+    PETSc.Sys.Print('dx = ', band.dx)
     la,lv,gv,wv = band.createGLVectors()
     v = band.getCoordinates()
     centers = band.BlockInd2CenterCarWithoutBand(band.gindBlockWBand.getArray())
     dt = 0.1*band.dx**2
-    vv = sp.array([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]])
-    weights = sp.array([-6,1,1,1,1,1,1])*(dt/band.dx**2)
+    vv = np.array([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]])
+    weights = np.array([-6,1,1,1,1,1,1])*(dt/band.dx**2)
     L = band.createAnyMat(vv, weights, (7,3))
     PETSc.Sys.Print('Laplacian')
 
@@ -87,7 +88,7 @@ if __name__ == '__main__':
     plot3d_total(v,gv)
     nextt = 0.01
     PETSc.Sys.Print('Begin to solve.\n dt is {0}'.format(dt))
-    for t in sp.arange(0,0.2,dt):
+    for t in np.arange(0,0.2,dt):
         L.multAdd(gv,gv,wv)
         M.mult(wv,gv)
         if t > nextt:

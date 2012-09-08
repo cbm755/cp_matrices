@@ -108,7 +108,9 @@ class Band(object):
         scatter = PETSc.Scatter().create(lindBlockWBandFrom,LInd,self.gindBlockWBand,None)
         scatter.scatter(lindBlockWBandFrom,self.gindBlockWBand,PETSc.InsertMode.INSERT)
         #Natural order Index To Petsc order Index
+        # TODO: colin needs to change this int64 to int32: what is correct thing to do here?
         self.ni2pi = PETSc.AO().createMapping(self.gindBlockWBand.getArray().astype(np.int64))
+        #self.ni2pi = PETSc.AO().createMapping(self.gindBlockWBand.getArray().astype(np.int32))
 
     def getCoordinatesWithGhost(self):
         '''Return the coordinates of local vector.'''

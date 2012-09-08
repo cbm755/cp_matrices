@@ -3,7 +3,7 @@ Created on Aug 10, 2012
 
 @author: nullas
 '''
-import scipy as sp
+import numpy as np
 from matplotlib import pylab as pl
 from mpi4py import MPI
 #from cp.surfaces.MeshWrapper import MeshWrapper
@@ -16,7 +16,7 @@ import matplotlib.tri as tri
 
 petsc4py.init(sys.argv)
 def test_initialu(cp):
-    return sp.ones(cp.shape[0])#cp[:,0]
+    return np.ones(cp.shape[0])#cp[:,0]
 def initialu(cp):
     return cp[:,0]
 
@@ -26,26 +26,26 @@ def triplot(x,y,z,r=0.001,title = 'band'):
     triang = tri.Triangulation(x,y)
     xmid = x[triang.triangles].var(axis=1)
     ymid = y[triang.triangles].var(axis=1)
-    mask = sp.where(xmid*xmid + ymid*ymid > r*r, 1, 0)
+    mask = np.where(xmid*xmid + ymid*ymid > r*r, 1, 0)
     triang.set_mask(mask)
     pl.figure()
     pl.gca().set_aspect('equal')
     pl.tricontourf(triang, z)
     pl.colorbar()
-    V = sp.arange(-10,10,dtype=sp.double)/10*z.max()
+    V = np.arange(-10,10,dtype=np.double)/10*z.max()
     pl.tricontour(triang, z,V)#, colors='k')
     pl.title(title)
 
 if __name__ == '__main__':
     opt = {'M':40,'m':4,'d':2}
-    surface = Sphere(center=sp.array([0.0, 0.0]))
+    surface = Sphere(center=np.array([0.0, 0.0]))
     comm = MPI.COMM_WORLD
     band = Band(surface,comm,opt)
     la,lv,gv,wv = band.createGLVectors()
     v = band.getCoordinates() 
     dt = 0.1*band.dx**2
-    vv = sp.array([[0,0],[1,0],[-1,0],[0,1],[0,-1]])
-    weights = sp.array([-4,1,1,1,1])*(dt/band.dx**2)
+    vv = np.array([[0,0],[1,0],[-1,0],[0,1],[0,-1]])
+    weights = np.array([-4,1,1,1,1])*(dt/band.dx**2)
     L = band.createAnyMat(vv, weights, (5,2))
     PETSc.Sys.Print('Laplacian')
     band.test_initialu(test_initialu)
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     PETSc.Sys.Print('Initial')
     nextt = 0.1
     PETSc.Sys.Print('Begin to solve')
-    for t in sp.arange(0,1,dt):
+    for t in np.arange(0,1,dt):
         L.multAdd(gv,gv,wv)
         M.mult(wv,gv)
         if t > nextt:
@@ -85,5 +85,4 @@ if __name__ == '__main__':
     pl.show()
     PETSc.Sys.Print('maximal is {0}'.format(gv.max()[1]))    
 del band,v   
-    
-    
+
