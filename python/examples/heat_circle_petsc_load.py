@@ -21,6 +21,7 @@ petsc4py.init(sys.argv)
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
+use_implicit = True
 
 # this will load the picke on each processor
 #(dx,initial_u,final_u) = pickle.load(file('non_petsc_data.pickle'))
@@ -49,6 +50,9 @@ L_Mat = PETSc.Mat().load(viewer)
 viewer = PETSc.Viewer().createBinary('Ematrix.dat', 'r')
 E_Mat = PETSc.Mat().load(viewer)
 
+viewer = PETSc.Viewer().createBinary('Amatrix.dat', 'r')
+A_Mat = PETSc.Mat().load(viewer)
+
 # NO! only sets the local part
 #v.setArray(initial_u.copy())
 # Have to do this carefully:
@@ -61,29 +65,31 @@ v2 = L_Mat.getVecRight()
 
 
 Tf = 2
-dt = 0.1 * np.min(dx)**2
+
+if use_implicit:
+    dt = 0.5 * np.min(dx)
+else:
+    dt = 0.1 * np.min(dx)**2
+    # replace laplacian with dt*L
+    L_Mat.scale(dt)
+
 numtimesteps = int(Tf // dt + 1)
 
 
-
-
-# replace laplacian with dt*L
-L_Mat.scale(dt)
-
 start_time = timeit.default_timer()
 
-for kt in xrange(numtimesteps):
-    # v2 = v + (dt*L)*v
-    L_Mat.multAdd(v, v, v2)
-
-    E_Mat.mult(v2, v)  # v = E*v2
-
-    t = kt * dt
-    #if not kt%100 or kt == (numtimesteps-1):
-    #    uplot = Eplot * v.getArray()
-    #    true_solution = np.exp(-t) * np.cos(th_plot + np.pi / 2)
-    #    max_error = (np.abs(true_solution - uplot)).max()
-    #    print "time: {0:2f} ({1:2.2f}%), err={2:g}".format(t, 100*float(kt) / numtimesteps, max_error)
+if use_implicit:
+    for kt in xrange(numtimesteps):
+        #v2 = v + dt * M * v2
+        #A*v2  = v
+        #v = v2
+        raise NotImplementedError('learn ksp/ts')
+        t = kt*dt;
+else:
+    for kt in xrange(numtimesteps):
+        L_Mat.multAdd(v, v, v2)    # v2 = v + (dt*L)*v
+        E_Mat.mult(v2, v)          # v = E*v2
+        t = kt * dt
 
 
 print "Times, rank=", rank, "time=", timeit.default_timer() - start_time
