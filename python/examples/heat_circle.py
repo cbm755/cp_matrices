@@ -1,11 +1,11 @@
 """Solves the heat equation on a true sphere."""
 import numpy as np
+import pickle
+import timeit
 
 from cp.surfaces import Circle
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
 from cp.surfaces.coordinate_transform import cart2pol
-import pickle
-
 
 s = Circle()
 
@@ -15,7 +15,7 @@ dim = 2
 
 # As a byproduct of finding the banded grid, we already have its
 # closest points, so we don't really have to call s.closest_point()
-cp, distance, grid, dx = s.grid(num_blocks_per_dim=41,
+cp, distance, grid, dx = s.grid(num_blocks_per_dim=161,
                                    levels=1,
                                    p=p,
                                    diff_stencil_arm=diff_stencil_arm)
@@ -53,13 +53,15 @@ Eplot = build_interp_matrix(int_grid,
 Tf = 2
 dt = 0.1 * np.min(dx)**2
 numtimesteps = int(Tf // dt + 1)
-errors = []  # To store the error at each timestep
+
+start_time = timeit.default_timer()
+
 # Explicit Forward Euler time stepping
 for kt in xrange(numtimesteps):
     unew = u + dt * (L*u)
     u = E*unew
     t = kt * dt
-    if not kt%100 or kt == (numtimesteps-1):
+    if not kt%1000 or kt == (numtimesteps-1):
         uplot = Eplot * u
         true_solution = np.exp(-t) * np.cos(th_plot + np.pi / 2)
         max_error = (np.abs(true_solution - uplot)).max()
@@ -69,6 +71,8 @@ for kt in xrange(numtimesteps):
         #    src.data.point_data.scalars = sphplot
         #    src.data.point_data.scalars.name = 'scalars'
         #    src.data.modified()
+
+print "Serial code time=", timeit.default_timer() - start_time
 
 
 print 'saving matrices to petsc format on disk'
