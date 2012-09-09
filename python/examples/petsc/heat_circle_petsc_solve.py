@@ -28,14 +28,12 @@ use_implicit = True
 
 # alternatively, load it once and share the scalar around
 if rank == 0:
-    (dx,initial_u,final_u) = pickle.load(file('non_petsc_data.pickle'))
+    (dx, cpm, Tf, numtimesteps, dt, initial_u, final_u) = pickle.load(file('non_petsc_data.pickle'))
 else:
-    initial_u = None
-    final_u = None
-    dx = None
+    (dx, cpm, Tf, numtimesteps, dt, initial_u, final_u) = (None, None, None, None, None, None, None)
 
-# Broadcast dx to other processors
-dx = comm.bcast(dx, root = 0)
+# Broadcast variables to other processors
+(dx, cpm, Tf, numtimesteps, dt) = comm.bcast((dx, cpm, Tf, numtimesteps, dt), root = 0)
 
 #buf = np.zeros(2, PETSc.ScalarType)
 #for iproc in xrange(1,comm.size):
@@ -44,52 +42,60 @@ dx = comm.bcast(dx, root = 0)
 #    elif rank == iproc:
 #        comm.Recv(buf, source=0, tag=123)
 
-viewer = PETSc.Viewer().createBinary('Lmatrix.dat', 'r')
-L_Mat = PETSc.Mat().load(viewer)
 
-viewer = PETSc.Viewer().createBinary('Ematrix.dat', 'r')
-E_Mat = PETSc.Mat().load(viewer)
-
-viewer = PETSc.Viewer().createBinary('Amatrix.dat', 'r')
-A_Mat = PETSc.Mat().load(viewer)
+if cpm == 0:
+    viewer = PETSc.Viewer().createBinary('Lmatrix.dat', 'r')
+    L_Mat = PETSc.Mat().load(viewer)
+    viewer = PETSc.Viewer().createBinary('Ematrix.dat', 'r')
+    E_Mat = PETSc.Mat().load(viewer)
+elif cpm == 1:
+    viewer = PETSc.Viewer().createBinary('Mmatrix.dat', 'r')
+    M_Mat = PETSc.Mat().load(viewer)
+elif cpm == 2:
+    viewer = PETSc.Viewer().createBinary('Amatrix.dat', 'r')
+    A_Mat = PETSc.Mat().load(viewer)
 
 # NO! only sets the local part
 #v.setArray(initial_u.copy())
 # Have to do this carefully:
 v = conv.array2PETScVec(initial_u)
 
-#v = L_Mat.getVecRight()
-v2 = L_Mat.getVecRight()
-#v3 = L_Mat.getVecRight()
+v2 = v.copy()
+#v2 = L_Mat.getVecRight()
 
 
-
-Tf = 2
-
-if use_implicit:
-    dt = 0.5 * np.min(dx)
-else:
-    dt = 0.1 * np.min(dx)**2
+# pre-multiply the matrices by dt.  I don't like this much.
+if cpm == 0:
     # replace laplacian with dt*L
     L_Mat.scale(dt)
-
-numtimesteps = int(Tf // dt + 1)
+elif cpm == 1:
+    # replace laplacian with dt*M
+    M_Mat.scale(dt)
 
 
 start_time = timeit.default_timer()
 
-if use_implicit:
-    for kt in xrange(numtimesteps):
-        #v2 = v + dt * M * v2
-        #A*v2  = v
-        #v = v2
-        raise NotImplementedError('learn ksp/ts')
-        t = kt*dt;
-else:
+# various CPM algorithms
+if cpm == 0:  # explicit Euler, Ruuth--Merriman
     for kt in xrange(numtimesteps):
         L_Mat.multAdd(v, v, v2)    # v2 = v + (dt*L)*v
         E_Mat.mult(v2, v)          # v = E*v2
         t = kt * dt
+
+elif cpm == 1:  # explicit Euler, von Glehn--Maerz--Macdonald
+    for kt in xrange(numtimesteps):
+        M_Mat.multAdd(v, v, v2)    # v2 = v + (dt*M)*v
+        # todo: how to just assign data in v2 to v?
+        v2.swap(v)
+        t = kt * dt
+
+elif cpm == 2:  # implicit Euler, vGMM
+    for kt in xrange(numtimesteps):
+        #v2 = v + dt * M * v2
+        #A*v2 = v
+        #v = v2
+        raise NotImplementedError('learn ksp/ts')
+        t = kt*dt;
 
 
 print "Times, rank=", rank, "time=", timeit.default_timer() - start_time
