@@ -10,18 +10,10 @@ from petsc4py import PETSc
 import cp.tools.scipy_petsc_conversions as conv
 
 
-#from cp.surfaces.MeshWrapper import MeshWrapper
-#from cp.surfaces.Sphere import Sphere
-#from cp.petsc.band import Band
-#import matplotlib.tri as tri
-
-
 petsc4py.init(sys.argv)
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
-
-use_implicit = True
 
 # this will load the picke on each processor
 #(dx,initial_u,final_u) = pickle.load(file('non_petsc_data.pickle'))
@@ -43,6 +35,7 @@ else:
 #        comm.Recv(buf, source=0, tag=123)
 
 
+# which matrices should we load
 if cpm == 0:
     viewer = PETSc.Viewer().createBinary('Lmatrix.dat', 'r')
     L_Mat = PETSc.Mat().load(viewer)
@@ -55,11 +48,11 @@ elif cpm == 2:
     viewer = PETSc.Viewer().createBinary('Amatrix.dat', 'r')
     A_Mat = PETSc.Mat().load(viewer)
 
-# NO! only sets the local part
+
+# this only sets the local part
 #v.setArray(initial_u.copy())
 # Have to do this carefully:
 v = conv.array2PETScVec(initial_u)
-
 v2 = v.copy()
 #v2 = L_Mat.getVecRight()
 
@@ -101,7 +94,6 @@ elif cpm == 2:  # implicit Euler, vGMM
 print "Times, rank=", rank, "time=", timeit.default_timer() - start_time
 
 
-# TODO: only gets the local part
 final_u2 = conv.PETScVec2array(v)
 if rank == 0:
     maxdiff = max(abs(final_u - final_u2))
