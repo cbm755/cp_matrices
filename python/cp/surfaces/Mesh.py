@@ -4,10 +4,10 @@ from collections import defaultdict
 import numpy as np
 from scipy.spatial import cKDTree
 #from parallel_kdquery import cKDTree_MP
-try:
-    from mayavi import mlab
-except ImportError:
-    from enthought.mayavi import mlab
+#try:
+#    from mayavi import mlab
+#except ImportError:
+#    from enthought.mayavi import mlab
 
 from cp.tools.io import load_ply
 from cp.surfaces.triangulation_fast import FindClosestPointToTriSet
