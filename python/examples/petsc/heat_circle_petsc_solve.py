@@ -105,6 +105,9 @@ print "Times, rank=", rank, "time=", timeit.default_timer() - start_time
 final_u2 = conv.PETScVec2array(v)
 if rank == 0:
     maxdiff = max(abs(final_u - final_u2))
-    print('max diff in serial/parallel: ', maxdiff)
-
+    print 'max diff in serial/parallel: ', maxdiff
+    if maxdiff < 1e-13:
+        print '\n**PASSED**: serial/parallel codes differ by < 1e-13\n'
+    else:
+        print '\n**FAILED**: serial/parallel code output differs\n'
 

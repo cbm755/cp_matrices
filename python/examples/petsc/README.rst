@@ -25,11 +25,12 @@ or on my machine::
 (this could be run on another machine, provided you copy the .pickle,
 .dat and .dat.info files)
 
+
 Output
 ######
 
 The code will output the max norm of the error between the serial
-solution and the PETSc solution.
+solution and the PETSc solution.  It will indicate PASS/FAIL.
 
 
 TODO
