@@ -79,7 +79,8 @@ class Band(object):
 	# Find the coordinates in the center of each block 
         BlockCenterCar = self.BlockSub2CenterCarWithoutBand(subBlock)
 
-        cp,_,_,_ = surface.cp(BlockCenterCar)
+        cp,_,_,_ = surface.closest_point(BlockCenterCar)
+        #cp,_,_,_ = surface.cp(BlockCenterCar)
         dBlockCenter = self.norm1(cp-BlockCenterCar)
         p = self.interpDegree
         if p % 2 == 1:
@@ -156,7 +157,8 @@ class Band(object):
     
     def computeCP(self):
 	cp = self.getCoordinates()
-        cp,_,_,_ = self.surface.cp(cp)
+        cp,_,_,_ = self.surface.closest_point(cp)
+        #cp,_,_,_ = self.surface.cp(cp)
         self.cp = cp
 
     def createGLVectors(self):
@@ -251,7 +253,7 @@ class Band(object):
         self.gvec.setArray(f(self.cp))
     
     def subToPetscInd(self,sub):
-        '''Convert sub-indices to Petsc indices. See comments in 'creatExtMat'. We need this helper function
+        '''Convert sub-indices to Petsc indices. See comments in 'createExtMat'. We need this helper function
         because we only know the PETSc indices of big blocks. So we first find a point is in which block, then
         find the natural linear index inside that block.'''
         m = self.m
@@ -270,9 +272,10 @@ class Band(object):
 
         return ind
         
-    def createMat(self, ind, weights, NNZ = None):
+    def createMat(self, size, ind, weights, NNZ = None):
         ''' 
         Create a PETSc matrix, ind is the global PETSc indices. 
+        size: size of the matrix 
         ind: Suppose each row of the matrix has nnz non-zero elements, and this processor has k rows, 
              then 'ind' should be a k*nnz array indicating the global column indices of matrix entries.
         weights: 'weights' stores the values of matrix entries corresponding to 'ind'.
@@ -281,8 +284,9 @@ class Band(object):
         ''' 
         if NNZ is None:
             NNZ = (ind.shape[1],ind.shape[1])
+
         m = PETSc.Mat().create(comm=self.comm)
-        m.setSizes((self.gvec.sizes,self.gvec.sizes))
+        m.setSizes(size)
         m.setFromOptions()
         m.setPreallocationNNZ(NNZ)
         (start,end) = m.getOwnershipRange()
@@ -298,7 +302,12 @@ class Band(object):
     def createExtensionMat(self,cp = None):
         '''create a PETSc.Mat() for the closest point extension'''
 
-        if cp is None:cp = self.cp
+        if cp is None:
+            wvecsizes = self.wvec.sizes
+            cp = self.cp
+        else:
+            wvecsizes = (cp.shape[0],PETSc.DECIDE)
+        gvec = self.gvec
 
         dim = self.Dim
         dx = (self.hGrid,)*dim
@@ -311,14 +320,14 @@ class Band(object):
         # find the sub-indices of the base points, 'subBasept' is a N*dim array (N:number of base-points).
         subBasept = findGridInterpBasePt(cp, dx, ll, p)
         # offsets is the sub-indices of the interpolation stencil, a dim*STENCIL array (STENCIL=(p+1)^dim).
-        # If in 'C' order, should be the following line (should work in the refactor branch, to be tested):
-#        offsets = np.mgrid[(slice(p+1),)*dim].reshape((dim, -1))
+        # If in 'C' order, should be the following line: 
+        offsets = np.mgrid[(slice(p+1),)*dim].reshape((dim, -1))
         # or equivalently the following two lines:
 #        x = np.arange((p+1)**dim)
 #        offsets = np.column_stack(np.unravel_index(x,(p+1,)*dim,order='C')).T
-        # but currently in the structure branch, it should be 'Fortran' order:
-        x = np.arange((p+1)**dim)
-        offsets = np.column_stack(np.unravel_index(x,(p+1,)*dim,order='F')).T
+        #If in the structure branch, it should be 'Fortran' order:
+#        x = np.arange((p+1)**dim)
+#        offsets = np.column_stack(np.unravel_index(x,(p+1,)*dim,order='F')).T
         # The sub indices of the whole interpolation stencil with Fortran order, a dim*N*STENCIL array.         
         sub = ( subBasept[...,np.newaxis] + offsets[np.newaxis,...] ).transpose((1,0,2))
         # Convert sub indices to global PETSc indices
@@ -327,10 +336,40 @@ class Band(object):
         basept = subBasept*dx + ll
         weights = buildInterpWeights(basept,cp,dx,p+1)
 
-        E = self.createMat(ind,weights)
+        E = self.createMat((wvecsizes,gvec.sizes),ind,weights)
         
         return E
 
+    def createLaplacianMat(self):
+        '''create a PETSc.Mat() for discrete Laplacian.
+        TODO: more than dim 3; more than second order; different dx,dy,dz'''
+        dim = self.Dim
+
+        dx = (self.hGrid,)*dim
+        ll = np.array(self.ll) + self.hGrid/2
+        pt = self.getCoordinates()
+        # find the sub index of itself 
+        subItself = findGridInterpBasePt(pt,dx,ll,0)
+
+        if dim == 2:
+            offsets = np.array([[0,0,1,0,-1],
+                                [0,1,0,-1,0]])
+            weight = np.array([-4.,1.,1.,1.,1.]) / self.hGrid**2
+        elif dim == 3:
+            offsets = np.array([[0,0,0,1,0,0,-1],
+                                [0,0,1,0,0,-1,0],
+                                [0,1,0,0,-1,0,0]]) 
+            weight = np.array([-6.,1.,1.,1.,1.,1.,1.]) / self.hGrid**2
+
+        sub = ( subItself[...,np.newaxis] + offsets[np.newaxis,...] ).transpose((1,0,2))
+        # Convert sub indices to global PETSc indices
+        ind = self.subToPetscInd(sub)
+
+        weights = np.tile(weight,(ind.shape[0],1)) 
+
+        L = self.createMat((self.gvec.sizes,self.gvec.sizes),ind,weights,(2*dim+1,dim))
+        
+        return L
 
     def createAnyMat(self,rp,weights,NNZ = None):
         if NNZ is None:
@@ -469,14 +508,14 @@ class Band(object):
         m = self.m
         ll = np.array(self.ll) + self.hGrid/2;
         #find base point first
-        indBasept = findGridInterpBasePt(cp, dx, ll, p)
-#        offsets = np.mgrid[(slice(p+1),)*dim].reshape((dim, -1))
-        x = np.arange((p+1)**dim)
-        offsets = np.column_stack(np.unravel_index(x,(p+1,)*dim,order='F')).T
-        sub = ( indBasept[...,np.newaxis] + offsets[np.newaxis,...] ).transpose((1,0,2))
+        subBasept = findGridInterpBasePt(cp, dx, ll, p)
+        offsets = np.mgrid[(slice(p+1),)*dim].reshape((dim, -1))
+#        x = np.arange((p+1)**dim)
+#        offsets = np.column_stack(np.unravel_index(x,(p+1,)*dim,order='F')).T
+        sub = ( subBasept[...,np.newaxis] + offsets[np.newaxis,...] ).transpose((1,0,2))
         ind = self.subToPetscInd(sub)
 
-        basept = indBasept*dx + ll
+        basept = subBasept*dx + ll
         return basept,ind
 
     def createExtensionMatForLoop(self,cp = None):
