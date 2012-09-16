@@ -79,6 +79,7 @@ class Band(object):
 	# Find the coordinates in the center of each block 
         BlockCenterCar = self.BlockSub2CenterCarWithoutBand(subBlock)
 
+        #cp,_,_,_ = surface.closest_point(BlockCenterCar)
         cp,_,_,_ = surface.cp(BlockCenterCar)
         dBlockCenter = self.norm1(cp-BlockCenterCar)
         p = self.interpDegree
@@ -156,6 +157,7 @@ class Band(object):
     
     def computeCP(self):
 	cp = self.getCoordinates()
+        #cp,_,_,_ = self.surface.closest_point(cp)
         cp,_,_,_ = self.surface.cp(cp)
         self.cp = cp
 
@@ -251,7 +253,7 @@ class Band(object):
         self.gvec.setArray(f(self.cp))
     
     def subToPetscInd(self,sub):
-        '''Convert sub-indices to Petsc indices. See comments in 'creatExtMat'. We need this helper function
+        '''Convert sub-indices to Petsc indices. See comments in 'createExtMat'. We need this helper function
         because we only know the PETSc indices of big blocks. So we first find a point is in which block, then
         find the natural linear index inside that block.'''
         m = self.m
@@ -270,9 +272,10 @@ class Band(object):
 
         return ind
         
-    def createMat(self, ind, weights, NNZ = None):
+    def createMat(self, size, ind, weights, NNZ = None):
         ''' 
         Create a PETSc matrix, ind is the global PETSc indices. 
+        size: size of the matrix 
         ind: Suppose each row of the matrix has nnz non-zero elements, and this processor has k rows, 
              then 'ind' should be a k*nnz array indicating the global column indices of matrix entries.
         weights: 'weights' stores the values of matrix entries corresponding to 'ind'.
@@ -281,8 +284,9 @@ class Band(object):
         ''' 
         if NNZ is None:
             NNZ = (ind.shape[1],ind.shape[1])
+
         m = PETSc.Mat().create(comm=self.comm)
-        m.setSizes((self.gvec.sizes,self.gvec.sizes))
+        m.setSizes(size)
         m.setFromOptions()
         m.setPreallocationNNZ(NNZ)
         (start,end) = m.getOwnershipRange()
@@ -298,7 +302,12 @@ class Band(object):
     def createExtensionMat(self,cp = None):
         '''create a PETSc.Mat() for the closest point extension'''
 
-        if cp is None:cp = self.cp
+        if cp is None:
+            wvecsizes = self.wvec.sizes
+            cp = self.cp
+        else:
+            wvecsizes = (cp.shape[0],PETSc.DECIDE)
+        gvec = self.gvec
 
         dim = self.Dim
         dx = (self.hGrid,)*dim
@@ -327,7 +336,7 @@ class Band(object):
         basept = subBasept*dx + ll
         weights = buildInterpWeights(basept,cp,dx,p+1)
 
-        E = self.createMat(ind,weights)
+        E = self.createMat((wvecsizes,gvec.sizes),ind,weights)
         
         return E
 

@@ -90,7 +90,8 @@ if __name__ == '__main__':
                 PETSc.Sys.Print('time is {0}'.format(t))
                 
 
-        mv = band.createExtensionMatForLoop(cp=points[vstart:vstart+vAssigned])
+        #mv = band.createExtensionMatForLoop(cp=points[vstart:vstart+vAssigned])
+        mv = band.createExtensionMat(cp=points[vstart:vstart+vAssigned])
         cv = mv.getVecLeft()
         mv.mult(gv,cv)
         cv = band.toZeroStatic(cv)
