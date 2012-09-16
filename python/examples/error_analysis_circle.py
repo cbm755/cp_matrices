@@ -8,7 +8,8 @@ from matplotlib import pylab as pl
 from mpi4py import MPI
 #from cp.surfaces.MeshWrapper import MeshWrapper
 from cp.surfaces.Sphere import Sphere
-from cp.petsc.band import Band
+from cp.petsc.band_with_doc import Band
+#from cp.petsc.band import Band
 import sys
 import petsc4py
 from petsc4py import PETSc
@@ -65,6 +66,7 @@ if __name__ == '__main__':
         band = Band(surface,comm,opt)
         la,lv,gv,wv = band.createGLVectors()
         v = band.getCoordinates() 
+        band.computeCP()
         dt = 0.1*band.dx**2
         vv = sp.array([[0,0],[1,0],[-1,0],[0,1],[0,-1]])
         weights = sp.array([-4,1,1,1,1])*(dt/band.dx**2)
