@@ -1,90 +1,81 @@
-'''
-Created on Aug 10, 2012
+"""Solves the heat equation on a true sphere."""
 
-@author: nullas
-'''
-import scipy as sp
+import numpy as np
 from matplotlib import pylab as pl
 from mpi4py import MPI
-#from cp.surfaces.MeshWrapper import MeshWrapper
-from cp.surfaces.Sphere import Sphere
+from cp.surfaces import Sphere
 from cp.petsc.band_with_doc import Band
 import sys
 import petsc4py
 from petsc4py import PETSc
-import matplotlib.tri as tri
 from scipy.linalg import norm
 
-petsc4py.init(sys.argv)
+try:
+    from mayavi import mlab
+except ImportError:
+    from enthought.mayavi import mlab
 
+from cp.surfaces.coordinate_transform import cart2sph
 
-def test_initialu(cp):
-    return sp.ones(cp.shape[0])#cp[:,0]
 def initialu(cp):
-    return cp[:,0]
-
-def triplot(x,y,z,r=0.0002,title = 'band'):
-#    z = c-c.min()
-#    z /= z.max()
-    return 0
-    triang = tri.Triangulation(x,y)
-    xmid = x[triang.triangles].var(axis=1)
-    ymid = y[triang.triangles].var(axis=1)
-    mask = sp.where(xmid*xmid + ymid*ymid > r*r, 1, 0)
-    triang.set_mask(mask)
-    pl.figure()
-    pl.gca().set_aspect('equal')
-    pl.tricontourf(triang, z)
-    pl.colorbar()
-    V = sp.arange(-10,10,dtype=sp.double)/10*z.max()
-    pl.tricontour(triang, z,V)#, colors='k')
-    pl.title(title)
+    th,phi,r = cart2sph(cp[:,0],cp[:,1],cp[:,2])
+    return np.cos(phi + np.pi / 2)
 
 if __name__ == '__main__':
-    MBlocklist = [20,40,80,160]
+    MBlocklist = [10,20,40,80]
+    Tf = 0.5
     error = []
     dx = []
-    l = sp.linspace(-sp.pi, sp.pi, 500)
-    points = sp.column_stack((sp.cos(l),sp.sin(l)))
-    exactu = sp.cos(l)
     
     comm = MPI.COMM_WORLD
     
+    surface = Sphere(center=np.array([0.0, 0.0, 0.0]))
+    # exact solution  
+    rez = 30
+    xx, yy, zz = surface.parametric_grid(rez)
+    th, phi, r = cart2sph(xx,yy,zz)
+    exactu = np.cos(phi + np.pi / 2).ravel()
     
-    vsize = points.shape[0]
+    points = np.array([xx.ravel(),yy.ravel(),zz.ravel()]).T
+     
+    vsize = xx.ravel().shape[0]
     vAssigned = vsize // comm.size + int(comm.rank < (vsize % comm.size))
-
 
     vstart = comm.exscan(vAssigned)
     if comm.rank == 0:
         vstart = 0
     for MBlock in MBlocklist:
-        opt = {'M':MBlock,'m':5,'d':2}
-        surface = Sphere(center=sp.array([0.0, 0.0]))
+        opt = {'M':MBlock,'m':5,'d':3}
+
         
         band = Band(surface,comm,opt)
         la,lv,gv,wv = band.createGLVectors()
-        v = band.getCoordinates() 
+        grid = band.getCoordinates() 
         band.computeCP()
-        dt = 0.1*band.dx**2
-        #vv = sp.array([[0,0],[1,0],[-1,0],[0,1],[0,-1]])
-        #weights = sp.array([-4,1,1,1,1])*(dt/band.dx**2)
-        #L = band.createAnyMat(vv, weights, (5,2))
+
+
+        dt = 0.2*band.dx**2
+        #vv = sp.array([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]])
+        #weights = sp.array([-6,1,1,1,1,1,1])*(dt/band.dx**2)
+        #L = band.createAnyMat(vv, weights, (7,3))
         L = band.createLaplacianMat()
         L *= dt
 
-        PETSc.Sys.Print('Laplacian')
-    
+        PETSc.Sys.Print('Laplacian matrix built')
         
         M = band.createExtensionMat()
         PETSc.Sys.Print('ExtensionMat built')
     
-        band.initialu(initialu)
-        PETSc.Sys.Print('Initial')
+        # initial conditions, in serial code we could do:
+        # th, phi, r = cart2sph(grid[:, 0], grid[:, 1], grid[:, 2])
+        # u = np.cos(phi + np.pi / 2)
+        # but in parallel code, we might need to do:
+        gv.setArray(initialu(band.cp)) 
+        PETSc.Sys.Print('Initial vector has been set up')
         nextt = 0.1
         PETSc.Sys.Print('Begin to solve')
         t = 0
-        for t in sp.arange(0,1,dt):
+        for t in np.arange(0,Tf,dt):
             L.multAdd(gv,gv,wv)
             M.mult(wv,gv)
             if t > nextt:
@@ -99,8 +90,8 @@ if __name__ == '__main__':
         cv = band.toZeroStatic(cv)
         if comm.rank == 0:
             cv = cv.getArray()
-            exu = sp.exp(-t)*exactu
-            ee = norm(cv-exu, sp.inf)
+            exu = np.exp(-2*t)*exactu
+            ee = norm(cv-exu, np.inf)
             error.append(ee)
             dx.append( band.dx )
         
@@ -110,7 +101,7 @@ if __name__ == '__main__':
         if comm.rank == 0: 
             print('maximal is {0}'.format(ee))
         PETSc.Sys.Print('==================================')   
-        del band,v,mv,cv 
+        del band,grid,mv,cv 
     if comm.rank == 0:
         import pickle
         ferror = open('error.pickle','w')
@@ -120,3 +111,6 @@ if __name__ == '__main__':
     
     
     
+
+
+
