@@ -299,8 +299,10 @@ class Band(object):
         m.assemble()
         return m
     
-    def createExtensionMat(self,cp = None):
+    def createExtensionMat(self, p = None, cp = None):
         '''create a PETSc.Mat() for the closest point extension'''
+
+        if p is None: p = self.interpDegree
 
         if cp is None:
             wvecsizes = self.wvec.sizes
@@ -311,7 +313,6 @@ class Band(object):
 
         dim = self.Dim
         dx = (self.hGrid,)*dim
-        p = self.interpDegree
         M = self.M
         m = self.m
         # The lower left grid point 'll' is at the center of the lower left element 'self.ll'
