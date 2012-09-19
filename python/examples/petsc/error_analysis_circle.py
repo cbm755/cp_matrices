@@ -3,12 +3,13 @@ Created on Aug 10, 2012
 
 @author: nullas
 '''
-import scipy as sp
+import numpy as np
 import timeit
 from matplotlib import pylab as pl
 from mpi4py import MPI
 #from cp.surfaces.MeshWrapper import MeshWrapper
 from cp.surfaces.Sphere import Sphere
+from cp.surfaces.coordinate_transform import cart2pol
 from cp.petsc.band_with_doc import Band
 import sys
 import petsc4py
@@ -18,11 +19,13 @@ from scipy.linalg import norm
 
 petsc4py.init(sys.argv)
 
+def uexactfn(t,cp):
+    k = 2
+    th, r = cart2pol(cp[:,0],cp[:,1])
+    return np.exp(-k**2*t)*np.cos(k*th) 
 
-def test_initialu(cp):
-    return sp.ones(cp.shape[0])#cp[:,0]
-def initialu(cp):
-    return cp[:,0]
+def uinitialfn(cp):
+    return uexactfn(0,cp)
 
 def triplot(x,y,z,r=0.0002,title = 'band'):
 #    z = c-c.min()
@@ -31,13 +34,13 @@ def triplot(x,y,z,r=0.0002,title = 'band'):
     triang = tri.Triangulation(x,y)
     xmid = x[triang.triangles].var(axis=1)
     ymid = y[triang.triangles].var(axis=1)
-    mask = sp.where(xmid*xmid + ymid*ymid > r*r, 1, 0)
+    mask = np.where(xmid*xmid + ymid*ymid > r*r, 1, 0)
     triang.set_mask(mask)
     pl.figure()
     pl.gca().set_aspect('equal')
     pl.tricontourf(triang, z)
     pl.colorbar()
-    V = sp.arange(-10,10,dtype=sp.double)/10*z.max()
+    V = np.arange(-10,10,dtype=np.double)/10*z.max()
     pl.tricontour(triang, z,V)#, colors='k')
     pl.title(title)
 
@@ -45,9 +48,8 @@ if __name__ == '__main__':
     MBlocklist = [20,40,80,160]
     error = []
     dx = []
-    l = sp.linspace(-sp.pi, sp.pi, 500)
-    points = sp.column_stack((sp.cos(l),sp.sin(l)))
-    exactu = sp.cos(l)
+    l = np.linspace(-np.pi, np.pi, 1000)
+    points = np.column_stack((np.cos(l),np.sin(l)))
     
     comm = MPI.COMM_WORLD
    
@@ -60,15 +62,15 @@ if __name__ == '__main__':
 
     for MBlock in MBlocklist:
         opt = {'M':MBlock,'m':5,'d':2}
-        surface = Sphere(center=sp.array([0.0, 0.0]))
+        surface = Sphere(center=np.array([0.0, 0.0]))
         
         band = Band(surface,comm,opt)
         _,_,v,v2 = band.createGLVectors()
         grid = band.getCoordinates() 
         band.computeCP()
 
-        #vv = sp.array([[0,0],[1,0],[-1,0],[0,1],[0,-1]])
-        #weights = sp.array([-4,1,1,1,1])*(dt/band.dx**2)
+        #vv = np.array([[0,0],[1,0],[-1,0],[0,1],[0,-1]])
+        #weights = np.array([-4,1,1,1,1])*(dt/band.dx**2)
         #L = band.createAnyMat(vv, weights, (5,2))
         L = band.createLaplacianMat()
         PETSc.Sys.Print('Laplacian built')
@@ -78,14 +80,14 @@ if __name__ == '__main__':
         E1 = band.createExtensionMat(p=1)
         PETSc.Sys.Print('ExtensionMat built')
     
-        band.initialu(initialu)
+        v.setArray(uexactfn(0,band.cp))
         PETSc.Sys.Print('Initial value has been set')
         
         # TODO: pass 'cpm' as a paramter when calling this example would be nicer;
         # currently we need to modify the code manually
-        cpm = 2
+        cpm = 3
 
-        if cpm >= 1:
+        if cpm >= 1:  # Method of lines, von Glehn--Maerz--Macdonald
             la = 2*band.Dim / band.dx**2
             # TODO: easier way to set up the identity matrix?
             I = PETSc.Mat().create(comm=comm)
@@ -97,7 +99,7 @@ if __name__ == '__main__':
             I.assemble()
             
             # TODO: clearer way to compute M = EL-lambda*(I-E)?
-            M = E1.matMult(L)
+            M = E1.matMult(L) 
             IminusE = I.copy()
             IminusE.axpy(-1,E)
             M.axpy(-la,IminusE)
@@ -111,7 +113,7 @@ if __name__ == '__main__':
         PETSc.Sys.Print('Begin to solve')
         start_time = timeit.default_timer()
 
-        # various CPM algorithms
+        # various CPM algorithms, if cpm>=1: use various MOLs, vGMM
         if cpm == 0:  # explicit euler, ruuth--merriman
             L *= dt
             for kt in xrange(numtimesteps):
@@ -133,54 +135,103 @@ if __name__ == '__main__':
                     nextt += 0.1
                     PETSc.Sys.Print('time is {0}'.format(t))
 
-        elif cpm >= 2:  # method of lines, vGMM
-            dt = 0.2*band.dx
+        elif cpm == 2:   # implicit Euler
+            dt = 0.1*band.dx
             numtimesteps = int( Tf // dt + 1 )
+            A = I.copy()
+            A.axpy(-dt,M)
+            A.setUp()
+            ksp = PETSc.KSP().create()
+            ksp.setOperators(A)
+            ksp.setType(ksp.Type.GMRES)
+            pc = ksp.getPC()
+            # slow
+            #pc.setType(pc.Type.GAMG)
+            # default preconditioner, fastest of all , and seems to be enough accurate...
+            pc.setType('none')
+            for kt in xrange(numtimesteps):
+                ksp.solve(v,v2)
+                v = v2
+                t = kt*dt
+                if t > nextt:
+                    nextt += 0.1
+                    PETSc.Sys.Print('time is {0}'.format(t))
 
-            if cpm == 2:   # implicit Euler
-                A = I.copy()
-                A.axpy(-dt,M)
-                A.setUp()
-                ksp = PETSc.KSP().create()
-                ksp.setOperators(A)
-                ksp.setType(ksp.Type.GMRES)
-                pc = ksp.getPC()
-                # slow
-                #pc.setType(pc.Type.GAMG)
-                # faster than GAMG, but not accurate
-                #pc.setType('ilu')
-                # no preconditioner, fastest of all , and seems to be enough accurate...
-                pc.setType('none')
-                for kt in xrange(numtimesteps):
-                    ksp.solve(v,v2)
-                    v = v2
-                    t = kt*dt
-                    if t > nextt:
-                        nextt += 0.1
-                        PETSc.Sys.Print('time is {0}'.format(t))
-            elif cpm == 3:   # Crank-Nicolson
-                A = I.copy()
-                A.axpy(-0.5*dt,M)
-                A.setUp()
-                ksp = PETSc.KSP().create()
-                ksp.setOperators(A)
-                ksp.setType(ksp.Type.GMRES)
-                pc = ksp.getPC()
-                # slow
-                #pc.setType(pc.Type.GAMG)
-                # faster than GAMG, but not accurate
-                #pc.setType('ilu')
-                # no preconditioner, fastest of all , and seems to be enough accurate...
-                pc.setType('none')
+        elif cpm == 3:   # Crank-Nicolson
+            # Currently only first order, do not know why..
+            dt = 0.1*band.dx
+            numtimesteps = int( Tf // dt + 1 )
+            beta = 0.5
+            #A = I.copy()
+            #A.axpy(-beta*dt,M)
+            A = I - beta*dt*M
+            A.setUp()
+            ksp = PETSc.KSP().create()
+            ksp.setOperators(A)
+            #ksp.setType(ksp.Type.GMRES)
+            ksp.setType(ksp.Type.PREONLY)   # Just use the preconditioner as a direct method
+            pc = ksp.getPC()
+            pc.setType(pc.Type.LU)          # This only works for a single processor 
+            # slow
+            #pc.setType(pc.Type.GAMG)
+            # default preconditioner, fastest of all , and seems to be enough accurate...
+            #pc.setType('none')
+            M.scale((1.-beta)*dt)
+            for kt in xrange(numtimesteps):
+                M.multAdd(v, v, v2)    # v2 = v + (0.5*dt*M)*v
+                ksp.solve(v2,v)        # v = (I-0.5*dt*M) \ v2
+                t = kt*dt
+                if t > nextt:
+                    nextt += 0.1
+                    PETSc.Sys.Print('time is {0}'.format(t))
 
-                M *= 0.5*dt
-                for kt in xrange(numtimesteps):
-                    M.multAdd(v, v, v2)    # v2 = v + (0.5*dt*M)*v
-                    ksp.solve(v2,v)        # v = A^(-1)*v2
-                    t = kt*dt
-                    if t > nextt:
-                        nextt += 0.1
-                        PETSc.Sys.Print('time is {0}'.format(t))
+        elif cpm == 4:   # SBDF-2: [1-2/3*dt*M]u^{n+1}=4/3*u^n-1/3*u^{n-1}
+            dt = 0.1*band.dx
+            numtimesteps = int( Tf // dt + 1 )
+            v1 = v.copy()
+            v1.setArray(uexactfn(dt,band.cp))
+            # first do some steps of Forward Euler
+#            timesteps_initial = int( 1 // band.dx  )
+#            dt_initial = dt / timesteps_initial
+#            M1 = M.copy()
+#            M1.scale(dt_initial)
+#            for k in xrange(timesteps_initial):
+#                M1.multAdd(v,v,v1)
+#                v1.swap(v)
+
+            # Or do one step of implicit Euler
+            # TODO: do we have to sepcify another A and ksp solver?
+#            A1 = I.copy()
+#            A1.axpy(-dt,M)
+#            A1.setUp()
+#            ksp1 = PETSc.KSP().create()
+#            ksp1.setOperators(A1)
+#            ksp1.setType(ksp1.Type.GMRES)
+#            pc1 = ksp1.getPC()
+#            pc1.setType('none')
+#            ksp1.solve(v,v1)
+            
+            A = I.copy()
+            #A.axpy(-2./3*dt,M)
+            A = I - 2./3*dt*M
+            A.setUp()
+            ksp = PETSc.KSP().create()
+            ksp.setOperators(A)
+            ksp.setType(ksp.Type.GMRES)
+            pc = ksp.getPC()
+            # slow
+            #pc.setType(pc.Type.GAMG)
+            # default preconditioner, fastest of all , and seems to be enough accurate...
+            pc.setType('none')
+            for kt in xrange(2,numtimesteps):
+                v2 = 4./3*v1 - v/3
+                ksp.solve(v2,v2)        
+                v = v1
+                v1 = v2
+                t = kt*dt
+                if t > nextt:
+                    nextt += 0.1
+                    PETSc.Sys.Print('time is {0}'.format(t))
 
         print "Times, rank=", comm.rank, "time=", timeit.default_timer() - start_time
 
@@ -191,8 +242,8 @@ if __name__ == '__main__':
         cv = band.toZeroStatic(cv)
         if comm.rank == 0:
             cv = cv.getArray()
-            exu = sp.exp(-t)*exactu
-            ee = norm(cv-exu, sp.inf)
+            exu = uexactfn(t,points)
+            ee = norm(cv-exu, np.inf) / norm(exu, np.inf)
             error.append(ee)
             dx.append( band.dx )
         
