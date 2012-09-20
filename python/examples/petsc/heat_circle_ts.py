@@ -100,6 +100,8 @@ if __name__ == '__main__':
         ts = PETSc.TS().create(comm=comm)
         ts.setProblemType(ts.ProblemType.LINEAR)
         ts.setType('euler')
+#        ts.setType('beuler')
+        #ts.setType('cn')  # Crank-Nicolson, very slow
 #        ts.setType('ssp')
         # Lots of printout. How to turn this off?
 #        ts.setType('rk')
@@ -110,13 +112,13 @@ if __name__ == '__main__':
         #ts.setMonitor(monitor)
         ts.setTime(0.0)
         ts.setInitialTimeStep(0.0,dt)
-        ts.setMaxTime(Tf)
+        ts.setMaxSteps(numtimesteps)
         ts.setMaxSNESFailures(-1)       # allow an unlimited number of failures (step will be rejected and retried)
 
-#        snes = ts.getSNES()             # Nonlinear solver
-#        ksp = snes.getKSP()             # Linear solver
-#        ksp.setType(ksp.Type.GMRES)        # GMRES
-#        pc = ksp.getPC()  
+        snes = ts.getSNES()             # Nonlinear solver
+        ksp = snes.getKSP()             # Linear solver
+        ksp.setType(ksp.Type.GMRES)        # GMRES
+        pc = ksp.getPC()  
 #        pc.setType('none')
 
         PETSc.Sys.Print('Begin to solve')
@@ -139,6 +141,7 @@ if __name__ == '__main__':
         
         PETSc.Sys.Print('==================================')   
         if comm.rank == 0: 
+            print('final time is {0}'.format(t))
             print('maximal is {0}'.format(ee))
         PETSc.Sys.Print('==================================')   
         del band,v,Eplot,cv 

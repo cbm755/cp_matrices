@@ -107,7 +107,7 @@ if __name__ == '__main__':
         #ts.setMonitor(monitor)
         ts.setTime(0.0)
         ts.setInitialTimeStep(0.0,dt)
-        ts.setMaxTime(Tf)
+        ts.setMaxSteps(numtimesteps)
         ts.setMaxSNESFailures(-1)       # allow an unlimited number of failures (step will be rejected and retried)
 
         snes = ts.getSNES()             # Nonlinear solver
@@ -140,6 +140,7 @@ if __name__ == '__main__':
         
         PETSc.Sys.Print('==================================')   
         if comm.rank == 0: 
+            print('final time is {0}'.format(t))
             print('maximal is {0}'.format(ee))
         PETSc.Sys.Print('==================================')   
         del band,grid,mv,cv 
