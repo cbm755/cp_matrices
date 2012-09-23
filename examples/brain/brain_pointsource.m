@@ -2,8 +2,9 @@
 % on the brain
 % u_t = lap_s u - alpha u /(1+u) + p.s.
 
-loaddata = 0;
-build_matrices = 0;
+% can speed up later runs if you set these to false
+loaddata = true; build_matrices = true;
+%loaddata = false; build_matrices = false;
 
 if loaddata
 dx = 0.05;

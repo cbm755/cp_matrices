@@ -1,7 +1,8 @@
 %% Gray--Scott reaction-diffusion
 
-loaddata = false;
-build_matrices = false;
+% can speed up later runs if you set these to false
+loaddata = true; build_matrices = true;
+%loaddata = false; build_matrices = false;
 
 if loaddata
 dx = 0.025;
