@@ -1,22 +1,25 @@
 """Solves the heat equation on a triangulated sphere."""
 import numpy as np
-try:
-    from mayavi import mlab
-except ImportError:
-    from enthought.mayavi import mlab
+import pickle
+
 
 from cp.surfaces import Mesh
 # Since our mesh is a sphere, we'll take advantage of its
 # parametric_plot method
-from cp.surfaces import Sphere
 from cp.tools.io import load_ply
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
 # TODO: move coordinate_transform out of cp.surfaces (maybe to
 # cp.tools?)
 #from cp.surfaces.coordinate_transform import cart2sph
 
-
 PLOT = True
+
+if PLOT:
+    try:
+        from mayavi import mlab
+    except ImportError:
+        from enthought.mayavi import mlab
+
 
 # Load vertices and faces, and instantiate surface
 v, f = load_ply('brain-lh_scale_1.ply')
@@ -104,3 +107,7 @@ for kt in xrange(numtimesteps):
             src.data.point_data.scalars = uplot
             src.data.point_data.scalars.name = 'scalars'
             src.data.modified()
+
+initial_u_IC = Eplot * initial_u;
+pickle.dump((dx, Tf, numtimesteps, dt, initial_u_IC), file('brain_IC.pickle','w'))
+pickle.dump((dx, Tf, numtimesteps, dt, uplot), file('brain_final.pickle','w'))
