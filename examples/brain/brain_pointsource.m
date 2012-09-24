@@ -3,8 +3,8 @@
 % u_t = lap_s u - alpha u /(1+u) + S
 
 % can speed up later runs if you set these to false
-%loaddata = true; build_matrices = true;
-loaddata = false; build_matrices = false;
+loaddata = true; build_matrices = true;
+%loaddata = false; build_matrices = false;
 
 if loaddata
 dx = 0.05;
@@ -22,7 +22,7 @@ nz=length(z1d);
 
 
 %PlyFile = 'bunny.ply';
-PlyFile = 'brain-lh_scale_0.ply';
+PlyFile = 'brain-lh_scale_1.ply';
 %PlyFile = 'annies_pig.ply';
 %PlyFile = 'bumpy_torus_scaled.ply';
 disp( ['reading triangulation from "' PlyFile '"'] );
@@ -95,12 +95,12 @@ end
 
 % parameters for brain reaction-diffusion
 alpha = 0.1;   % coefficient of reaction term
-gammaS = 1;    % coefficient of point-sources forcing
-v0 = 1;        % magnitude of point-sources
+gammaS = 100;    % coefficient of point-sources forcing
+v0 = 0.5;        % magnitude of point-sources
 
 % forcing function - gaussians around point sources
 % first randomly choose some points, then find their closest points (this might bias eg. high curvature pts)
-nsrcs = 3;
+nsrcs = 1;
 srcs = randi(length(band), nsrcs, 1);
 
 % make a source term
@@ -112,10 +112,11 @@ varsq = dx; % scale somehow
 for srccount = 1:nsrcs
   si = srcs(srccount);
   vdist = (xg-cpxg(si)).^2 + (yg-cpyg(si)).^2 + (zg-cpzg(si)).^2;
-  v = v + exp( -vdist/(2*varsq));
+  v = v + exp( -vdist/(2*varsq));  
 end
 % cp-ext
 v = E3*v;   % E1 or E3 here?
+
 
 % viz this:
 figure(2); clf;
@@ -124,7 +125,7 @@ clf;
 vplot = Eplot*v;
 trisurf(Faces,xp,yp,zp, vplot);
 xlabel('x'); ylabel('y'); zlabel('z');
-title( 'point sources' );
+title( 'sources' );
 axis equal
 shading interp
 camlight left
@@ -135,15 +136,14 @@ colorbar
 drawnow()
 
 
-
 %% Do calculation
-%u0 = zeros(size(xg));
-u0 = ones(size(xg));
+u0 = zeros(size(xg));
+%u0 = ones(size(xg));
 u = u0;
 
 
 
-Tf = 15000;
+Tf = 100;
 dt = 0.2*dx^2;
 %dt = 1;
 numtimesteps = ceil(Tf/dt)
