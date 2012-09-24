@@ -97,7 +97,7 @@ for kt in xrange(numtimesteps):
     u = E*unew
     t = kt * dt
     if not kt%100 or kt == (numtimesteps-1):
-        print "time: {0:2f}, {1:2f} %".format(t, float(kt) / numtimesteps)
+        print "time: {0:2f}, {1:2f} %".format(t, 100 * float(kt) / numtimesteps)
         uplot = Eplot * u
         #true_solution = np.exp(-2*t) * np.cos(phi_plot + np.pi / 2)
         #step_error = (np.abs(true_solution - sphplot.reshape(xp.shape)).sum() /
