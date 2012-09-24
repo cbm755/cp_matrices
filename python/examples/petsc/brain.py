@@ -6,8 +6,6 @@ import pickle
 
 
 from cp.surfaces import Mesh
-# Since our mesh is a sphere, we'll take advantage of its
-# parametric_plot method
 from cp.tools.io import load_ply
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
 # TODO: move coordinate_transform out of cp.surfaces (maybe to
@@ -88,6 +86,46 @@ if PLOT:
     surf = mlab.pipeline.surface(normals)
     mlab.colorbar()
 
+# reaction-diffusion equation
+# parameters:
+alpha = 0.1     # coefficient of reaction term
+gammaS = 1      # coefficient of sources term
+v0 = 1          # magnitude of point sources
+
+# load source locations
+#(sources) = pickle.load(file('brain_sources.pickle'))
+nsrcs = 3   # TODO: make this the size of the sources matrix!
+# build the source term
+v = 0
+varsq = dx      # scale delta fns somehow
+#for srccount in xrange(nsrcs)
+  #vdist = (xg-sources(srccount,1)).^2 + (yg-cpyg(si)).^2 + (zg-cpzg(si)).^2
+  #v = v + exp( -vdist/(2*varsq))
+# cp-ext
+#v = E*v
+
+
+# choose a Closest Point Method algorithm
+cpm = 0
+
+# choose timestep
+if cpm == 0:
+    dt = 0.2 * np.min(dx)**2
+elif cpm == 1:
+    dt = 0.2 * np.min(dx)**2
+elif cpm == 2:
+    dt = 0.5 * np.min(dx)
+
+# build the vGMM matrix
+if cpm == 1 or cpm == 2:
+    #I = speye(L.shape[0], L.shape[1])
+    I = speye(*L.shape)
+    lamb = 4.0/np.min(dx)**2
+    M = E*L - lamb*(I - E)
+if cpm == 2:
+    A = I - dt*M
+
+
 Tf = 0.2
 dt = 0.2 * np.min(dx)**2
 numtimesteps = int(Tf // dt + 1)
@@ -95,8 +133,20 @@ dt = Tf / numtimesteps
 errors = []  # To store the error at each timestep
 # Explicit Forward Euler time stepping
 for kt in xrange(numtimesteps):
-    unew = u + dt * (L*u)
-    u = E*unew
+    if cpm == 0:
+        # explicit Euler, Ruuth--Merriman style
+        unew = u + dt * (L*u)
+        u = E*unew
+    elif cpm == 1:
+        # explicit Euler, von Glehn--Maerz--Macdonald
+        unew = u + dt * (M*u)
+        u = unew;
+    elif cpm == 2:
+        # implicit Euler, vGMM
+        unew = splinalg.spsolve(A, u)
+        u = unew;
+    # unew = u + dt * (L*u)
+    # u = E*unew
     t = kt * dt
     if not kt%100 or kt == (numtimesteps-1):
         print "time: {0:2f}, {1:2f} %".format(t, 100 * float(kt) / numtimesteps)

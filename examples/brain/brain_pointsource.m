@@ -1,10 +1,10 @@
-%% Surface diffusion with reaction term and point sources
+%% Surface diffusion with reaction term and sources
 % on the brain
-% u_t = lap_s u - alpha u /(1+u) + p.s.
+% u_t = lap_s u - alpha u /(1+u) + S
 
 % can speed up later runs if you set these to false
-loaddata = true; build_matrices = true;
-%loaddata = false; build_matrices = false;
+%loaddata = true; build_matrices = true;
+loaddata = false; build_matrices = false;
 
 if loaddata
 dx = 0.05;
@@ -95,30 +95,34 @@ end
 
 % parameters for brain reaction-diffusion
 alpha = 0.1;   % coefficient of reaction term
-pslam = 1;   % coefficient of point-sources forcing
+gammaS = 1;    % coefficient of point-sources forcing
+v0 = 1;        % magnitude of point-sources
 
 % forcing function - gaussians around point sources
 % first randomly choose some points, then find their closest points (this might bias eg. high curvature pts)
 nsrcs = 3;
 srcs = randi(length(band), nsrcs, 1);
 
-% make a sum of gaussians
-gsum = 0;
+% make a source term
+% S2 = gamma * sum_i ( (u-v0) delta_eps(x-xi))
+% or write as S2 = gamma * v.*u  - gamma * v0 * v
+% with v = sum_i (delta_eps(i))
+v = 0;
 varsq = dx; % scale somehow
 for srccount = 1:nsrcs
   si = srcs(srccount);
-  gdist = (xg-cpxg(si)).^2 + (yg-cpyg(si)).^2 + (zg-cpzg(si)).^2;
-  gsum = gsum + exp( -gdist/(2*varsq));
+  vdist = (xg-cpxg(si)).^2 + (yg-cpyg(si)).^2 + (zg-cpzg(si)).^2;
+  v = v + exp( -vdist/(2*varsq));
 end
 % cp-ext
-gsum = E3*gsum;   % E1 or E3 here?
+v = E3*v;   % E1 or E3 here?
 
 % viz this:
 figure(2); clf;
 set(0, 'CurrentFigure', 2);
 clf;
-gplot = Eplot*gsum;
-trisurf(Faces,xp,yp,zp, gplot);
+vplot = Eplot*v;
+trisurf(Faces,xp,yp,zp, vplot);
 xlabel('x'); ylabel('y'); zlabel('z');
 title( 'point sources' );
 axis equal
@@ -150,8 +154,9 @@ dt = Tf / numtimesteps
 for kt = 1:numtimesteps
   % explicit Euler timestepping
 
-  %unew = u + dt*E1*(L*u) - dt*alpha*u./(1+u) - dt*pslam*(u-gsum) - dt*lambda*(u - E3*u);
-  unew = u + dt*E1*(L*u) - dt*alpha*u./(1+u) + dt*pslam*gsum - dt*lambda*(u - E3*u);
+  % include penalty term S2 = gamma*(v.*u - v0*v)
+  unew = u + dt*E1*(L*u) - dt*alpha*u./(1+u) - dt*gammaS*(v.*u-v0*v) - dt*lambda*(u - E3*u);
+
 
   u = unew;
  
