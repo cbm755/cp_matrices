@@ -30,7 +30,7 @@ p = 3
 diff_stencil_arm = 1
 dim = 3
 
-index, distance, grid, dx = m.grid(num_blocks_per_dim=81,
+index, distance, grid, dx = m.grid(num_blocks_per_dim=101,
                                    levels=1,
                                    p=p,
                                    diff_stencil_arm=diff_stencil_arm)
@@ -132,7 +132,7 @@ if cpm == 2:
     A = I - dt*M
 
 
-Tf = 0.2
+Tf = 1
 dt = 0.2 * np.min(dx)**2
 numtimesteps = int(Tf // dt + 1)
 dt = Tf / numtimesteps
@@ -164,8 +164,8 @@ for kt in xrange(numtimesteps):
         print "time: {0:2f}, {1:2f} %".format(t, 100 * float(kt) / numtimesteps)
         uplot = Eplot * u
 
-        # TODO output data
-        # pickle.dump((u), file('brain_at_time_kt','w'))
+        # output data
+        pickle.dump((u), file('brain_after_kt' + str(kt),'w'))
 
         #true_solution = np.exp(-2*t) * np.cos(phi_plot + np.pi / 2)
         #step_error = (np.abs(true_solution - sphplot.reshape(xp.shape)).sum() /
