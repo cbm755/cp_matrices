@@ -40,8 +40,8 @@ if PLOT:
 #dt = Tf / numtimesteps
 
 
-(dx, Tf, numtimesteps, dt, initial_u_IC) = pickle.load(file('brain_IC.pickle'))
-(dx, Tf, numtimesteps, dt, uplot) = pickle.load(file('brain_final.pickle'))
+(dx, Tf, numtimesteps, dt, initial_u_plot) = pickle.load(file('brain_IC_plotvec.pickle'))
+(dx, Tf, numtimesteps, dt, uplot) = pickle.load(file('brain_final_plotvec.pickle'))
 
 
 if PLOT:

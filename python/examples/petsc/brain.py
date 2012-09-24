@@ -1,4 +1,6 @@
-"""Solves the heat equation on a triangulated sphere."""
+"""Solves the PDE problems on the surface of a brain.
+Also outputs PETSc matrices.
+"""
 import numpy as np
 import pickle
 
@@ -12,7 +14,7 @@ from cp.build_matrices import build_interp_matrix, build_diff_matrix
 # cp.tools?)
 #from cp.surfaces.coordinate_transform import cart2sph
 
-PLOT = True
+PLOT = False
 
 if PLOT:
     try:
@@ -108,6 +110,22 @@ for kt in xrange(numtimesteps):
             src.data.point_data.scalars.name = 'scalars'
             src.data.modified()
 
-initial_u_IC = Eplot * initial_u;
-pickle.dump((dx, Tf, numtimesteps, dt, initial_u_IC), file('brain_IC.pickle','w'))
-pickle.dump((dx, Tf, numtimesteps, dt, uplot), file('brain_final.pickle','w'))
+cpm = 0
+print 'saving matrices to petsc format on disk'
+import cp.tools.scipy_petsc_conversions as conv
+if cpm == 0:
+    conv.save_scipy_to_petsc_ondisk(L, 'Lmatrix.dat')
+    conv.save_scipy_to_petsc_ondisk(E, 'Ematrix.dat')
+elif cpm == 1:
+    conv.save_scipy_to_petsc_ondisk(M, 'Mmatrix.dat')
+elif cpm == 2:
+    conv.save_scipy_to_petsc_ondisk(A, 'Amatrix.dat')
+
+final_u = u
+print 'saving dx, ICs, soln to disk'
+pickle.dump((dx, cpm, Tf, numtimesteps, dt, initial_u, final_u), file('non_petsc_data.pickle','w'))
+
+
+initial_u_plot = (Eplot * initial_u).astype('f');
+pickle.dump((dx, Tf, numtimesteps, dt, initial_u_plot), file('brain_IC_plotvec.pickle','w'))
+pickle.dump((dx, Tf, numtimesteps, dt, uplot.astype('f')), file('brain_final_plotvec.pickle','w'))
