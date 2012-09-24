@@ -1,5 +1,6 @@
 from itertools import izip
 from collections import defaultdict
+from warnings import warn
 
 import numpy as np
 from scipy.spatial import cKDTree
@@ -10,7 +11,11 @@ from scipy.spatial import cKDTree
 #    from enthought.mayavi import mlab
 
 from cp.tools.io import load_ply
-from cp.surfaces.triangulation_fast import FindClosestPointToTriSet
+try:
+    from cp.surfaces.triangulation_fast import FindClosestPointToTriSet
+except ImportError:
+    warn('fast triangulation code not compiled')
+
 
 from Surface import Surface
 
