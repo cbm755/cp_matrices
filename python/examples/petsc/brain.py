@@ -30,7 +30,7 @@ diff_stencil_arm = 1
 dim = 3
 
 index, distance, grid, dx = m.grid(num_blocks_per_dim=41,
-                                   levels=2,
+                                   levels=1,
                                    p=p,
                                    diff_stencil_arm=diff_stencil_arm)
 cp, dist, _, _ = m.closest_point(grid, index)

@@ -21,6 +21,10 @@ def save_scipy_to_petsc_ondisk(A, fname):
     #As = A.data
     nnz = len(Aj)
 
+    # TODO:
+    # http://www.mcs.anl.gov/petsc/documentation/faq.html#efficient-assembly
+    # need to preallocate and try passing in vectors instead of one-at-a-time
+
     #B = PETSc.Mat().create(PETSc.COMM_WORLD)
     B = PETSc.Mat().createAIJ((A.shape))
     #B.setSizes([m*n, m*n])
