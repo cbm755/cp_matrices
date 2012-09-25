@@ -19,10 +19,11 @@ from cp.tools.io import load_ply
 
 
 # which input to read?
-basename = 'data_r200/brain_r200'
+#basename = 'data_r200/brain_r200'
+basename = 'brain_r401'
 
 # Load vertices and faces, and instantiate surface
-plyscale = 1;
+plyscale = 0;
 vert, faces = load_ply('brain-lh_scale_' + str(plyscale) + '.ply')
 #m = Mesh(vert, faces)
 
@@ -57,7 +58,7 @@ if (1==0):
 
 
 # or load from the binary files:
-for kt in xrange(100, 4000, 500):
+for kt in xrange(0, 1000, 50):
     fname = '{:s}_plot_scale{:d}_kt_{:0>6d}.bin'.format(basename, plyscale, kt)
     uplot = np.fromfile(fname, 'f')
     

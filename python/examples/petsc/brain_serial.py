@@ -22,7 +22,7 @@ if PLOT:
         from enthought.mayavi import mlab
 
 # output options
-basename = 'brain_r400'
+basename = 'brain_r401'
 
 # Load vertices and faces, and instantiate surface
 plyscale = 0;
@@ -33,7 +33,7 @@ p = 3
 diff_stencil_arm = 1
 dim = 3
 
-index, distance, grid, dx = m.grid(num_blocks_per_dim=101,
+index, distance, grid, dx = m.grid(num_blocks_per_dim=150,
                                    levels=1,
                                    p=p,
                                    diff_stencil_arm=diff_stencil_arm)
@@ -93,7 +93,7 @@ if PLOT:
 
 # reaction-diffusion equation
 # parameters:
-alpha = 0.1     # (model) coefficient of reaction term
+alpha = 2.0     # (model) coefficient of reaction term
 gammaS = 100.0      # (numerical) coefficient of sources term
 v0 = 0.5          # magnitude of point sources
 
@@ -103,7 +103,7 @@ sources = np.loadtxt("brain_sources.txt")
 nsrcs = sources.shape[0]    # number of sources
 # build the source term
 v = 0
-varsq = dx[0]      # scale delta fns somehow
+varsq = 5*dx[0]      # scale delta fns somehow
 # second run: (delete a point)
 #for srccount in xrange(nsrcs-1):
 for srccount in xrange(nsrcs):
@@ -127,7 +127,7 @@ elif cpm == 2:
 
 Tf = 2.0
 numtimesteps = int(np.ceil(Tf / dt))
-turn_off_at_time = 0.2
+turn_off_at_time = 0.05
 turn_off_at = int(np.ceil(turn_off_at_time / dt))
 dt = Tf / numtimesteps
 print "turn off some sources at kt=" + str(turn_off_at)
