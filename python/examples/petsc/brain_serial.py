@@ -183,7 +183,7 @@ for kt in xrange(numtimesteps):
         uplot = Eplot * u
 
         # output data
-        fname = '{:s}_gridsoln_kt_{:0>6d}'.format(basename, kt)
+        fname = '{:s}_gridsoln_kt_{:0>6d}.pickle'.format(basename, kt)
         pickle.dump((u), file(fname, 'w'))
         # more output, as binary float32 data:
         fname = '{:s}_plot_scale{:d}_kt_{:0>6d}.bin'.format(basename, plyscale, kt)
