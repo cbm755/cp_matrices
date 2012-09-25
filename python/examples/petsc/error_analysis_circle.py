@@ -61,11 +61,11 @@ if __name__ == '__main__':
         vstart = 0
 
     for MBlock in MBlocklist:
-        opt = {'M':MBlock,'m':5,'d':2}
+        opt = {'M':MBlock,'m':5,'d':2,'xmin':-2,'xmax':2}
         surface = Sphere(center=np.array([0.0, 0.0]))
         
         band = Band(surface,comm,opt)
-        _,_,v,v2 = band.createGLVectors()
+        v,v2 = band.createGlobalVectors()
         grid = band.getCoordinates() 
         band.computeCP()
 
