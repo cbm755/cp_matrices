@@ -14,7 +14,7 @@ from cp.build_matrices import build_interp_matrix, build_diff_matrix
 # cp.tools?)
 #from cp.surfaces.coordinate_transform import cart2sph
 
-PLOT = False
+PLOT = True
 
 if PLOT:
     try:
@@ -23,7 +23,7 @@ if PLOT:
         from enthought.mayavi import mlab
 
 # output options
-basename = 'brain_r401'
+basename = 'brain_r501'
 
 # Load vertices and faces, and instantiate surface
 plyscale = 0;
@@ -92,12 +92,12 @@ if PLOT:
     surf = mlab.pipeline.surface(normals)
     mlab.colorbar()
     surf.module_manager.scalar_lut_manager.use_default_range = False
-    surf.module_manager.scalar_lut_manager.data_range = (0.0, 0.5)
+    surf.module_manager.scalar_lut_manager.data_range = (0.25, 0.45)
 
 
 # reaction-diffusion equation
 # parameters:
-alpha = 20.0     # (model) coefficient of reaction term
+alpha = 50.0     # (model) coefficient of reaction term
 gammaS = 100.0      # (numerical) coefficient of sources term
 v0 = 0.5          # magnitude of point sources
 
@@ -105,6 +105,7 @@ v0 = 0.5          # magnitude of point sources
 sources = np.loadtxt("brain_sources.txt")
 #sources = pickle.load(file('brain_sources.pickle'))
 nsrcs = sources.shape[0]    # number of sources
+# sourcecp, _, _, _ = m.closest_point(sources)
 # build the source term
 v = 0
 varsq = 5*dx[0]      # scale delta fns somehow
@@ -119,7 +120,9 @@ v = E*v
 
 
 if PLOT:
-    mlab.points3d(sources[:,0], sources[:,1], sources[:,2], scale_factor=0.1,color=(1,0,0))
+    mlab.points3d(sources[:,0], sources[:,1], sources[:,2], scale_factor=0.1,color=(1,1,1))
+    turnoff = 1
+    #mlab.points3d(sources[turnoff,0], sources[turnoff,1], sources[turnoff,2], scale_factor=0.1, color=(1,1,1))
     #raw_input("press enter to continue")
 
 # choose a Closest Point Method algorithm
@@ -158,15 +161,15 @@ for kt in xrange(numtimesteps):
         # TODO: should  be a funciton or something
         print 'turning some srcs off'
         v = 0
-        if PLOT:
-            mlab.points3d(sources[:,0], sources[:,1], sources[:,2], scale_factor=0.1, color=(0,0,0))
-        for srccount in (0,3,4,6):
+        for srccount in xrange(nsrcs):
         #for srccount in xrange(nsrcs-1):
-            vdist = (grid[:,0]-sources[srccount,0])**2 + (grid[:,1]-sources[srccount,1])**2 + (grid[:,2]-sources[srccount,2])**2
-            # exp fns around sources
-            v = v + np.exp( -vdist / (2 * varsq))
-            if PLOT:
-                mlab.points3d(sources[srccount,0], sources[srccount,1], sources[srccount,2], scale_factor=0.1,color=(1,0,0))
+            if srccount in (turnoff,100):
+                if PLOT:
+                    mlab.points3d(sources[srccount,0], sources[srccount,1], sources[srccount,2], scale_factor=0.1,color=(0,0,0))
+            else:
+                vdist = (grid[:,0]-sources[srccount,0])**2 + (grid[:,1]-sources[srccount,1])**2 + (grid[:,2]-sources[srccount,2])**2
+                # exp fns around sources
+                v = v + np.exp( -vdist / (2 * varsq))
         # cp-ext
         v = E*v
 
