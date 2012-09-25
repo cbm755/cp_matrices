@@ -22,7 +22,7 @@ if PLOT:
         from enthought.mayavi import mlab
 
 # output options
-basename = 'brain_r001'
+basename = 'brain_r400'
 
 # Load vertices and faces, and instantiate surface
 plyscale = 0;
@@ -127,9 +127,10 @@ elif cpm == 2:
 
 Tf = 2.0
 numtimesteps = int(np.ceil(Tf / dt))
-turn_off_at_time = 0.6
+turn_off_at_time = 0.2
 turn_off_at = int(np.ceil(turn_off_at_time / dt))
 dt = Tf / numtimesteps
+print "turn off some sources at kt=" + str(turn_off_at)
 
 # build the vGMM matrix
 if cpm == 1 or cpm == 2:
@@ -149,6 +150,7 @@ for kt in xrange(numtimesteps):
         # TODO: should  be a funciton or something
         print 'turning one src off'
         v = 0
+        #for srccount in (0,3,4,6):
         for srccount in xrange(nsrcs-1):
             vdist = (grid[:,0]-sources[srccount,0])**2 + (grid[:,1]-sources[srccount,1])**2 + (grid[:,2]-sources[srccount,2])**2
             # exp fns around sources
@@ -174,10 +176,10 @@ for kt in xrange(numtimesteps):
     # unew = u + dt * (L*u)
     # u = E*unew
     t = kt * dt
-    if not kt%100 or kt == (numtimesteps-1):
+    if not kt%25 or kt == (numtimesteps-1):
 
 
-        print "time: {0:2f}, {1:2f} %".format(t, 100 * float(kt) / numtimesteps)
+        print "kt={:d}, time: {:2f}, {:2f} %, u_minmax = [{:g},{:g}]".format(kt, t, 100 * float(kt) / numtimesteps, u.min(), u.max())
         uplot = Eplot * u
 
         # output data
