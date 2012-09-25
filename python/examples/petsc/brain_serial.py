@@ -14,7 +14,7 @@ from cp.build_matrices import build_interp_matrix, build_diff_matrix
 # cp.tools?)
 #from cp.surfaces.coordinate_transform import cart2sph
 
-PLOT = True
+PLOT = False
 
 if PLOT:
     try:
@@ -118,10 +118,9 @@ for srccount in xrange(nsrcs):
 # cp-ext
 v = E*v
 
-
+turnoff = 1
 if PLOT:
     mlab.points3d(sources[:,0], sources[:,1], sources[:,2], scale_factor=0.1,color=(1,1,1))
-    turnoff = 1
     #mlab.points3d(sources[turnoff,0], sources[turnoff,1], sources[turnoff,2], scale_factor=0.1, color=(1,1,1))
     #raw_input("press enter to continue")
 
@@ -162,8 +161,8 @@ for kt in xrange(numtimesteps):
         print 'turning some srcs off'
         v = 0
         for srccount in xrange(nsrcs):
-        #for srccount in xrange(nsrcs-1):
-            if srccount in (turnoff,100):
+            # check whether this source is in the list of those to be turned off
+            if srccount in (turnoff,):
                 if PLOT:
                     mlab.points3d(sources[srccount,0], sources[srccount,1], sources[srccount,2], scale_factor=0.1,color=(0,0,0))
             else:
