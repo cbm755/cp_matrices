@@ -13,7 +13,7 @@ from cp.build_matrices import build_interp_matrix, build_diff_matrix
 # cp.tools?)
 #from cp.surfaces.coordinate_transform import cart2sph
 
-PLOT = True
+PLOT = False
 
 if PLOT:
     try:
@@ -21,10 +21,13 @@ if PLOT:
     except ImportError:
         from enthought.mayavi import mlab
 
+# output options
+basename = 'brain_r001'
 
 # Load vertices and faces, and instantiate surface
-v, f = load_ply('brain-lh_scale_1.ply')
-m = Mesh(v, f)
+plyscale = 0;
+vert, faces = load_ply('brain-lh_scale_' + str(plyscale) + '.ply')
+m = Mesh(vert, faces)
 
 p = 3
 diff_stencil_arm = 1
@@ -91,13 +94,13 @@ if PLOT:
 # reaction-diffusion equation
 # parameters:
 alpha = 0.1     # (model) coefficient of reaction term
-gammaS = 100      # (numerical) coefficient of sources term
+gammaS = 100.0      # (numerical) coefficient of sources term
 v0 = 0.5          # magnitude of point sources
 
 # load source locations
-sources = np.loadtxt("brain_sources.txt") 
+sources = np.loadtxt("brain_sources.txt")
 #sources = pickle.load(file('brain_sources.pickle'))
-nsrcs = sources.size/3;    # number of sources
+nsrcs = sources.shape[0]    # number of sources
 # build the source term
 v = 0
 varsq = dx[0]      # scale delta fns somehow
@@ -122,6 +125,12 @@ elif cpm == 1:
 elif cpm == 2:
     dt = 0.5 * np.min(dx)
 
+Tf = 2.0
+numtimesteps = int(np.ceil(Tf / dt))
+turn_off_at_time = 0.6
+turn_off_at = int(np.ceil(turn_off_at_time / dt))
+dt = Tf / numtimesteps
+
 # build the vGMM matrix
 if cpm == 1 or cpm == 2:
     #I = speye(L.shape[0], L.shape[1])
@@ -132,20 +141,27 @@ if cpm == 2:
     A = I - dt*M
 
 
-Tf = 1
-dt = 0.2 * np.min(dx)**2
-numtimesteps = int(Tf // dt + 1)
-dt = Tf / numtimesteps
+
 errors = []  # To store the error at each timestep
 # Explicit Forward Euler time stepping
 for kt in xrange(numtimesteps):
+    if kt == turn_off_at:
+        # TODO: should  be a funciton or something
+        print 'turning one src off'
+        v = 0
+        for srccount in xrange(nsrcs-1):
+            vdist = (grid[:,0]-sources[srccount,0])**2 + (grid[:,1]-sources[srccount,1])**2 + (grid[:,2]-sources[srccount,2])**2
+            # exp fns around sources
+            v = v + np.exp( -vdist / (2 * varsq))
+        # cp-ext
+        v = E*v
+
     if cpm == 0:
         # explicit Euler, Ruuth--Merriman style
         unew = u + dt * (L*u)
         u = E*unew
     elif cpm == 1:
         # explicit Euler, von Glehn--Maerz--Macdonald
-        
 
         # TODO: clean this up!
         # this now solves a nonlinear reaction-diffusion equation
@@ -165,7 +181,11 @@ for kt in xrange(numtimesteps):
         uplot = Eplot * u
 
         # output data
-        pickle.dump((u), file('brain_after_kt' + str(kt),'w'))
+        fname = '{:s}_gridsoln_kt_{:0>6d}'.format(basename, kt)
+        pickle.dump((u), file(fname, 'w'))
+        # more output, as binary float32 data:
+        fname = '{:s}_plot_scale{:d}_kt_{:0>6d}.bin'.format(basename, plyscale, kt)
+        uplot.astype('f').tofile(fname)
 
         #true_solution = np.exp(-2*t) * np.cos(phi_plot + np.pi / 2)
         #step_error = (np.abs(true_solution - sphplot.reshape(xp.shape)).sum() /
@@ -175,6 +195,5 @@ for kt in xrange(numtimesteps):
             src.data.point_data.scalars = uplot
             src.data.point_data.scalars.name = 'scalars'
             src.data.modified()
-
-cpm = 0
+            raw_input("press enter to continue")
 

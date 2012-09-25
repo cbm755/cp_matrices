@@ -17,13 +17,17 @@ from cp.tools.io import load_ply
 #from cp.surfaces.coordinate_transform import cart2sph
 
 
-PLOT = True
+
+# which input to read?
+basename = 'brain_r001'
 
 # Load vertices and faces, and instantiate surface
-vert, faces = load_ply('brain-lh_scale_1.ply')
+plyscale = 0;
+vert, faces = load_ply('brain-lh_scale_' + str(plyscale) + '.ply')
 #m = Mesh(vert, faces)
 
-if PLOT:
+
+if (1==1):
     # Plotting code. Build a pipeline to be able to change the data later.
     #src = mlab.pipeline.grid_source(xp, yp, zp,
     #                                scalars=(Eplot * u).reshape(xp.shape))
@@ -39,12 +43,31 @@ if PLOT:
 #numtimesteps = int(Tf // dt + 1)
 #dt = Tf / numtimesteps
 
+mlab.options.offscreen = True
 
-(dx, Tf, numtimesteps, dt, initial_u_plot) = pickle.load(file('brain_IC_plotvec.pickle'))
-(dx, Tf, numtimesteps, dt, uplot) = pickle.load(file('brain_final_plotvec.pickle'))
-
-
-if PLOT:
+if (1==0):
+    #(dx, Tf, numtimesteps, dt, initial_u_plot) = pickle.load(file('brain_IC_plotvec.pickle'))
+    #(dx, Tf, numtimesteps, dt, uplot) = pickle.load(file('brain_final_plotvec.pickle'))
+    uplot = np.fromfile('testout.bin', 'f')
     src.data.point_data.scalars = uplot
     src.data.point_data.scalars.name = 'scalars'
     src.data.modified()
+    raw_input("press enter to continue")
+
+
+# or load from the binary files:
+for kt in xrange(0, 3100, 300):
+    fname = '{:s}_plot_scale{:d}_kt_{:0>6d}.bin'.format(basename, plyscale, kt)
+    uplot = np.fromfile(fname, 'f')
+
+    # TODO: fix lower/upper bounds
+    src.data.point_data.scalars = uplot
+    src.data.point_data.scalars.name = 'scalars'
+    src.data.modified()
+    # TODO: how to do pause(0) or drawnow() in mayavi?
+    print 'kt = ' + str(kt)
+    raw_input("press enter to continue")
+    #mlab.show()
+    #if (kt == 0):
+    #    raw_input("press enter to continue")
+        
