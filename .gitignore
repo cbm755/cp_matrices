@@ -11,3 +11,5 @@
 *.ply
 .project
 .pydevproject
+*.bin
+*.pickle
