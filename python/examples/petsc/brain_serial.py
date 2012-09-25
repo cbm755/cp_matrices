@@ -4,6 +4,7 @@ Does not output PETSc matrices.
 import numpy as np
 import scipy as sp
 import pickle
+import math
 
 
 from cp.surfaces import Mesh
@@ -90,10 +91,13 @@ if PLOT:
     normals = mlab.pipeline.poly_data_normals(src)
     surf = mlab.pipeline.surface(normals)
     mlab.colorbar()
+    surf.module_manager.scalar_lut_manager.use_default_range = False
+    surf.module_manager.scalar_lut_manager.data_range = (0.0, 0.5)
+
 
 # reaction-diffusion equation
 # parameters:
-alpha = 2.0     # (model) coefficient of reaction term
+alpha = 20.0     # (model) coefficient of reaction term
 gammaS = 100.0      # (numerical) coefficient of sources term
 v0 = 0.5          # magnitude of point sources
 
@@ -109,10 +113,14 @@ varsq = 5*dx[0]      # scale delta fns somehow
 for srccount in xrange(nsrcs):
   vdist = (grid[:,0]-sources[srccount,0])**2 + (grid[:,1]-sources[srccount,1])**2 + (grid[:,2]-sources[srccount,2])**2
   # exp fns around sources
-  v = v + np.exp( -vdist / (2 * varsq))
+  v = v + 1.0/math.sqrt(2*math.pi*varsq) * np.exp( -vdist / (2 * varsq))
 # cp-ext
 v = E*v
 
+
+if PLOT:
+    mlab.points3d(sources[:,0], sources[:,1], sources[:,2], scale_factor=0.1,color=(1,0,0))
+    #raw_input("press enter to continue")
 
 # choose a Closest Point Method algorithm
 cpm = 1
@@ -148,15 +156,20 @@ errors = []  # To store the error at each timestep
 for kt in xrange(numtimesteps):
     if kt == turn_off_at:
         # TODO: should  be a funciton or something
-        print 'turning one src off'
+        print 'turning some srcs off'
         v = 0
-        #for srccount in (0,3,4,6):
-        for srccount in xrange(nsrcs-1):
+        if PLOT:
+            mlab.points3d(sources[:,0], sources[:,1], sources[:,2], scale_factor=0.1, color=(0,0,0))
+        for srccount in (0,3,4,6):
+        #for srccount in xrange(nsrcs-1):
             vdist = (grid[:,0]-sources[srccount,0])**2 + (grid[:,1]-sources[srccount,1])**2 + (grid[:,2]-sources[srccount,2])**2
             # exp fns around sources
             v = v + np.exp( -vdist / (2 * varsq))
+            if PLOT:
+                mlab.points3d(sources[srccount,0], sources[srccount,1], sources[srccount,2], scale_factor=0.1,color=(1,0,0))
         # cp-ext
         v = E*v
+
 
     if cpm == 0:
         # explicit Euler, Ruuth--Merriman style
