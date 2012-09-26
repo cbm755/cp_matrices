@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
         
         band = Band(surface,comm,opt)
-        la,lv,gv,wv = band.createGLVectors()
+        gv,wv = band.createGlobalVectors()
         grid = band.getCoordinates() 
         band.computeCP()
 

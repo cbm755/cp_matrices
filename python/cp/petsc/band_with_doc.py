@@ -37,14 +37,16 @@ class Band(object):
         self.surface = surface
         self.M = opt.get('M',20)
         self.m = opt.get('m',4)
+        self.xmin = opt.get('xmin',-2)
+        self.xmax = opt.get('xmax',2)
         self.StencilWidth = opt.get('sw',1)
         self.Dim = opt.get('d',3)
         self.interpDegree = opt.get('p',3)
-        self.hBlock = 4/self.M
+        self.hBlock = (self.xmax-self.xmin)/self.M
         self.hGrid = self.hBlock/self.m
         self.sizes = (self.M,)*self.Dim
         self.dx = self.hGrid
-        self.ll = opt.get('ll',(-2,)*self.Dim)
+        self.ll = (self.xmin,)*self.Dim
 
     def SelectBlock(self,surface = None):
         '''
@@ -161,7 +163,7 @@ class Band(object):
         #cp,_,_,_ = self.surface.cp(cp)
         self.cp = cp
 
-    def createGLVectors(self):
+    def createGlobalVectors(self):
         '''
 	Create global and local vectors for the values at fine grid.
 	Currently only global vectors 'self.gvec' and 'self.wvec' is used.
@@ -175,62 +177,7 @@ class Band(object):
         self.gvec.setUp()
         self.wvec = self.gvec.copy()
 
-	# The rest lines of code for this def, except the last return line, is creating
-        # local vectors, which is not used currently. Could skip reading them for now.
-
-        self.larray = np.zeros((self.numBlockWBandAssigned,)+\
-                               (self.m+self.StencilWidth*2,)*self.Dim,order='F')
-        self.lvec = PETSc.Vec().createWithArray(self.larray,comm=self.comm)
-
-#        self.createIndicesHelper()
-        tind = np.arange((self.m+self.StencilWidth*2)**self.Dim)
-        tind = tind.reshape((self.m+self.StencilWidth*2,)*self.Dim,order='F')
-
-        for dim in xrange(self.Dim):
-            tind = np.delete(tind,0,dim)
-            tind = np.delete(tind,np.s_[-1],dim)
-
-        tind = tind.flatten(order='F')
-
-#        ISList = []
-#        c = (self.m+self.StencilWidth*2)**self.Dim
-#        for i in xrange(self.BlockWBandStart,self.BlockWBandEnd):
-#            ti = i*c
-#            ISList.extend(list(tind+ti))
-        tind = np.tile(tind,self.numBlockWBandAssigned)
-        ttind = np.arange(self.BlockWBandStart,self.BlockWBandEnd)
-        tt = (self.m+2*self.StencilWidth)**self.Dim
-        ttind *= tt
-        ttind = np.repeat(ttind, self.m**self.Dim)
-        ttind = tind + ttind
-
-
-        ISFrom = PETSc.IS().createGeneral(ttind,comm=self.comm)
-        self.l2g = PETSc.Scatter().create(self.lvec,ISFrom,self.gvec,None)
-
-        #generate scatter global2local
-        tind = np.arange(tt)
-        tind = self.Ind2Sub(tind,(self.m+2*self.StencilWidth,)*self.Dim)
-        tind -= self.StencilWidth
-        tind = np.tile(tind,(self.numBlockWBandAssigned,1))
-        ttind = self.ni2pi.petsc2app(np.arange(self.BlockWBandStart,self.BlockWBandEnd))
-        ttind = self.BlockInd2SubWithoutBand(ttind)
-        ttind = np.repeat(ttind,tt,axis=0)
-        ttind += tind/self.m
-        tind = np.mod(tind,self.m)
-        tind = self.Sub2Ind(tind, (self.m,)*self.Dim)
-        ttind = self.BlockSub2IndWithoutBand(ttind)
-        ttind = self.ni2pi.app2petsc(ttind)
-        ttind *= self.m**self.Dim
-        tind += ttind
-        (ind,) = np.where(tind>=0)
-        tind = tind[ind]
-        ISTo = ind+self.BlockWBandStart*tt
-        ISFrom = PETSc.IS().createGeneral(tind)
-        ISTo = PETSc.IS().createGeneral(ISTo)
-        self.g2l = PETSc.Scatter().create(self.gvec,ISFrom,self.lvec,ISTo)
-
-        return self.larray,self.lvec,self.gvec,self.wvec
+        return self.gvec,self.wvec
 
 
     def toZero(self,gvec = None):
@@ -251,6 +198,7 @@ class Band(object):
 
     def initialu(self,f):
         self.gvec.setArray(f(self.cp))
+
     
     def subToPetscInd(self,sub):
         '''Convert sub-indices to Petsc indices. See comments in 'createExtMat'. We need this helper function
@@ -372,45 +320,6 @@ class Band(object):
         
         return L
 
-    def createAnyMat(self,rp,weights,NNZ = None):
-        if NNZ is None:
-            NNZ = (rp.shape[0],rp.shape[0])
-        shape0 = rp.shape[0]
-        tt = self.m**self.Dim
-        start = self.BlockWBandStart
-        size = (self.m,)*self.Dim
-        rpt = np.tile(rp,(tt,1))
-
-        m = PETSc.Mat().create(comm=self.comm)
-        m.setSizes((self.wvec.sizes,self.gvec.sizes))
-        m.setFromOptions()
-        m.setPreallocationNNZ(NNZ)
-        ind = np.arange(tt)
-        tsubInBlock = self.Ind2Sub(ind, size)
-        tsubInBlock = np.repeat(tsubInBlock,shape0,axis=0)
-        tsubInBlock += rpt
-        offset = np.floor_divide(tsubInBlock,self.m)
-        subInBlock = np.mod(tsubInBlock,self.m)
-        ones = np.ones(tt*shape0,dtype=np.int64)
-        indInBlock = self.Sub2Ind(subInBlock, size)
-        for block in xrange(self.numBlockWBandAssigned):
-            tx = (block+start)*tt
-            index = ind + tx
-            #petsc ->  natural -> sub -> +offset -> natural -> petsc
-            nind = self.ni2pi.petsc2app(block + start)
-            nind = ones*nind
-            nsub = self.BlockInd2SubWithoutBand(nind)
-            nsub += offset
-            nind = self.BlockSub2IndWithoutBand(nsub)
-            pind = self.ni2pi.app2petsc(nind)
-
-            pind *= tt
-            pind += indInBlock
-#            pind = pind.reshape((-1,shape0))
-            for i in xrange(tt):
-                m[index[i],pind[shape0*i:shape0*(i+1)]] = weights
-        m.assemble()
-        return m
     
 
 
@@ -459,10 +368,10 @@ class Band(object):
 
 
     def BlockSub2CenterCarWithoutBand(self,sub):
-        return sub/self.M*4-2+self.hBlock/2
+        return sub/self.M*(self.xmax-self.xmin)+self.xmin+self.hBlock/2
 
     def BlockSub2CornerCarWithoutBand(self,sub):
-        return sub/self.M*4-2
+        return sub/self.M*(self.xmax-self.xmin)+self.xmin
 
     def BlockInd2CenterCarWithoutBand(self,ind):
         return self.BlockSub2CenterCarWithoutBand(self.BlockInd2SubWithoutBand(ind))
@@ -482,6 +391,78 @@ class Band(object):
     Following are some defs which might be useful in the future.
     '''
     
+    def createGLVectors(self):
+        '''
+	Create global and local vectors for the values at fine grid.
+	Currently only global vectors 'self.gvec' and 'self.wvec' is used.
+	'''
+
+        self.SelectBlock()
+        
+        # Create global vectors 'self.gvec' and 'self.wvec'.
+        lsize = self.numBlockWBandAssigned*self.m**self.Dim
+        self.gvec = PETSc.Vec().createMPI((lsize,PETSc.DECIDE))
+        self.gvec.setUp()
+        self.wvec = self.gvec.copy()
+
+	# The rest lines of code for this def, except the last return line, is creating
+        # local vectors, which is not used currently. Could skip reading them for now.
+
+        self.larray = np.zeros((self.numBlockWBandAssigned,)+\
+                               (self.m+self.StencilWidth*2,)*self.Dim,order='F')
+        self.lvec = PETSc.Vec().createWithArray(self.larray,comm=self.comm)
+
+#        self.createIndicesHelper()
+        tind = np.arange((self.m+self.StencilWidth*2)**self.Dim)
+        tind = tind.reshape((self.m+self.StencilWidth*2,)*self.Dim,order='F')
+
+        for dim in xrange(self.Dim):
+            tind = np.delete(tind,0,dim)
+            tind = np.delete(tind,np.s_[-1],dim)
+
+        tind = tind.flatten(order='F')
+
+#        ISList = []
+#        c = (self.m+self.StencilWidth*2)**self.Dim
+#        for i in xrange(self.BlockWBandStart,self.BlockWBandEnd):
+#            ti = i*c
+#            ISList.extend(list(tind+ti))
+        tind = np.tile(tind,self.numBlockWBandAssigned)
+        ttind = np.arange(self.BlockWBandStart,self.BlockWBandEnd)
+        tt = (self.m+2*self.StencilWidth)**self.Dim
+        ttind *= tt
+        ttind = np.repeat(ttind, self.m**self.Dim)
+        ttind = tind + ttind
+
+
+        ISFrom = PETSc.IS().createGeneral(ttind,comm=self.comm)
+        self.l2g = PETSc.Scatter().create(self.lvec,ISFrom,self.gvec,None)
+
+        #generate scatter global2local
+        tind = np.arange(tt)
+        tind = self.Ind2Sub(tind,(self.m+2*self.StencilWidth,)*self.Dim)
+        tind -= self.StencilWidth
+        tind = np.tile(tind,(self.numBlockWBandAssigned,1))
+        ttind = self.ni2pi.petsc2app(np.arange(self.BlockWBandStart,self.BlockWBandEnd))
+        ttind = self.BlockInd2SubWithoutBand(ttind)
+        ttind = np.repeat(ttind,tt,axis=0)
+        ttind += tind/self.m
+        tind = np.mod(tind,self.m)
+        tind = self.Sub2Ind(tind, (self.m,)*self.Dim)
+        ttind = self.BlockSub2IndWithoutBand(ttind)
+        ttind = self.ni2pi.app2petsc(ttind)
+        ttind *= self.m**self.Dim
+        tind += ttind
+        (ind,) = np.where(tind>=0)
+        tind = tind[ind]
+        ISTo = ind+self.BlockWBandStart*tt
+        ISFrom = PETSc.IS().createGeneral(tind)
+        ISTo = PETSc.IS().createGeneral(ISTo)
+        self.g2l = PETSc.Scatter().create(self.gvec,ISFrom,self.lvec,ISTo)
+
+        return self.larray,self.lvec,self.gvec,self.wvec
+
+
     def getCoordinatesWithGhost(self):
         '''Return the coordinates of local vector.'''
         # TODO: this may return repeated superfluous coordinates.
@@ -598,3 +579,42 @@ class Band(object):
 	return m
     
         
+    def createAnyMat(self,rp,weights,NNZ = None):
+        if NNZ is None:
+            NNZ = (rp.shape[0],rp.shape[0])
+        shape0 = rp.shape[0]
+        tt = self.m**self.Dim
+        start = self.BlockWBandStart
+        size = (self.m,)*self.Dim
+        rpt = np.tile(rp,(tt,1))
+
+        m = PETSc.Mat().create(comm=self.comm)
+        m.setSizes((self.wvec.sizes,self.gvec.sizes))
+        m.setFromOptions()
+        m.setPreallocationNNZ(NNZ)
+        ind = np.arange(tt)
+        tsubInBlock = self.Ind2Sub(ind, size)
+        tsubInBlock = np.repeat(tsubInBlock,shape0,axis=0)
+        tsubInBlock += rpt
+        offset = np.floor_divide(tsubInBlock,self.m)
+        subInBlock = np.mod(tsubInBlock,self.m)
+        ones = np.ones(tt*shape0,dtype=np.int64)
+        indInBlock = self.Sub2Ind(subInBlock, size)
+        for block in xrange(self.numBlockWBandAssigned):
+            tx = (block+start)*tt
+            index = ind + tx
+            #petsc ->  natural -> sub -> +offset -> natural -> petsc
+            nind = self.ni2pi.petsc2app(block + start)
+            nind = ones*nind
+            nsub = self.BlockInd2SubWithoutBand(nind)
+            nsub += offset
+            nind = self.BlockSub2IndWithoutBand(nsub)
+            pind = self.ni2pi.app2petsc(nind)
+
+            pind *= tt
+            pind += indInBlock
+#            pind = pind.reshape((-1,shape0))
+            for i in xrange(tt):
+                m[index[i],pind[shape0*i:shape0*(i+1)]] = weights
+        m.assemble()
+        return m
