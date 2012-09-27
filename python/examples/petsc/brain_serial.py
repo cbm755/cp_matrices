@@ -10,11 +10,8 @@ import math
 from cp.surfaces import Mesh
 from cp.tools.io import load_ply
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
-# TODO: move coordinate_transform out of cp.surfaces (maybe to
-# cp.tools?)
-#from cp.surfaces.coordinate_transform import cart2sph
 
-PLOT = False
+PLOT = True
 
 if PLOT:
     try:
@@ -201,14 +198,16 @@ for kt in xrange(numtimesteps):
         fname = '{:s}_gridsoln_kt_{:0>6d}.pickle'.format(basename, kt)
         pickle.dump((u), file(fname, 'w'))
         # more output, as binary float32 data:
-        fname = '{:s}_plot_scale{:d}_kt_{:0>6d}.bin'.format(basename, plyscale, kt)
+        fname = '{:s}_plot_scale{:d}_kt_{:0>6d}.ascii'.format(basename, plyscale, kt)
         uplot.astype('f').tofile(fname)
+        # or ascii output
+        uplot.astype('f').tofile(fname, sep=" ", format="%s")
 
         #true_solution = np.exp(-2*t) * np.cos(phi_plot + np.pi / 2)
         #step_error = (np.abs(true_solution - sphplot.reshape(xp.shape)).sum() /
         #np.abs(true_solution).sum())
         #errors.append(step_error)
-        if PLOT:
+        if PLOT and not kt%100:
             src.data.point_data.scalars = uplot
             src.data.point_data.scalars.name = 'scalars'
             src.data.modified()
