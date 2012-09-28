@@ -5,7 +5,11 @@ from petsc4py import PETSc
 from mpi4py import MPI
 
 
-def save_scipy_to_petsc_ondisk(A, fname):
+def save_scipy_to_petsc_ondisk(A, nnz_alloc, fname):
+    """
+    Convert a scipy sparse matrix to a petsc matrix and save to disk
+
+    """
 
     #import sys, petsc4py
     #petsc4py.init(sys.argv)
@@ -25,11 +29,14 @@ def save_scipy_to_petsc_ondisk(A, fname):
     # http://www.mcs.anl.gov/petsc/documentation/faq.html#efficient-assembly
     # need to preallocate and try passing in vectors instead of one-at-a-time
 
-    #B = PETSc.Mat().create(PETSc.COMM_WORLD)
-    B = PETSc.Mat().createAIJ((A.shape))
-    #B.setSizes([m*n, m*n])
-    #B.setSizes((A.shape))
+    #B = PETSc.Mat().createAIJ((A.shape))
+    B = PETSc.Mat()
+    B.create(PETSc.COMM_WORLD)
+    B.setType('aij')
+    B.setSizes((A.shape))
     B.setFromOptions()
+    B.setPreallocationNNZ(nnz_alloc)
+    B.setUp()
     Istart, Iend = B.getOwnershipRange()
     print (Istart, Iend)
 
@@ -37,20 +44,27 @@ def save_scipy_to_petsc_ondisk(A, fname):
     #A.setValues([0, 1], [2, 3], [1, 1, 1, 1]) # Insert a 2x2 block of values into the matrix.
 
     # No!, but I'm sure there is a form like this
-    #B.setValues(Ai, Aj, As)
+    #B.setValuesIJV(Ai, Aj, As)
+    #B.setValuesRCV(Ai, Aj, As)
 
-    for i in xrange(0, nnz):
-        I = Ai[i]
-        J = Aj[i]
-        val = As[i]
-        #print (i,I,J,val)
-        # TODO: this is silly, but I'll probably run in serial anyway...
-        if (I >= Istart) and (I < Iend):
-        #B.setValue(I,J,val)
-            B[I,J] = val
+    if (1==0):
+        for i in xrange(0, A.shape[0]):
+            ai,aj,aij = find(A[1102,:])
+            B.setValues(i,aj,aij)
+
+    if (1==1):
+        for i in xrange(0, nnz):
+            I = Ai[i]
+            J = Aj[i]
+            val = As[i]
             #print (i,I,J,val)
-        else:
-            print ("fail", i,I,J,val)
+            # TODO: this is silly, but I'll probably run in serial anyway...
+            if (I >= Istart) and (I < Iend):
+            #B.setValue(I,J,val)
+                B[I,J] = val
+                #print (i,I,J,val)
+            else:
+                print ("fail", i,I,J,val)
 
     B.assemblyBegin()
     B.assemblyEnd()

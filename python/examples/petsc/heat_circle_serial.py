@@ -114,12 +114,12 @@ print "Serial code time=", timeit.default_timer() - start_time
 print 'saving matrices to petsc format on disk'
 import cp.tools.scipy_petsc_conversions as conv
 if cpm == 0:
-    conv.save_scipy_to_petsc_ondisk(L, 'Lmatrix.dat')
-    conv.save_scipy_to_petsc_ondisk(E, 'Ematrix.dat')
+    conv.save_scipy_to_petsc_ondisk(L, (5,0), 'Lmatrix.dat')
+    conv.save_scipy_to_petsc_ondisk(E, (16,0), 'Ematrix.dat')
 elif cpm == 1:
-    conv.save_scipy_to_petsc_ondisk(M, 'Mmatrix.dat')
+    conv.save_scipy_to_petsc_ondisk(M, (36.0), 'Mmatrix.dat')
 elif cpm == 2:
-    conv.save_scipy_to_petsc_ondisk(A, 'Amatrix.dat')
+    conv.save_scipy_to_petsc_ondisk(A, (36,0), 'Amatrix.dat')
 
 
 final_u = u

@@ -11,7 +11,8 @@ from cp.surfaces import Mesh
 from cp.tools.io import load_ply
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
 
-PLOT = True
+PLOT = False
+OUTPUT_PETSc = True
 
 if PLOT:
     try:
@@ -20,7 +21,7 @@ if PLOT:
         from enthought.mayavi import mlab
 
 # output options
-basename = 'brain_r501'
+basename = 'brain_r777'
 
 # Load vertices and faces, and instantiate surface
 plyscale = 0;
@@ -31,11 +32,15 @@ p = 3
 diff_stencil_arm = 1
 dim = 3
 
-index, distance, grid, dx = m.grid(num_blocks_per_dim=150,
+print 'building grid'
+index, distance, grid, dx = m.grid(num_blocks_per_dim=101,
                                    levels=1,
                                    p=p,
                                    diff_stencil_arm=diff_stencil_arm)
+print 'finding closest points'
 cp, dist, _, _ = m.closest_point(grid, index)
+
+
 
 # The points in `grid` can be thought to be a subset of a virtual grid
 # (for instance, the result of meshgrid). `ll` is the lower left
@@ -64,15 +69,18 @@ initial_u = u.copy()
 
 # Let's build the matrices. TODO: I think it would be nicer to use
 # `grid` instead of `int_grid`. It is a simple change.
+print 'building E matrix'
 E = build_interp_matrix(int_grid, cp, dx, p, ll, virtual_grid_shape)
 # TODO: being able to select different laplacian operators. Currently
 # it uses the second order laplacian for 2D and 3D. We could probably
 # use stencils.py, and give the stencil as a parameter
+print 'building L matrix'
 L = build_diff_matrix(int_grid, dx, virtual_grid_shape)
 
 # Points in the surface of the sphere, used por plotting
 #xp, yp, zp = Sphere().parametric_grid(65)
 #_, phi_plot, _ = cart2sph(xp, yp, zp)
+print 'building Eplot matrix'
 Eplot = build_interp_matrix(int_grid,
                             m.vertices,
                             dx, 1, ll, virtual_grid_shape)
@@ -132,14 +140,15 @@ elif cpm == 1:
 elif cpm == 2:
     dt = 0.5 * np.min(dx)
 
-Tf = 2.0
+Tf = 0.5
 numtimesteps = int(np.ceil(Tf / dt))
-turn_off_at_time = 0.05
+turn_off_at_time = 10.0
 turn_off_at = int(np.ceil(turn_off_at_time / dt))
 dt = Tf / numtimesteps
-print "turn off some sources at kt=" + str(turn_off_at)
+print "will turn off some sources at kt=" + str(turn_off_at)
 
 # build the vGMM matrix
+print 'assemble vGMM matrix'
 if cpm == 1 or cpm == 2:
     #I = speye(L.shape[0], L.shape[1])
     I = sp.sparse.eye(*L.shape)
@@ -149,8 +158,7 @@ if cpm == 2:
     A = I - dt*M
 
 
-
-errors = []  # To store the error at each timestep
+print 'starting time-stepping'
 # Explicit Forward Euler time stepping
 for kt in xrange(numtimesteps):
     if kt == turn_off_at:
@@ -213,3 +221,22 @@ for kt in xrange(numtimesteps):
             src.data.modified()
             raw_input("press enter to continue")
 
+
+if OUTPUT_PETSc:
+    print 'saving matrices to petsc format on disk'
+    import cp.tools.scipy_petsc_conversions as conv
+    st = timeit.default_timer()
+    if cpm == 0:
+        conv.save_scipy_to_petsc_ondisk(L, (7,0), 'brain_Lmatrix.dat')
+        conv.save_scipy_to_petsc_ondisk(E, (64,0), 'brain_Ematrix.dat')
+    elif cpm == 1:
+        # 2.5*64 + small safety factor
+        conv.save_scipy_to_petsc_ondisk(M, (165,0), 'brain_Mmatrix.dat')
+    elif cpm == 2:
+        conv.save_scipy_to_petsc_ondisk(A, (165,0), 'brain_Amatrix.dat')
+
+    final_u = u
+    print 'saving dx, ICs, soln to disk'
+    # todo: v not right yet
+    pickle.dump((dx, cpm, Tf, numtimesteps, dt, initial_u, final_u, alpha, gammaS, v0, v), file('brain_nonpetsc_data.pickle','w'))
+    timeit.default_timer() - st
