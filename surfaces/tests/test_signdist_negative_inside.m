@@ -22,7 +22,6 @@ function [pass, str] = test_signdist_negative_inside()
   end
 
   %% now do 3D
-
   list = {@cpSphere};
 
   for i = 1:length(list)
@@ -38,3 +37,9 @@ function [pass, str] = test_signdist_negative_inside()
       pass(c) = 0;
     end
   end
+
+  %% Torus
+  [cpx, cpy, cpz, sd] = cpTorus(1, 0, 0, 1, 0.5);
+  c = c + 1;
+  pass(c) = (sd < 0);
+
