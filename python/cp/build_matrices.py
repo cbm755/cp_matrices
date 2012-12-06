@@ -9,14 +9,20 @@ def build_diff_matrix(int_band, dx, shape):
     dim = len(shape)
     if dim == 3:
         # Assume now that band is not a linear index, but a 3D index (ie, int_band)
-        weights = np.array([-6, 1, 1, 1, 1, 1, 1]) / np.max(dx)**2
-        offsets = np.array([[0,0,0],
-                            [0,0,1],
-                            [0,1,0],
-                            [1,0,0],
-                            [0,0,-1],
-                            [0,-1,0],
-                            [-1,0,0]])
+        #weights = np.array([-6, 1, 1, 1, 1, 1, 1]) / np.max(dx)**2
+        weights = np.array([-2/dx[0]**2 -2/dx[1]**2 -2/dx[2]**2,
+                             1/dx[0]**2, 1/dx[0]**2,
+                             1/dx[1]**2, 1/dx[1]**2, 
+                             1/dx[2]**2, 1/dx[2]**2])
+
+        offsets = np.array([[ 0, 0, 0],
+                            [ 1, 0, 0],
+                            [-1, 0, 0],
+                            [ 0, 1, 0],
+                            [ 0,-1, 0],
+                            [ 0, 0, 1],
+                            [ 0, 0,-1]])
+
         Li = np.tile(np.arange(int_band.shape[0])[:, np.newaxis], weights.size)
         Lj = np.zeros_like(Li)
         Ls = np.zeros_like(Li, dtype=np.float)
@@ -32,12 +38,15 @@ def build_diff_matrix(int_band, dx, shape):
                        (int_band.shape[0], shape[0] * shape[1] * shape[2])).tocsr()
         return L[:, np.ravel_multi_index(int_band.T, shape)]
     elif dim == 2:
-        weights = np.array([-4, 1, 1, 1, 1]) / np.max(dx)**2
-        offsets = np.array([[0, 0],
-                            [0, 1],
-                            [1, 0],
-                            [0, -1],
-                            [-1, 0]])
+        #weights = np.array([-4, 1, 1, 1, 1]) / np.max(dx)**2
+        weights = np. array([-2/dx[0]**2 -2/dx[1]**2,
+                              1/dx[0]**2, 1/dx[0]**2,
+                              1/dx[1]**2, 1/dx[1]**2])
+        offsets = np.array([[ 0, 0],
+                            [ 1, 0],
+                            [-1, 0],
+                            [ 0, 1],
+                            [ 0,-1]])
         Li = np.tile(np.arange(int_band.shape[0])[:, np.newaxis], weights.size)
         Lj = np.zeros_like(Li)
         Ls = np.zeros_like(Li, dtype=np.float)
