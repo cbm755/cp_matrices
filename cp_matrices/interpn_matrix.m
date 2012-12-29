@@ -108,8 +108,8 @@ function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
     xw{d} = LagrangeWeights1D_vec(Xgrid(:,d), xi(:,d), ddx(d), Nsten);
   end
 
-  NN = Nsten*ones(1,d);
-  for s=1:prod(NN);
+  NN = Nsten*ones(1,dim);
+  for s=1:prod(NN)
     [ii{1:dim}] = ind2sub(NN, s);
     %weights(:,s) = xw(:,i) .* yw(:,j) .* zw(:,k);
     temp = xw{1}(:,ii{1});
