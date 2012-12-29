@@ -13,12 +13,10 @@ function [IJK,DIST,CP,XYZ,CPFACE] = tri2cp(Faces, Vertices, dx, relpt, p, fd_ste
 %   'dx': the grid size.
 %
 %   'relpt': a 3-vector specifying a point from which the integer grid
-%            is defined.  A scale relpt will be promoted to a
+%            is defined.  A scalar relpt will be promoted to a
 %            3-vector.  (if you are debugging and using the full 3D
 %            matrix support, then relpt must be lower left corner of
 %            data.)
-%
-%   'bandwidth': the bandwidth that the code should use.
 %
 %   'p': degree of interpolation
 %
@@ -66,6 +64,8 @@ if (nargin < 5)
 elseif (nargin < 6)
   bw = p;
   calcbw = 0;
+else
+  calcbw = 1;
 end
 
 if (calcbw)
@@ -99,12 +99,12 @@ tic
 [IJK,DD,CP,XYZ,CPFACE] = tri2cp_helper(dx, relpt, bw, ...
                                            Faces, Vertices, ...
                                            trim, DEBUG_LEVEL);
-toc
 
-% NOTE: DD is squared distance
+% Note: DD is squared distance
 DIST = sqrt(DD);
 
 num_grid_points = length(DD)
+toc
 
 % a test
 assert( max(abs( relpt(1) + (IJK(:,1)-1)*dx - XYZ(:,1) )) == 0)
