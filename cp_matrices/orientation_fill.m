@@ -5,21 +5,34 @@ function inside = orientation_fill(xx,yy,zz,dist,dx,seeds,verbose)
 %   toward the surface.  'seeds' should be list of indices into the
 %   arrays xx, yy, zz, dist.  'inside' will be the same shape as xx
 %   and contains ones for each points classified as inside.  Set
-%   verbose to 2 to show isosurface of the progress.
+%   verbose to 3 or higher to show isosurface of the progress.
 %
 %   This code it not guaranteed to find all inside points.  Its just
 %   helper code for a larger routine (orientation_from_cp).  You
 %   probably want that instead.
 
+  %% Parameters
+  % todo: add a small tolerance to prevent leakage here?
+  %leaktol = 0.5*dx;
+  leaktol = 0;
+  % todo: larger values seem to need less stage2 work, but are then
+  % slower at this stage.  Tradeoff?
+  lookradpenalty = 2;
+
+
   inside = zeros(size(xx));
   looked = logical(inside);
+
+  if isempty(seeds)
+    error('need at least one seed');
+  end
 
   if length(seeds) ~= 1
     %warning('more than one seed might not be optimal');
   end
   inside(seeds) = 1;
 
-  if verbose == 2
+  if verbose >= 3
     figure(10); clf;
   end
 
@@ -44,17 +57,13 @@ function inside = orientation_fill(xx,yy,zz,dist,dx,seeds,verbose)
     % now everything within dist is inside too
     x = xx(i);  y = yy(i);  z = zz(i);
     %[x y z d]
-    % todo: add a small tolerance to prevent leakage here?
-    tol = 0.5*dx;
-    II = find( (xx-x).^2 + (yy-y).^2 + (zz-z).^2 < (d-tol)^2);
+    II = find( (xx-x).^2 + (yy-y).^2 + (zz-z).^2 < (d-leaktol)^2);
     inside(II) = 1;
 
     %looked(i) = 1;
     % the middle of the sphere can be considered done, but we need a
     % small band at the edge to seed further fill
-    % TODO: -1.5 here is tunable parameter, larger values seem to
-    % need less stage2, but how much slower is this stage?
-    pd = d - 1.5*dx;
+    pd = d - lookradpenalty*dx;
     if (pd > 0)
       II = find( (xx-x).^2 + (yy-y).^2 + (zz-z).^2 < pd^2 );
       if ~isempty(II)
@@ -70,7 +79,7 @@ function inside = orientation_fill(xx,yy,zz,dist,dx,seeds,verbose)
       looked(i) = 1;
     end
 
-    if verbose == 2 && ((c < 30) || (mod(c,100) == 0))
+    if verbose >= 3 && ((c < 30) || (mod(c,100) == 0))
       set(0, 'CurrentFigure', 10);  clf;
       isosurface(xx,yy,zz,inside,0.5);
       axis equal
@@ -79,8 +88,8 @@ function inside = orientation_fill(xx,yy,zz,dist,dx,seeds,verbose)
       drawnow()
     end
 
-    if (verbose >= 1)
-      fprintf('iter%d, #look,in=%d,%d, %s', c, ...
+    if (verbose >= 2)
+      fprintf('iter%d, #look,in=%d,%d, %s\n', c, ...
               nnz(looked), nnz(inside), text);
     end
   end
