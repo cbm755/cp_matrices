@@ -1,6 +1,10 @@
 function [pass, str] = test_normals_pig()
   str = 'normals test 3d: build oriented normals for the cp pig';
 
+  verb = 1;
+  make_plot = 0;
+  wh = 1;  % also supports genus3 but its quite thin and needs a
+           % very high resolution
 
   addpath('../../surfaces/readply');
   addpath('../../surfaces/tri');
@@ -8,6 +12,7 @@ function [pass, str] = test_normals_pig()
 
   %% Construct a grid in the embedding space
   %dx = 0.1;  % fails, too coarse
+  %dx = 0.025;  % has trouble around the tail
   dx = 0.05;
   x1d = (-2:dx:2)';
   y1d = x1d;
@@ -16,12 +21,15 @@ function [pass, str] = test_normals_pig()
   ny=length(y1d);
   nz=length(z1d);
 
-
-  PlyFile = 'pig_loop2.ply';
-  %PlyFile = 'annies_pig.ply';
-  %PlyFile = 'bumpy_torus_scaled.ply';
-  disp( ['reading triangulation from "' PlyFile '"'] );
-  [Faces, Vertices] = plyread(PlyFile, 'tri');
+  if wh == 1
+    PlyFile = 'pig_loop2.ply';
+    disp( ['reading triangulation from "' PlyFile '"'] );
+    [Faces, Vertices] = plyread(PlyFile, 'tri');
+  else
+    PlyFile = 'genus3.off';
+    disp( ['reading triangulation from "' PlyFile '"'] );
+    [Faces, Vertices] = offread(PlyFile);
+  end
 
   disp('converting to closest point representation');
   [IJK,DIST,CP,XYZ] = tri2cp(Faces, Vertices, dx, x1d(1), 5, 1);
@@ -42,7 +50,7 @@ function [pass, str] = test_normals_pig()
   p = 3;  % TODO: also try 1,5
   E = interp3_matrix(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
 
-  make_plot = 0;
+
   if make_plot
     figure(11); clf;
     trisurf(Faces, Vertices(:,1), Vertices(:,2), Vertices(:,3))
@@ -50,27 +58,42 @@ function [pass, str] = test_normals_pig()
     axis tight
     shading flat
     alpha(0.7);
+    xlabel('x'); ylabel('y'); zlabel('z');
     hold on;
   end
 
-  dpt = (xg - 0).^2 + (yg - 0.4).^2 + (zg - 0).^2;
+  if wh == 1
+    nrpt = [0 0.4 0];
+  else
+    nrpt = [0.4 -0.25 -0.2];
+  end
+  dpt = (xg - nrpt(1)).^2 + (yg - nrpt(2)).^2 + (zg - nrpt(3)).^2;
   [temp,seedin] = min(dpt);
   if temp > 2*dx
     error('should be closer');
   end
+
   [temp,seedout] = max(zg);
 
   pass = [~isempty(seedin) ~isempty(seedout)];
 
 
-  inside = orientation_fill(xg,yg,zg,dist,dx,seedin,1);
-  outside = orientation_fill(xg,yg,zg,dist,dx,seedout,1);
-  [in2,out2,unknown] = orientation_stage2(xg,yg,zg,cpxg,cpyg,cpzg,dist,dx,E,inside,outside,1);
+  inside = orientation_fill(xg,yg,zg,dist,dx,seedin,verb);
+
+  if make_plot
+    figure(12); clf;
+    H = plot3(xg(inside),yg(inside),zg(inside),'k.');
+    axis equal
+    xlabel('x'); ylabel('y'); zlabel('z');
+  end
+
+  outside = orientation_fill(xg,yg,zg,dist,dx,seedout,verb);
+  [in2,out2,unknown] = orientation_stage2(xg,yg,zg,cpxg,cpyg,cpzg,dist,dx,E,inside,outside,verb);
   pass = [pass isempty(unknown)];
 
   [insideg,sdist,unknown] = orientation_from_cp(xg,yg,zg,cpxg,cpyg,cpzg,...
                                                 dist,dx,E, ...
-                                                seedin, seedout, 1);
+                                                seedin, seedout, verb);
 
   pass = [pass isempty(unknown)];
 
