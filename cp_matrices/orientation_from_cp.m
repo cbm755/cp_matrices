@@ -28,13 +28,15 @@ function [in2,sdist,unknown] = orientation_from_cp(xx,yy,zz,cpx,cpy,cpz,dist,dx,
 %     verbose = 3: progress + plots (must have a meshgrid)
 %
 %   'unknown' contains a list of points which the algorithm was
-%   unable to classify
+%   unable to classify.
 %
 %   Not robust: will fail, possibly badly, for open surfaces or if
 %   there are holes.  Will probably need some tweaks for point clouds.
 %   Certainly has trouble near regions of high-curvature (relative to
 %   the grid spacing).  Using a wider band can help.
 %
+%   TODO: drops to keyboard eventually for unknown points: this
+%   should be a user option.
 %
 %   TODO: currently 3D only although should be easy to port to 2D.
 

@@ -79,9 +79,11 @@ function [inside,outside,unknown] = orientation_stage2(xx,yy,zz,cpx,cpy,cpz,dist
         tooclose = false;
       end
 
-      [io1,skip1,data1] = classify_dist(i, abs(dist), inside, outside, E);
+      [io1,skip1,data1] = classify_dist(...
+          i, abs(dist), inside, outside, E, force);
 
-      [io2,io3,skip2,skip3,data2] = classify_nbrs(i, inside, outside, dx, nnbrs, xx,yy,zz,cpx,cpy,cpz,n1,n2,n3);
+      [io2,io3,skip2,skip3,data2] = classify_nbrs(...
+          i,inside,outside,dx,nnbrs,xx,yy,zz,cpx,cpy,cpz,n1,n2,n3,force);
 
       io = [io1 io2 io3];
 
@@ -137,10 +139,16 @@ function [inside,outside,unknown] = orientation_stage2(xx,yy,zz,cpx,cpy,cpz,dist
       end
 
       if (verbose >= 2)
-        L = abs(mean(data1.cpval1 ./ data1.cpval2));
-        fprintf('  pass#%d:%d dist=%8.2g  %s\t%2d%2d%2d,%d%d%d %.0e [%d],[%d%d],%.3g\n', ...
-                pass,i,dist(i),text,io1,io2,io3,skip1,skip2,skip3,...
-                L,data1.nncII,data2.numneg,data2.numpos,data2.weightsum);
+        if isempty(data1)
+          L1 = [];
+          L2 = [];
+        else
+          L1 = abs(mean(data1.cpval1 ./ data1.cpval2));
+          L2 = data1.nncII;
+        end
+        fprintf('  p#%d:%d(%d%%) dist=%8.2g  %s\t%2d%2d%2d,%d%d%d %.0e[%d],[%d%d],%.3g\n', ...
+                pass,i,round(i/nnc),dist(i),text,io1,io2,io3,skip1,skip2,skip3,...
+                L1,L2,data2.numneg,data2.numpos,data2.weightsum);
       end
 
       if drop_key %&& DROP_TO_KEYBOARD_OK
@@ -194,7 +202,7 @@ end
 
 
 
-function [io,skip,data] = classify_dist(i, dist, inside, outside, E)
+function [io,skip,data] = classify_dist(i,dist,inside,outside,E,force)
 %
 
   Ei = E(i,:);
@@ -208,18 +216,28 @@ function [io,skip,data] = classify_dist(i, dist, inside, outside, E)
   nncII = length(ncII);
 
   skip = 0;
-  % TODO: parameter here should depend on dim and p
-  % TODO: this code can be very slow if this number is too high: skip
-  % should return here, unless a force parameter is passed in
-  if nncII > 10
+  % If too many stencil points are unknown, then it seems this approach
+  % would not be that reliable (in practice it seems fine).  It also
+  % gets very slow for large values, so we use random patterns below.
+  % (empirical results: 5: 0.04s, 8: 0.3s, 12: 5s).
+  if nncII >= 8
     skip = 1;
+    %if ~force
+    %  io = 0;
+    %  data = [];
+    %  return
+    %end
   end
 
   %sdist = -1*inside(II).*dist(II) + outside(II).*dist(II);
   sdist = -1*inside.*abs(dist) + outside.*abs(dist);
   sdist1 = sdist; sdist1(i) = -abs(dist(i));
   sdist2 = sdist; sdist2(i) = abs(dist(i));
-  pat = make_binary_patterns(nncII);
+  if nncII >= 8
+    pat = make_random_binary_patterns(nncII,256);
+  else
+    pat = make_binary_patterns(nncII);
+  end
   cpval1 = zeros(1,size(pat,1));
   cpval2 = zeros(1,size(pat,1));
   for s=1:size(pat,1)
@@ -256,7 +274,7 @@ end
 
 
 function [io1,io2,skip1,skip2,data] = classify_nbrs(...
-    i,inside,outside,dx,nnbrs,xx,yy,zz,cpx,cpy,cpz,n1,n2,n3)
+    i,inside,outside,dx,nnbrs,xx,yy,zz,cpx,cpy,cpz,n1,n2,n3,force)
 %
 
   dim = 3;
@@ -352,6 +370,8 @@ function [io1,io2,skip1,skip2,data] = classify_nbrs(...
   data.II = II;
 end
 
+
+
 function pat = make_binary_patterns(N)
 % Given 3, gives [0 0 0; 0 0 1; 0 1 0; etc]
 % a bit ugly but gets the job done
@@ -365,4 +385,17 @@ function pat = make_binary_patterns(N)
     end
   end
 
+end
+
+function pat = make_random_binary_patterns(N,M)
+% some (close to but less than M) patterns of length N with random 1
+% entries.
+  pat = zeros(M,N);
+
+  for s=1:M
+    A = rand(1,N);
+    A = A > rand;
+    pat(s,:) = A;
+  end
+  pat = unique(pat,'rows');
 end

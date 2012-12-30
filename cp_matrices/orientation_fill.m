@@ -20,7 +20,7 @@ function inside = orientation_fill(xx,yy,zz,dist,dx,seeds,verbose)
   lookradpenalty = 2;
 
 
-  inside = zeros(size(xx));
+  inside = logical(zeros(size(xx)));
   looked = logical(inside);
 
   if isempty(seeds)
@@ -81,8 +81,14 @@ function inside = orientation_fill(xx,yy,zz,dist,dx,seeds,verbose)
 
     if verbose >= 3 && ((c < 30) || (mod(c,100) == 0))
       set(0, 'CurrentFigure', 10);  clf;
-      isosurface(xx,yy,zz,inside,0.5);
+      [n1,n2] = size(xx);
+      if n1 == 1 || n2 == 1
+        plot3(xx(inside),yy(inside),zz(inside),'k.','markersize',4);
+      else
+        isosurface(xx,yy,zz,inside,0.5);
+      end
       axis equal
+      xlabel('x'); ylabel('y'); zlabel('z');
       title([ 'inside, iteration ' num2str(c) ]);
       alpha(0.7)
       drawnow()
