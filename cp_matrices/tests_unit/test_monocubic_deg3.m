@@ -4,24 +4,24 @@ function [pass, str] = test_monocubic_deg3()
   c = 0;
   pass = [];
 
-  for i=1:4
+  for i=1:3
     [errMC(i) errQ(i) errC(i)] = helper(i);
   end
 
   % quadratic p=2 should be third-order
-  A = errMC(1:end-1) ./ errMC(2:end)
+  A = errMC(1:end-1) ./ errMC(2:end);
   c = c + 1;
-  pass(c) = all(A > 5);
+  pass(c) = all(A > 5);  % should be 8
 
   % quadratic p=2 should be third-order
-  A = errQ(1:end-1) ./ errQ(2:end)
+  A = errQ(1:end-1) ./ errQ(2:end);
   c = c + 1;
-  pass(c) = all(A > 6);
+  pass(c) = all(A > 7);  % should be 8
 
   % cubic p=3 should be fourth-order
-  A = errC(1:end-1) ./ errC(2:end)
+  A = errC(1:end-1) ./ errC(2:end);
   c = c + 1;
-  pass(c) = all(A > 12);
+  pass(c) = all(A > 14); % should be 16
 end
 
 
