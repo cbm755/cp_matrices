@@ -1,6 +1,6 @@
 function [Faces, Vertices] = offread(fname)
 %OFFREAD Read a triangulation from an ascii .off file
-%   [Faces, Vertices] = plyread('genus3.off');
+%   [Faces, Vertices] = offread('genus3.off');
 %
 %   Note: this may not be a standard off file.
 
