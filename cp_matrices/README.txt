@@ -18,6 +18,3 @@ that start with the word "test"
 
 TODO: add documentation or clean up an example on how to use these.
 
-TODO: should also work with ndgrid (to make Tom and Ingrid happy).
-Needs some testing because haven't been used much (at all?)
-

@@ -12,14 +12,20 @@ Status
 This is work in process, so the usual disclaimers apply.
 
 
+TODO: start a list of contributors
+
+
 Other people's code
 -------------------
 readply:
     MATLAB functions to read and write 3D data PLY files
-    by Pascal Getreuer 2004
+    by Pascal Getreuer 2004.
 
 ba_interp:
-    TODO: fast matlab interpolation
-    TODO: add author
+    fast matlab interpolation (not currently included in this
+    code, but very useful).
 
-any others?
+surfaces:
+    Some surface triangulations are included in surfaces/tri/
+    Each should have a README file associated with it.
+    These are mostly from Aim@Shape and probably have their own licenses.

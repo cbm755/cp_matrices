@@ -1,7 +1,13 @@
-Some surfaces for using with the Closest Point Method.
+Surfaces for use with the Closest Point Method
+==============================================
 
-cpSphere etc are closest point functions
+These are Matlab implementations of closest point representations of
+surfaces.
 
-paramSphere etc are parameterizations, good for plotting
+cpSphere etc are closest point functions.
 
-pig_loop2_griddata*: generated with tri2cp, see pig_loop2_example2.m for how to use this
+paramSphere etc are parameterizations, good for plotting.
+
+tri2cp/ is code, written in C and linked to Matlab with Mex for
+converting triangulations into closest point representations.
+
