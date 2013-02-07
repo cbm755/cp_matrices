@@ -54,9 +54,12 @@ function inside = orientation_fill(xx,yy,zz,dist,dx,seeds,verbose)
     i = I(ii(1));
     d = abs(dist(i));
 
+    % TODO: if d < dx there must be some optimization can do here
+    % to skip the two searches...
+
     % now everything within dist is inside too
     x = xx(i);  y = yy(i);  z = zz(i);
-    %[x y z d]
+    % TODO: maybe faster to use logical indexing here
     II = find( (xx-x).^2 + (yy-y).^2 + (zz-z).^2 < (d-leaktol)^2);
     inside(II) = 1;
 
