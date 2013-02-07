@@ -88,12 +88,29 @@ function [pass, str] = test_normals_pig()
   end
 
   outside = orientation_fill(xg,yg,zg,dist,dx,seedout,verb);
-  [in2,out2,unknown] = orientation_stage2(xg,yg,zg,cpxg,cpyg,cpzg,dist,dx,E,inside,outside,verb);
+  tic
+  [in2,out2,unknown] = orientation_stage2(...
+      xg,yg,zg,cpxg,cpyg,cpzg,dist,dx,E,inside,outside,verb);
+  toc
   pass = [pass isempty(unknown)];
 
-  [insideg,sdist,unknown] = orientation_from_cp(xg,yg,zg,cpxg,cpyg,cpzg,...
-                                                dist,dx,E, ...
-                                                seedin, seedout, verb);
+  % testing another approach
+  % TODO: lots of different things we could do, all unreliable
+  % (probably) in some specific geometry.  Clean up, pick one, etc.
+  tic
+  [in3,out3,un3] = orientation_stage2_global1(...
+      xg,yg,zg,cpxg,cpyg,cpzg,dist,dx,E,inside,outside,verb);
+  toc
+  tic
+  [in4,out4,un4] = orientation_stage2_global2(...
+      xg,yg,zg,cpxg,cpyg,cpzg,dist,dx,E,inside,outside,verb);
+  toc
+  pass = [pass isempty(un3) isempty(un4)]
+
+
+
+  [insideg,sdist,unknown] = orientation_from_cp(...
+      xg,yg,zg,cpxg,cpyg,cpzg,dist,dx,E,seedin, seedout, verb);
 
   pass = [pass isempty(unknown)];
 
