@@ -46,8 +46,7 @@ if (loaddata == 1)
   %% discrete operators
   disp('building laplacian and interp matrices');
   L = laplacian_3d_matrix(x1d,y1d,z1d, 2, band,band);
-  [Li,Lj,Ls] = laplacian_3d_matrix_tempcomp(x1d,y1d,z1d, 2, band, ...
-                                            band);
+  [Li,Lj,Ls] = laplacian_3d_matrix_tempcomp(x1d,y1d,z1d,2,band,band);
   % some are zero because their stencil is outside the band
   I = find(Lj == 0);
   Lj(I) = 1;
@@ -143,10 +142,16 @@ N = length(u);
 blocksz = 512;   % block size for GPU
 numblocks = ceil(N / blocksz);
 
-spMV = parallel.gpu.CUDAKernel('kernel_spmatvec.ptx', ...
-                               'kernel_spmatvec.cu');
+spMV = parallel.gpu.CUDAKernel('kernel_spmatvec2.ptx', ...
+                               'kernel_spmatvec2.cu');
 spMV.ThreadBlockSize = [blocksz,1,1];
 spMV.GridSize = [numblocks,1];
+
+% convert the indices to int32 (8 bytes, same a cuda's int)
+Ei = int32(Ei);
+Ej = int32(Ej);
+Li = int32(Li);
+Lj = int32(Lj);
 
 % upload the arrays
 u_d = gpuArray(u);
