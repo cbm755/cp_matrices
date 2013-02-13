@@ -22,7 +22,7 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
 %   constructing the matrix.  If BAND is passed or not determines
 %   the column space of the result (i.e., effects Ej).
 %
-%   INTERP2_MATRIX(X, Y, XI, YI, P, BAND, true)
+%   INTERP3_MATRIX(X, Y, XI, YI, P, BAND, true)
 %      Uses ndgrid instead of meshgrid ordering.
 %
 %   Notes:
