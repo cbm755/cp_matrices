@@ -19,7 +19,7 @@ __global__ void kernel_spmatvec(double * y, const double * As, const double * Aj
   unsigned int k;
   unsigned int j;
   if (idx < N) {
-    y[idx] = 0.0;   // todo: any advance to adding into a temporary double?
+    y[idx] = 0.0;   // todo: any advantage to adding into a temporary double?
     for (j = 0; j < M; j++) {
       k = Aj[idx + j*N] - 1;  // -1 here for matlab indexing
       y[idx] += As[idx + j*N] * x[k];

@@ -1,5 +1,9 @@
 %% Test of my sparse matrix-vector multiply on GPU
 % This uses Matlab's Parallel Computing Toolkit.
+%
+% Compile with:
+%   nvcc -ptx kernel_spmatvec.cu
+
 
 % TODO: needs to be inside a function to avoid a memcpy off of GPU?
 
@@ -7,7 +11,7 @@ N = 100000;     % vector length
 M = 128;        % nnz per row
 blocksz = 512;  % block size for GPU
 
-numblocks = ceil(N / 10);
+numblocks = ceil(N / blocksz);
 
 kern = parallel.gpu.CUDAKernel('kernel_spmatvec.ptx', ...
                                'kernel_spmatvec.cu');

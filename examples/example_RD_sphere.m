@@ -6,6 +6,7 @@ paramf = @paramSphere;
 %paramf = @paramEllipsoid;
 
 loaddata = 1;
+makeplots = 0;
 
 if (loaddata == 1)
   dx = 0.05;      % grid size
@@ -19,9 +20,9 @@ if (loaddata == 1)
   nz = length(z1d);
 
   % meshgrid is only needed for finding the closest points, not afterwards
-  [xx yy zz] = meshgrid(x1d, y1d, z1d);
+  [x y z] = meshgrid(x1d, y1d, z1d);
 
-  [cpx, cpy, cpz, dist] = cpf(xx,yy,zz);
+  [cpx, cpy, cpz, dist] = cpf(x,y,z);
   cpx = cpx(:); cpy = cpy(:); cpz = cpz(:);
 
   %% Banding: do calculation in a narrow band around the surface
@@ -35,7 +36,8 @@ if (loaddata == 1)
 
   % store closest points in the band;
   cpx = cpx(band); cpy = cpy(band); cpz = cpz(band);
-  x = xx(band); y = yy(band); z = zz(band);
+  x = x(band); y = y(band); z = z(band);
+  dist = dist(band);
 
 
   %% discrete operators
@@ -49,8 +51,6 @@ if (loaddata == 1)
   % Eplot is a matrix which interpolations data onto the plotting grid
   Eplot = interp3_matrix(x1d, y1d, z1d, xp(:), yp(:), zp(:), p, band);
 end
-
-figure(1); clf;
 
 % u_t = f(u,g) + nuu*Lap u
 % v_t = g(u,g) + nuv*Lap u
@@ -73,18 +73,19 @@ numtimesteps = ceil(Tf/dt)
 dt = Tf / numtimesteps
 
 
-figure(1);
-sphplot = Eplot*u;
-sphplot = reshape(sphplot, size(xp));
-Hplot = surf(xp, yp, zp, sphplot);
-title( ['u at time ' num2str(t) ', kt= ' num2str(kt)] );
-xlabel('x'); ylabel('y'); zlabel('z');
-axis equal
-view(-10, 60)
-axis off;
-shading interp
-camlight left
-colorbar
+if makeplots
+  figure(1); clf;
+  sphplot = Eplot*u;
+  sphplot = reshape(sphplot, size(xp));
+  Hplot = surf(xp, yp, zp, sphplot);
+  xlabel('x'); ylabel('y'); zlabel('z');
+  axis equal
+  view(-10, 60)
+  axis off;
+  shading interp
+  camlight left
+  colorbar
+end
 
 %% Method-of-lines approach
 % See [vonGlehn/Macdonald/Maerz 2013]
@@ -117,7 +118,7 @@ for kt = 1:numtimesteps
 
   t = kt*dt;
 
-  if ( (mod(kt,20)==0) || (kt<=10) || (kt==numtimesteps) )
+  if makeplots && ((mod(kt,20)==0) || (kt<=10) || (kt==numtimesteps))
     disp([kt t]);
     sphplot = Eplot*u;
     sphplot = reshape(sphplot, size(xp));
