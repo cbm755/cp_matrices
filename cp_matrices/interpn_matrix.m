@@ -20,7 +20,6 @@ function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
 %   'length(BAND)' sparse matrix.
 %
 %   [Ei,Ej,Es] = INTERPN_MATRIX(...)
-%   [Ei,Ej,Es] = INTERPN_MATRIX(...)
 %   Here the entries of the matrix are returned as three vectors
 %   (like in FEM).  This is efficient and avoids the overhead of
 %   constructing the matrix.  If BAND is passed or not determines

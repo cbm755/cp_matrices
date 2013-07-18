@@ -36,7 +36,6 @@ ny=length(y1d);
 
 dim = 2;
 p = 3;  % degree interp
-order = 2;  % lbaplacian order
 bw = 1.001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
 if (pad < bw)
   warning('maybe insufficient padding');
@@ -51,10 +50,6 @@ xg = x2d(band);
 yg = y2d(band);
 cpxg = cpx(band);
 cpyg = cpy(band);
-
-%L = laplacian_2d_matrix(x1d,y1d, order, band,band);
-
-%E = interp2_matrix_band(x1d,y1d, cpxg,cpyg, p, band);
 
 [Dx1f,Dx1b, Dy1f,Dy1b] = firstderiv_upw1_2d_matrices(x1d,y1d, band, ...
                                                   band,  true);

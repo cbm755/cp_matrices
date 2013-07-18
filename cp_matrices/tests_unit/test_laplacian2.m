@@ -16,7 +16,7 @@ ny=length(y1d);
 
 dim = 2;
 p = 3;  % degree interp
-order = 2;  % lbaplacian order
+order = 2;  % laplacian order
 bw = 1.001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
 if (pad < bw)
   warning('maybe insufficient padding');
