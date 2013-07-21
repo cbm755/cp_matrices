@@ -46,20 +46,21 @@ dist = dist(band);
 % TODO: just put in a cpgrid and call a banding routine?
 
 cpgrid1.dim = 5;
+cpgrid1.dx = dx;
 cpgrid1.x1d = X1d;
+cpgrid1.cpfun = cpf;
 cpgrid1.band = band;
 cpgrid1.x = xg;
 cpgrid1.cpx = cpX;
 cpgrid1.dist = dist;
-cpgrid1.cpfun = cpf;
-cpgrid1.dx = dx;
+
 
 
 disp('refining once');
-cpgrid2 = refine_gridnd(cpgrid1, bw);
+cpgrid2 = refine_cpgrid_bw(cpgrid1, bw);
 
 %disp('refining again');
-%cpgrid3 = refine_gridnd(cpgrid2, bw);
+%cpgrid3 = refine_cpgrid_bw(cpgrid2, bw);
 
 cpgrid = cpgrid2;
 

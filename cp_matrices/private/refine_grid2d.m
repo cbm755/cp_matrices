@@ -11,8 +11,8 @@ function [band,xg,yg,cpxg,cpyg,distg,bdyg,dx,x1d,y1d] = refine_grid2d(cpf,dx0,x1
   Nx0 = length(x1d0);
   Ny0 = length(y1d0);
   % new 1d grids (the theoretical meshgrid)
-  x1d = x1d0(1):dx:x1d0(end);
-  y1d = y1d0(1):dx:y1d0(end);
+  x1d = (x1d0(1):dx:x1d0(end))';
+  y1d = (y1d0(1):dx:y1d0(end))';
   Nx = length(x1d);
   Ny = length(y1d);
 

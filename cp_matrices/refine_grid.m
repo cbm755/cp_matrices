@@ -3,6 +3,8 @@ function [varargout] = refine_grid(varargin)
 %   Given a banded cp grid, perform one or more steps of grid refinement.
 %   Works in 2D or 3D.
 %
+%   DEPRECATED: use refine_cpgrid() and refine_cpgrid_bw() instead.
+%
 %   [cpGrid2] = refine_grid(M, cpGrid)
 %      This call refines the grid specified by 'cpGrid' through 'M'
 %      steps of refinement (each step halves the grid spacing).
@@ -46,6 +48,8 @@ function [varargout] = refine_grid(varargin)
 %         refine_grid(M, cpf, dx0, x1d0,y1d0,z1d0, bw, band0, dist0)
 %
 %   See "example_refine_grid.m".
+
+  warning('Deprecated: see refine_cpgrid_bw(), refine_cpgrid()')
 
   %[nargin  nargout]
   %varargout = {};

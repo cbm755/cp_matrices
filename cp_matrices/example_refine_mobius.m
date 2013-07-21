@@ -14,7 +14,7 @@ addpath('../surfaces');
 tic
 %% Find an initial coarse band of closest points
 % '_c' to indicate "coarse"
-dx = 0.2;
+dx = 0.25;
 % Mobius strip
 cpf1 = @cpMobiusStrip;  paramf = @paramMobiusStrip;
 x1d_c = ((-1-6*dx):dx:(1+6*dx))';
@@ -42,10 +42,7 @@ disp('starting initial coarse');
 % Bandwidth formula
 dim = 3;  % dimension
 p = 3;    % interpolation order
-% "band" is a vector of the indices of the points in the computation
-% band.  The formula for bw is found in [Ruuth & Merriman 2008] and
-% the 1.0001 is a safety factor.
-bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
+bw = rm_bandwidth(dim, p);
 
 % actually banding the coarse grid is optional, you can pass the
 % entire grid to refine_grid() and the result will be banded according
@@ -59,6 +56,18 @@ cpx_c = cpx_c(band_c); cpy_c = cpy_c(band_c); cpz_c = cpz_c(band_c);
 x_c = xxc(band_c); y_c = yyc(band_c); z_c = zzc(band_c);
 dist_c = dist_c(band_c);
 bdy_c = bdy_c(band_c);
+
+% coarse grid object
+gc.dim = 3;
+gc.dx = dx;
+gc.x1d = x1d_c;  gc.y1d = y1d_c;  gc.z1d = z1d_c;
+gc.cpfun = cpf;
+gc.band = band_c;
+gc.x = xxc;  gc.y = yyc;  gc.z = zzc;
+gc.cpx = cpx_c;  gc.cpy = cpz_c;  gc.cpz = cpz_c;
+gc.dist = dist_c;
+gc.bdy = bdy_c;
+
 
 clear xxc yyc zzc
 
@@ -76,7 +85,10 @@ dx_c = dx;   % store the coarse dx
 %% refine it twice
 disp('starting refinement');
 A = tic;
-[band,x,y,z,cpx,cpy,cpz,dist,bdy,dx,x1d,y1d,z1d] = refine_grid(2, cpf, dx_c, x1d_c, y1d_c, z1d_c, bw, band_c, dist_c, bdy_c);
+%[band,x,y,z,cpx,cpy,cpz,dist,bdy,dx,x1d,y1d,z1d] = refine_grid(2,
+%cpf, dx_c, x1d_c, y1d_c, z1d_c, bw, band_c, dist_c, bdy_c);
+g = refine_cpgrid_bw(gc,bw);
+g = refine_cpgrid_bw(g,bw);
 %dx2 = dx/2^1;
 time_refine_total = toc(A)
 

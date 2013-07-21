@@ -1,9 +1,10 @@
-function cpGrid = refine_gridnd(cpGrid0, bw)
-%REFINE_GRIDND   Make a finer CP representation
+function cpGrid = refine_cpgrid_bw_nd(cpGrid0, bw)
+%REFINE_GRID_BW_ND   Make a finer CP representation based on bandwidth
+%
+%   Private: you probably want refine_grid_bw()
 %
 %   cpGrid2 = refine_gridnd(cpGrid, bw)
 %
-%   cpGrid is a structure containing
 
   if ~iscell(cpGrid0.x1d)
     error('require cell arrays for n-D support');
