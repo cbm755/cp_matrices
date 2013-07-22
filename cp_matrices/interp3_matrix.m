@@ -186,6 +186,6 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
 
     if (makeBanded)
       invbandmap = make_invbandmap(M, band);
-      Ej = logical2bandmap(Ej);
+      Ej = invbandmap(Ej);
     end
   end
