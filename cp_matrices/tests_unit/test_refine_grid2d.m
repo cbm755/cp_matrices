@@ -9,7 +9,7 @@ function [pass, str] = test_refine_grid2d()
   % standard banding forumla
   dim = 2;
   p = 3;
-  bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
+  bw = rm_bandwidth(dim, p);
 
   tic
   [band,x,y,cpx,cpy,dist,dx,x1d,y1d] = make_coarse_and_refine(cpf, xlim, ylim, bw, .2, 2);

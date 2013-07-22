@@ -17,7 +17,6 @@ function gg = refine_cpgrid_sten_3d(g, p)
   cpfun = g.cpfun;
   dim = g.dim;
 
-  % new grid
   dx = g.dx / 2;
   relpt = [g.x1d(1) g.y1d(1) g.z1d(1)];
   x1d  = ( g.x1d(1):dx:g.x1d(end) )';
@@ -32,30 +31,69 @@ function gg = refine_cpgrid_sten_3d(g, p)
                               g.cpx,g.cpy,g.cpz, p);
   band = unique(Ej);
 
-  [J,I,K] = ind2sub([ny nx nz], band);
+  [J, I, K] = ind2sub([ny nx nz], band);
 
   x = relpt(1) + (I-1)*dx;
   y = relpt(2) + (J-1)*dx;
   z = relpt(3) + (K-1)*dx;
 
-  [cpx,cpy,cpz,dist] = cpfun(xg,yg,zg);
+  [cpx, cpy, cpz, dist] = cpfun(x, y, z);
 
+  iter = 1;
+  while(1)
+    [tilde,Ej,tilde] = interp3_matrix(x1d,y1d,z1d, cpx,cpy,cpz, p);
+    band2 = unique(Ej);
 
-  % Safety check
-  [tilde,Ej,tilde] = interp2_matrix(x1d, y1d, cpx, cpy, p);
-  band2 = unique(Ej);
+    if length(band) == length(band2) && all(band == band2)
+      fprintf('  refine iter%d: no change, stopping iteration\n', iter);
+      break
+    else
+      if ~isempty(setdiff(band,band2))
+        warning('new band missing entries in first band: can this happen?');
+      end
+      [tilde,ii] = setdiff(band2,band);
+      [tilde,tilde,iii] = intersect(band,band2);
+      fprintf('  refine iter%d: found %d new points\n', iter, length(ii));
+      [J, I, K] = ind2sub([ny nx nz], band2);
+      [J2, I2, K2] = ind2sub([ny nx nz], band2(ii));
+      % build the xyz coordinates of the points in the band
+      x = relpt(1) + (I-1)*dx;
+      y = relpt(2) + (J-1)*dx;
+      z = relpt(3) + (K-1)*dx;
+      xT = relpt(1) + (I2-1)*dx;
+      yT = relpt(2) + (J2-1)*dx;
+      zT = relpt(3) + (K2-1)*dx;
+      % find the closest point
+      [cpxT, cpyT, cpzT, distT] = cpfun(xT, yT, zT);
+      dist2 = zeros(size(band2));
+      dist2(iii) = dist;
+      dist2(ii) = distT;
+      cpx2 = zeros(size(band2));
+      cpx2(iii) = cpx;
+      cpx2(ii) = cpxT;
+      cpy2 = zeros(size(band2));
+      cpy2(iii) = cpy;
+      cpy2(ii) = cpyT;
+      cpz2 = zeros(size(band2));
+      cpz2(iii) = cpz;
+      cpz2(ii) = cpzT;
+      if (1==0)  % debugging, check it matches recomputing everything
+        [cpx3, cpy3, cpz3, dist3] = cpfun(x, y, z);
+        assert(norm(dist3-dist2)==0)
+        assert(norm(cpx3-cpx2)==0)
+        assert(norm(cpy3-cpy2)==0)
+        assert(norm(cpz3-cpz2)==0)
+      end
+      band = band2;
+      cpx = cpx2;
+      cpy = cpy2;
+      cpz = cpz2;
+      dist = dist2;
+    end
+    iter = iter + 1;
+  end % while
 
-  if length(band) == length(band2) && all(band == band2)
-    % gave same thing, no need to recompute cp's.
-  else
-    band = band2;
-    [J,I,K] = ind2sub([ny nx nz], band);
-    x = relpt(1) + (I-1)*dx;
-    y = relpt(2) + (J-1)*dx;
-    z = relpt(3) + (K-1)*dx;
-    [cpx,cpy,cpz,dist] = cpfun(x,y,z);
-  end
-
+  fprintf('  refine: found %d points in %d iterations\n', length(band), iter);
   gg.dim = dim;
   gg.dx = dx;
   gg.x1d = x1d;

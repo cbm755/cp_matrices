@@ -7,16 +7,19 @@ function gg = refine_cpgrid_bw(g, bw)
 %     uses a bandwidth bw*dx to determine the band.  bw defaults to output of
 %     rm_bandwidth() if omitted.
 %
-%   NOTES: there are other possible approaches.  This one refines
+%   NOTE: there are other possible algorithms.  This one refines
 %   computational band and then discards points that are too far away.
 %   Perhaps not optimal in terms of how many CPs much be computed.
 %   See implementation of refine_cpgrid() for example which uses a
 %   sample of surface points and finds a band around it.
 %
+%   NOTE 2: in high dim/high co-dim, this approach is generally faster
+%   (but makes larger bands by virtue of the bandwidth approach).
+%
 %   TODO: fix or replace the private functions to take cpgrid objects
 
   if nargin < 2
-    error('todo');
+    bw = rm_bandwidth(g.dim);
   end
 
   if iscell(g.x1d)

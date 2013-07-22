@@ -9,8 +9,8 @@ function gg = refine_cpgrid_sten_nd(g, p)
     p = 3;
   end
 
-  cpfun = cp.cpfun;
-  dim = cp.dim;
+  cpfun = g.cpfun;
+  dim = g.dim;
   assert(dim == length(g.x1d));
 
   relpt = zeros(1, dim);
@@ -32,27 +32,77 @@ function gg = refine_cpgrid_sten_nd(g, p)
 
 
   %tic
-  %[Ei,Ej,Es] = interpn_matrix(cp2.x1d, cp.cpx, p);
+  %[Ei,Ej,Es] = interpn_matrix(gg.x1d, g.cpx, p);
   %band2 = unique(Ej);
   %toc
   tic
-  band = findn_band(cp2.x1d, cp.cpx, p);
+  band = findn_band(gg.x1d, g.cpx, p);
   toc
   %assert(all(band == band2))
-
-  gg.band = band;
 
   [I{1:dim}] = ind2sub(Ns, band);
 
   % build the xyz coordinates of the points in the band
+  x = {};
   for d = 1:dim
     x{d} = relpt(d) + (I{d}-1)*dx;
   end
 
   % find the closest point
-  [cpx,dist] = cpfun(gg.x);
+  [cpx,dist] = cpfun(x);
 
+  iter = 1;
+  while(1)
+    band2 = findn_band(gg.x1d, cpx, p);
+
+    if length(band) == length(band2) && all(band == band2)
+      fprintf('  refine iter%d: no change, stopping iteration\n', iter);
+      break
+    else
+      if ~isempty(setdiff(band,band2))
+        warning('new band missing entries in first band: can this happen?');
+      end
+      [tilde,ii] = setdiff(band2,band);
+      [tilde,tilde,iii] = intersect(band,band2);
+      fprintf('  refine iter%d: found %d new points\n', iter, length(ii));
+      [I{1:dim}] = ind2sub(Ns, band2);
+      [I2{1:dim}] = ind2sub(Ns, band2(ii));
+      % build the xyz coordinates of the points in the band
+      x = {};
+      xT = {};
+      for d = 1:dim
+        x{d} = relpt(d) + (I{d}-1)*dx;
+        xT{d} = relpt(d) + (I2{d}-1)*dx;
+      end
+      % find the closest point
+      [cpxT, distT] = cpfun(xT);
+      dist2 = zeros(size(band2));
+      dist2(iii) = dist;
+      dist2(ii) = distT;
+      cpx2 = {};
+      for d = 1:dim
+        cpx2{d} = zeros(size(band2));
+        cpx2{d}(iii) = cpx{d};
+        cpx2{d}(ii) = cpxT{d};
+      end
+
+      if (1==0)  % debugging, check it matches recomputing everything
+        [cpx3, dist3] = cpfun(x);
+        assert(norm(dist3-dist2)==0)
+        for d = 1:dim
+          assert(norm(cpx3{d}-cpx2{d})==0)
+        end
+      end
+      band = band2;
+      cpx = cpx2;
+      dist = dist2;
+    end
+    iter = iter + 1;
+  end % while
+
+  fprintf('  refine: found %d points in %d iterations\n', length(band), iter);
+  gg.band = band;
   gg.x = x;
   gg.cpx = cpx;
-  gg.dist = gdist;
+  gg.dist = dist;
 

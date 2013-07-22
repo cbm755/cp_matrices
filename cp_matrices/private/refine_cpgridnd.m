@@ -1,4 +1,4 @@
-function cpGrid = refine_cpgrid_bw_nd(cpGrid0, bw)
+function cpGrid = refine_cpgridnd(cpGrid0, bw)
 %REFINE_GRID_BW_ND   Make a finer CP representation based on bandwidth
 %
 %   Private: you probably want refine_grid_bw()
@@ -89,11 +89,9 @@ function cpGrid = refine_cpgrid_bw_nd(cpGrid0, bw)
   end
 
   % straighten each
-  tic
   for d = 1:dim
     ii{d} = ii{d}(:);
   end
-  toc
 
   % TODO: if you use non-distinct directions (-1,0,1), must call unique
   %ijk = unique(ijk, 'rows');

@@ -10,7 +10,7 @@ function [pass, str] = test_refine_grid3d()
   % standard banding forumla
   dim = 3;
   p = 3;
-  bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
+  bw = rm_bandwidth(dim, p);
 
   tic
   [band,x,y,z,cpx,cpy,cpz,dist,bdy,dx,x1d,y1d,z1d] = ...

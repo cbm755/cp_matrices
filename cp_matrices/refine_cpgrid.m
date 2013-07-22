@@ -17,11 +17,11 @@ function gg = refine_cpgrid(g, p)
   end
 
   if iscell(g.x1d)
-    gg = refine_cpgrid_nd_degp(g, p);
+    gg = refine_cpgrid_sten_nd(g, p);
   elseif g.dim == 2
-    gg = refine_cpgrid_2d_degp(g, p);
+    gg = refine_cpgrid_sten_2d(g, p);
   elseif g.dim == 3
-    gg = refine_cpgrid_3d_degp(g, p);
+    gg = refine_cpgrid_sten_3d(g, p);
   else
     error('this grid object cannot be handled');
   end

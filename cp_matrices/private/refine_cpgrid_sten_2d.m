@@ -8,9 +8,6 @@ function gg = refine_cpgrid_sten_2d(g, p)
 %     default if omitted.
 %
 %   TODO: doesn't deal with open surfaces properly (bdy)
-%   TODO: could be optimized quite a bit if computing
-%         CPs is expensive
-%   TODO: 
 
   if nargin < 2
     p = 3;
@@ -50,25 +47,68 @@ function gg = refine_cpgrid_sten_2d(g, p)
   [cpx, cpy, dist] = cpfun(x, y);
 
 
-  %% Safety check
+  %% Iteration
   % if we're working with minimal bands with no safety margin, its
-  % possible the above could miss a few grid points (I think).
-  % We can do it again using the new closest points.
-  % TODO: perhaps needs a toggle
-  [tilde,Ej,tilde] = interp2_matrix(x1d, y1d, cpx, cpy, p);
-  band2 = unique(Ej);
+  % possible the above could miss a few grid points.  We repeat the
+  % above as an itartion and look for a fixed point (usually one
+  % step).
+  iter = 1;
+  while(1)
+    [tilde,Ej,tilde] = interp2_matrix(x1d, y1d, cpx, cpy, p);
+    band2 = unique(Ej);
 
-  if length(band) == length(band2) && all(band == band2)
-    % gave same thing, no need to recompute cp's.
-  else
-    % TODO: could merge instead of recomputing all those CPs
-    band = band2;
-    [J,I] = ind2sub([ny nx], band);
-    x = relpt(1) + (I-1)*dx;
-    y = relpt(2) + (J-1)*dx;
-    [cpx, cpy, dist] = cpfun(x, y);
-  end
+    if length(band) == length(band2) && all(band == band2)
+      fprintf('  refine iter%d: no change, stopping iteration\n', iter);
+      break
+    else
+      %% Compute new closest points
+      % this is simple but needs to compute many CPs, instead we only
+      % compute the new ones
+      %band = band2;
+      %[J,I] = ind2sub([ny nx], band);
+      %x = relpt(1) + (I-1)*dx;
+      %y = relpt(2) + (J-1)*dx;
+      %[cpx, cpy, dist] = cpfun(x, y);
 
+      if ~isempty(setdiff(band,band2))
+        warning('new band missing entries in first band: can this happen?');
+      end
+      [tilde,ii] = setdiff(band2,band);
+      [tilde,tilde,iii] = intersect(band,band2);
+      fprintf('  refine iter%d: found %d new points\n', iter, length(ii));
+      [J,I] = ind2sub([ny nx], band2);
+      [J2,I2] = ind2sub([ny nx], band2(ii));
+      % build the xyz coordinates of the points in the band
+      x = relpt(1) + (I-1)*dx;
+      y = relpt(2) + (J-1)*dx;
+      xT = relpt(1) + (I2-1)*dx;
+      yT = relpt(2) + (J2-1)*dx;
+      % find the closest point
+      [cpxT, cpyT, distT] = cpfun(xT, yT);
+      dist2 = zeros(size(band2));
+      dist2(iii) = dist;
+      dist2(ii) = distT;
+      cpx2 = zeros(size(band2));
+      cpx2(iii) = cpx;
+      cpx2(ii) = cpxT;
+      cpy2 = zeros(size(band2));
+      cpy2(iii) = cpy;
+      cpy2(ii) = cpyT;
+      if (1==0)  % debugging, check it matches recomputing everything
+        [cpx3, cpy3, dist3] = cpfun(x, y);
+        assert(norm(dist3-dist2)==0)
+        assert(norm(cpx3-cpx2)==0)
+        assert(norm(cpy3-cpy2)==0)
+      end
+      band = band2;
+      cpx = cpx2;
+      cpy = cpy2;
+      dist = dist2;
+    end
+    iter = iter + 1;
+  end % while
+
+  fprintf('  refine: found %d points in %d iterations\n', length(band), iter);
   gg.dim = dim;
   gg.dx = dx;
   gg.x1d = x1d;
