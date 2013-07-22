@@ -6,9 +6,6 @@ function [pass, str] = test_normals_pig()
   wh = 1;  % also supports genus3 but its quite thin and needs a
            % very high resolution
 
-  addpath('../../surfaces/readply');
-  addpath('../../surfaces/tri');
-  addpath('../../surfaces/tri2cp');
 
   %% Construct a grid in the embedding space
   %dx = 0.1;  % fails, too coarse

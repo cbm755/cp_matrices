@@ -21,27 +21,27 @@ x(1:n) = xg(1:n) + N*( 1.2*(rand(n,1))-0.1 ) .* dx(1:n);
 
 
 
-T1 = tic;
+T1 = cputime();
 w1 = LagrangeWeights1D_vec(xg,x,dx,N);
-T1 = toc(T1);
+T1 = cputime()-T1;
 %fprintf('  vector code      (N=%d) elapsed time=%g seconds\n', N, T);
 
 
-T2 = tic;
+T2 = cputime();
 w2 = zeros(size(w1));
 for i=1:m
   w2(i,:) = LagrangeWeights1D(xg(i), x(i), dx(i), N);
 end
-T2 = toc(T2);
+T2 = cputime()-T2;
 %fprintf('  loop code        (N=%d) elapsed time=%g seconds\n', N, T);
 
 
-T3 = tic;
+T3 = cputime();
 w3 = zeros(size(w1));
 for i=1:m
   w3(i,:) = LagrangeWeights1D_vec(xg(i), x(i), dx(i), N);
 end
-T3 = toc(T3);
+T3 = cputime()-T3;
 fprintf('  N=%d: [vec,loop,loop-w-vec-code] elapsed times=[%5.3g,%5.3g,%5.3g] seconds\n', N, T1,T2,T3);
 
 pass = (max(max(abs(w1-w2))) == 0) & ...

@@ -112,21 +112,21 @@ function [varargout] = refine_grid(varargin)
     %[band, xg,yg,zg, cpxg,cpyg,cpzg, distg, bdyg, dx, x1d,y1d,z1d] = ...
     %    refine_grid3d(input{:});
     for k=1:M
-      A = tic;
+      A = cputime();
       [band, xg,yg,zg, cpxg,cpyg,cpzg, dist, bdy, dx, x1d,y1d,z1d] = ...
           refine_grid3d(cpf, dx, x1d,y1d,z1d, bw, band, dist, bdy, use_ndgrid);
-      fprintf('level %d (dx=%g) processing time: %g\n', k, dx, toc(A));
+      fprintf('level %d (dx=%g) processing time: %g\n', k, dx, cputime()-A);
     end
     varargout = {band, xg,yg,zg, cpxg,cpyg,cpzg, dist, bdy, dx, x1d,y1d,z1d};
   else
     for k=1:M
-      A = tic;
+      A = cputime();
       [band, xg,yg, cpxg,cpyg, dist, bdy, dx, x1d,y1d] = ...
           refine_grid2d(cpf, dx, x1d,y1d, bw, band, dist, bdy, use_ndgrid);
       if (M>1)
-        fprintf('level %d (dx=%g) processing time: %g\n', k, dx, toc(A));
+        fprintf('level %d (dx=%g) processing time: %g\n', k, dx, cputime()-A);
       else
-        fprintf('dx=%g processing time: %g\n', dx, toc(A));
+        fprintf('dx=%g processing time: %g\n', dx, cputime()-A);
       end
     end
     if (withbdy)

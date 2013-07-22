@@ -37,34 +37,34 @@ xg = xx(band); yg = yy(band); zg = zz(band);
 
 %% Construct an interpolation matrix for closest point
 disp('Constructing interpolation matrix');
-T=tic;
+T=cputime();
 %profile on
 L2 = laplacian_3d_matrix(x1d, y1d, z1d, order, band);
 %profile off
 %profile viewer
 %E2 = E2full(:,band);
-toc(T)
+cputime()-T
 
 %disp('Constructing interpolation matrix w/ banding');
-%T=tic;
+%T=cputime();
 %L2E3 = interp3_matrix(x1d, y1d, z1d, cpxg, cpyg, cpzg, p, band);
 %[E4i, E4j, E4s] = interp3_matrix(x1d, y1d, z1d, cpxg, cpyg, cpzg, p);
-%toc(T)
+%cputime()-T
 
 %c = c + 1;
 %pass(c) = max(max(abs(E2-E3))) == 0;
 
 disp('Constructing laplacian matrix with yujia''s repmat');
-T=tic;
+T=cputime();
 L3 = laplacian_3d_matrix_test(x1d, y1d, z1d, order, band);
-toc(T)
+cputime()-T
 
 
 
 disp('Constructing laplacian matrix with loops');
-T=tic;
+T=cputime();
 L = laplacian_3d_matrix(x1d, y1d, z1d, order, band, band, 0, 1);
-toc(T)
+cputime()-T
 
 
 c = c + 1;

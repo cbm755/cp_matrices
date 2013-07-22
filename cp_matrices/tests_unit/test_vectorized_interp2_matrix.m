@@ -32,15 +32,15 @@ xg = xx(band); yg = yy(band);
 
 %% Construct an interpolation matrix for closest point
 disp('Constructing interpolation matrix');
-T=tic;
+T=cputime();
 E2full = interp2_matrix(x1d, y1d, cpxg, cpyg, p);
 E2 = E2full(:,band);
-toc(T)
+cputime()-T
 
 disp('Constructing interpolation matrix w/ banding');
-T=tic;
+T=cputime();
 E3 = interp2_matrix(x1d, y1d, cpxg, cpyg, p, band);
-toc(T)
+cputime()-T
 
 c = c + 1;
 pass(c) = max(max(abs(E2-E3))) == 0;
@@ -48,9 +48,9 @@ pass(c) = max(max(abs(E2-E3))) == 0;
 
 disp('Constructing interpolation matrix, index form');
 %profile on
-T=tic;
+T=cputime();
 [E4i, E4j, E4s] = interp2_matrix(x1d, y1d, cpxg, cpyg, p);
-toc(T)
+cputime()-T
 %profile off
 %profile viewer
 

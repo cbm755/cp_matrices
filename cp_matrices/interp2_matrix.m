@@ -72,7 +72,7 @@ function [E,Ej,Es] = interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
     makeListOutput = false;
   end
 
-  T = tic;
+  T1 = cputime();
   dx = x(2)-x(1);   Nx = length(x);
   dy = y(2)-y(1);   Ny = length(y);
   ddx = [dx  dy];
@@ -123,7 +123,7 @@ function [E,Ej,Es] = interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
     end
   end
   %toc
-  T1 = toc(T);
+  T1 = cputime() - T1;
   %fprintf('done new Ei,Ej,weights, total time: %g\n', T1);
 
   % TODO: is there any advantage to keeping Ei as matrices?  Then each

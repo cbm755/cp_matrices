@@ -51,9 +51,9 @@ function [pass, str] = test_monocubic()
   pass(c) = max(w1) <= max(u_rand);
 
   % TODO: a timing test?
-  %T1 = tic;
+  %T1 = cputime();
   %w1 = monocubic_interp(cp, u, [cp.cpx cp.cpy]);
-  %T1 = toc(T1);
+  %T1 = cputime()-T1;
 
   %E = interp2_matrix(x1d, y1d, cpxg, cpyg, 2, band);
   %w2 = E*u;

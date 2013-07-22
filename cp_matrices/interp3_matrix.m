@@ -70,7 +70,7 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
     makeListOutput = false;
   end
 
-  T = tic;
+  T1 = cputime();
   dx = x(2)-x(1);   Nx = length(x);
   dy = y(2)-y(1);   Ny = length(y);
   dz = z(2)-z(1);   Nz = length(z);
@@ -131,7 +131,7 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
     end
   end
   %toc
-  T1 = toc(T);
+  T1 = cputime() - T1;
   %fprintf('done new Ei,Ej,weights, total time: %g\n', T1);
 
 

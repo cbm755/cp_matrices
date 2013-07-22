@@ -44,21 +44,21 @@ function [pass, str] = test_weno4_2d()
   disp('*** weno4 call');
   % do it twice as first one might not give good timing
   w1 = weno4_interp(cp, u, [cp.cpx cp.cpy]);
-  T1 = tic;
+  T1 = cputime();
   w1 = weno4_interp(cp, u, [cp.cpx cp.cpy]);
-  T1 = toc(T1);
+  T1 = cputime()-T1;
 
   disp('*** weno4_caching: calling build cache');
   WenoCache = weno4_interp(cp, u, [cp.cpx cp.cpy], 'cache');
-  T2 = tic;
+  T2 = cputime();
   WenoCache = weno4_interp(cp, u, [cp.cpx cp.cpy], 'cache');
-  T2 = toc(T2);
+  T2 = cputime()-T2;
 
   disp('*** cache built, now interpolating');
   w3 = weno4_interp(WenoCache, u);
-  T3 = tic;
+  T3 = cputime();
   w3 = weno4_interp(WenoCache, u);
-  T3 = toc(T3);
+  T3 = cputime()-T3;
   %w4 = weno4_interp(WenoCache, 1.1*u);
   %w5 = weno4_interp(WenoCache, 1.2*u);
 

@@ -84,13 +84,13 @@ dx_c = dx;   % store the coarse dx
 
 %% refine it twice
 disp('starting refinement');
-A = tic;
+time_refine_total = cputime();
 %[band,x,y,z,cpx,cpy,cpz,dist,bdy,dx,x1d,y1d,z1d] = refine_grid(2,
 %cpf, dx_c, x1d_c, y1d_c, z1d_c, bw, band_c, dist_c, bdy_c);
 g = refine_cpgrid_bw(gc,bw);
 g = refine_cpgrid_bw(g,bw);
 %dx2 = dx/2^1;
-time_refine_total = toc(A)
+time_refine_total = cputime() - time_refine_total
 
 %figure(3); clf;
 %porcupine_plot3d_param(x,y,z, cpx,cpy,cpz, bdy, paramf, 3)

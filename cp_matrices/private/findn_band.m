@@ -26,7 +26,7 @@ function Ej = findn_band(xs, xi, p)
     p = 3;  % default interp degree
   end
 
-  T = tic;
+  T1 = cputime();
   dim = length(xs);
   Ns = zeros(1, dim);
   ddx = zeros(1, dim);
@@ -79,7 +79,7 @@ function Ej = findn_band(xs, xi, p)
     end
     Ej(:,s) = sub2ind(Ns, gi{:});
   end
-  T1 = toc(T);
+  T1 = cputime() - T1;
   Ej = unique(Ej(:));
 
 end

@@ -66,9 +66,9 @@ function [err err2 err3] = helper(n)
 
   % do it twice as first one might not give good timing
   %w1 = monocubic_interp(cp, u, [cp.cpx cp.cpy]);
-  T1 = tic;
+  T1 = cputime();
   w1 = monocubic_interp(cp, u, [cp.cpx cp.cpy]);
-  T1 = toc(T1);
+  T1 = cputime()-T1;
 
   err = max(abs(w1-u));
 

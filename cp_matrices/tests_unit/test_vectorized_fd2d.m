@@ -33,30 +33,30 @@ xg = xx(band); yg = yy(band);
 
 
 disp('Constructing Laplacian matrix');
-T=tic;
+T=cputime();
 L2 = laplacian_2d_matrix(x1d, y1d, order, band);
 %E2 = E2full(:,band);
-toc(T)
+cputime()-T
 
 %disp('Constructing interpolation matrix w/ banding');
-%T=tic;
+%T=cputime();
 %L2E3 = interp3_matrix(x1d, y1d, z1d, cpxg, cpyg, cpzg, p, band);
 %[E4i, E4j, E4s] = interp3_matrix(x1d, y1d, z1d, cpxg, cpyg, cpzg, p);
-%toc(T)
+%cputime()-T
 
 %c = c + 1;
 %pass(c) = max(max(abs(E2-E3))) == 0;
 
 disp('Constructing laplacian matrix with yujia''s repmat');
-T=tic;
+T=cputime();
 L3 = laplacian_2d_matrix_test(x1d, y1d, order, band, band);
-toc(T)
+cputime()-T
 
 
 disp('Constructing laplacian matrix with loops');
-T=tic;
+T=cputime();
 L = laplacian_2d_matrix(x1d, y1d, order, band, band, 0, 1);
-toc(T)
+cputime()-T
 
 
 c = c + 1;

@@ -63,7 +63,7 @@ function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
   end
 
 
-  T = tic;
+  T1 = cputime();
   dim = length(xs);
   Ns = zeros(1, dim);
   ddx = zeros(1, dim);
@@ -123,7 +123,7 @@ function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
 
     Ej(:,s) = sub2ind(Ns, gi{:});
   end
-  T1 = toc(T);
+  T1 = cputime() - T1;
   %fprintf('done new Ei,Ej,weights, total time: %g\n', T1);
 
 

@@ -96,7 +96,7 @@ function E = interp3_matrix_test(x, y, z, xi, yi, zi, p)
   toc
 
   disp('new');
-  T = tic;
+  T = cputime();
   tic
   %[weights2 Ej2] = buildInterpWeights_vec(X,ptL,ddx,p,stencil,Nx,Ny,Nz);
   [xw,yw,zw,Ibpt] = buildInterpWeights_vec2(X,ptL,ddx,p,stencil,Nx,Ny,Nz);
@@ -126,7 +126,7 @@ function E = interp3_matrix_test(x, y, z, xi, yi, zi, p)
 
   toc
   disp('done new, total time:');
-  toc(T);
+  cputime() - T;
   max(max(Ej2-Ej))
   max(max(weights2-weights))
   
