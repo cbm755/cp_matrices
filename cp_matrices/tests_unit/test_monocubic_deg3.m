@@ -45,7 +45,7 @@ function [err err2 err3] = helper(n)
   %% Banding
   dim = 2;  % dimension
   p = 3;    % interpolation order
-  bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
+  bw = rm_bandwidth(dim, p);
   band = find(abs(dist) <= bw*maxdx);
   % store closest points in the band;
   cpxg = cpxg(band); cpyg = cpyg(band);
@@ -67,7 +67,7 @@ function [err err2 err3] = helper(n)
   % do it twice as first one might not give good timing
   %w1 = monocubic_interp(cp, u, [cp.cpx cp.cpy]);
   T1 = cputime();
-  w1 = monocubic_interp(cp, u, [cp.cpx cp.cpy]);
+  w1 = monocubic_interp(cp, u, {cp.cpx cp.cpy});
   T1 = cputime()-T1;
 
   err = max(abs(w1-u));

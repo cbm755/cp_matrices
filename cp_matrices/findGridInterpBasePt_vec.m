@@ -3,8 +3,8 @@ function [I,X] = findGridInterpBasePt_vec(x, p, relpt, dx)
 % This is best explained in the diagram below.
 %
 % [I,X] = findGridInterpBasePt(x, p, relpt, dx)
-%   x: is the interpolation point, must lie inside the === signs
-%      below.  (x should be Nx3 matrix).
+%   x: is the interpolation point, must lie inside the === region
+%      below.  (x should be Nx3 matrix or a cell array of column vectors).
 %   p: degree interpolation (N-1 point interp), a scalar.
 %   relpt: a reference point, corresponding to (1,1) in your grid (a
 %          1x3 row vector).
@@ -34,16 +34,29 @@ function [I,X] = findGridInterpBasePt_vec(x, p, relpt, dx)
 %   actually used in the Closest Point Method scales like 2D (for a 2D
 %   surface).  For now I'll add a warning to the 3D code.
 
-  % TODO: could simplify, if isscalar(dx)
   % TODO: is "fix" useful here instead of round?
 
-  if (mod(p,2) == 0)  % even
-    I = round( ( x - repmat(relpt,size(x,1),1) ) ./ repmat(dx,size(x,1),1) ) + 1  -  p/2;
-  else % odd
-    I = floor( ( x - repmat(relpt,size(x,1),1) ) ./ repmat(dx,size(x,1),1) ) + 1  -  (p-1)/2;
+  if iscell(x)
+    dim = length(x);
+    for d=1:dim
+      if (mod(p,2) == 0)  % even
+        I{d} = round( (x{d} - relpt(d)) / dx(d) ) + 1  -  p/2;
+      else % odd
+        I{d} = floor( (x{d} - relpt(d)) / dx(d) ) + 1  -  (p-1)/2;
+      end
+      % I-1 here because I is a matlab index
+      X{d} = relpt(d) + (I{d}-1).*dx(d);
+    end
+  else
+    %warning('deprecated: x should be a cell array');
+    if (mod(p,2) == 0)  % even
+      I = round( ( x - repmat(relpt,size(x,1),1) ) ./ repmat(dx,size(x,1),1) ) + 1  -  p/2;
+    else % odd
+      I = floor( ( x - repmat(relpt,size(x,1),1) ) ./ repmat(dx,size(x,1),1) ) + 1  -  (p-1)/2;
+    end
+    %I-1 here because I is a matlab index
+    X = repmat(relpt,size(x,1),1) + (I-1).*repmat(dx,size(x,1),1);
   end
-  % I-1 here because I is a matlab index
-  X = repmat(relpt,size(x,1),1) + (I-1).*repmat(dx,size(x,1),1);
 
   % in Matlab R14, isinteger is really slow, seems ok in 2010b
   %if ~(isinteger(p))

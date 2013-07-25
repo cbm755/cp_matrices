@@ -21,7 +21,7 @@ function [pass, str] = test_nd_ops_vs_2d()
   dim = 2;
   p = 3;       % max interpolation order
   stenrad = 2; % max stencil radius for finite differences
-  bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((stenrad+(p+1)/2)^2));
+  bw = rm_bandwidth(dim, p, stenrad);
   band = find(abs(dist) <= bw*dx);
 
   % store closest points in the band;
@@ -32,13 +32,13 @@ function [pass, str] = test_nd_ops_vs_2d()
   % interpolation
 
   E = interp2_matrix(x1d,y1d,  cpx, cpy, 3, band, true);
-  En = interpn_matrix({x1d y1d}, [cpx cpy], 3, band);
+  En = interpn_matrix({x1d y1d}, {cpx cpy}, 3, band);
 
   c = c + 1;
   pass(c) = nnz(E - En) == 0;
 
   E = interp2_matrix(x1d,y1d,  cpx, cpy, 1, band, true);
-  En = interpn_matrix({x1d y1d}, [cpx cpy], 1, band);
+  En = interpn_matrix({x1d y1d}, {cpx cpy}, 1, band);
 
   c = c + 1;
   pass(c) = nnz(E - En) == 0;

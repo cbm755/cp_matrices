@@ -15,19 +15,25 @@ function w = monocubic_interp(cp, f, xyz)
 
   relpt = [cp.x1d(1)  cp.y1d(1)];
 
-  x = xyz(:,1);
-  y = xyz(:,2);
+  if iscell(xyz)
+    x = xyz{1};
+    y = xyz{2};
+  else
+    x = xyz(:,1);
+    y = xyz(:,2);
+  end
 
   % determine the basepoint, roughly speaking this is "floor(xy)"
   % in terms of the grid
-  [ijk,X] = findGridInterpBasePt_vec(xyz, 3, relpt, [dx dy]);
+  [ijk,X] = findGridInterpBasePt_vec({x y}, 3, relpt, [dx dy]);
   % +1 here because the basepoint is actually the lowerleft corner
   % of the stencil and we want the "floor".
-  xi = X(:,1) + dx;
-  yi = X(:,2) + dy;
-  ijk = ijk + 1;
+  xi = X{1} + dx;
+  yi = X{2} + dy;
+  ijk{1} = ijk{1} + 1;
+  ijk{2} = ijk{2} + 1;
 
-  I = sub2ind([Ny Nx], ijk(:,2), ijk(:,1));
+  I = sub2ind([Ny Nx], ijk{2}, ijk{1});
   B = findInBand(I, cp.band, Nx*Ny);
 
   [E W N S] = neighbourMatrices(cp, cp.band, cp.band);

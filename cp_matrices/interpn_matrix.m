@@ -1,17 +1,16 @@
 function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
 %INTERPN_MATRIX  Return a n-D interpolation matrix
 %   E = INTERPN_MATRIX(X, XI, P)
-%   E = INTERPN_MATRIX({X Y Z ... W}, [XI YI ZI ... WI], P)
+%   E = INTERPN_MATRIX({x y z ... w}, {xi yi zi ... wi}, P)
 %   Build a matrix which interpolates grid data on a grid defined by
-%   the product of the lists X onto the points specified by columns
-%   of XI.
+%   the product of the lists X onto the points specified by lists XI.
 %   Interpolation is done using degree P barycentric Lagrange
-%   interpolation.  E will be a 'size(XI,1)' by M sparse matrix
+%   interpolation.  E will be a 'length(xi)' by M sparse matrix
 %   where M is the product of the lengths of X, Y, Z, ..., W.
 %
-%   E = INTERPN_MATRIX({X Y Z ... W}, {XI YI ZI ... WI}, P)
-%   As above put you can specify a cell array of column vectors for
-%   the interpolation points.
+%   E = INTERPN_MATRIX({x y z ... w}, [xi yi zi ... wi], P)
+%   Alternatively, second input can be a matrix with columns
+%   specifying the interpolation points (somewhat deprecated).
 %
 %   E = INTERPN_MATRIX(X, XI, P, BAND)
 %   BAND is a list of linear indices into a (possibly fictious) n-D
@@ -33,7 +32,7 @@ function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
 %   error checking on this.
 
   if ~iscell(xs)
-    error('expected a cell array of {x1d,y1d,etc}');
+    error('expected a cell array of {x1d,y1d,...}');
   end
 
   if (nargin < 5)
@@ -78,6 +77,15 @@ function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
     error('too big to use doubles as indicies: implement int64 indexing')
   end
 
+  if ~iscell(xi)
+    warning('do you want a cell array for interp pts {xi,yi,...}?');
+    xi2 = cell(1,d);
+    for d=1:dim
+      xi2{d} = xi(:,d);
+    end
+    xi = xi2;
+  end
+
   if makeBanded && isempty(invbandmap)
     invbandmap = make_invbandmap(M, band);
   end
@@ -85,17 +93,7 @@ function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
   Nsten = p+1;
   EXTSTENSZ = (Nsten)^dim;
 
-  if iscell(xi)
-    % convert xi to a matrix of column vectors.  TODO: is it better to
-    % to change findGridInterpBasePt_vec to support cell array?
-    xi2 = zeros(length(xi{1}), dim);
-    for d=1:dim
-      xi2(:,d) = xi{d};
-    end
-    xi = xi2;
-  end
-
-  Ni = length(xi(:,1));
+  Ni = length(xi{1}(:));
 
   Ei = repmat((1:Ni)',1,EXTSTENSZ);
   Ej = zeros(size(Ei));
@@ -104,7 +102,7 @@ function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
   [Ibpt, Xgrid] = findGridInterpBasePt_vec(xi, p, ptL, ddx);
   xw = {};
   for d=1:dim
-    xw{d} = LagrangeWeights1D_vec(Xgrid(:,d), xi(:,d), ddx(d), Nsten);
+    xw{d} = LagrangeWeights1D_vec(Xgrid{d}, xi{d}, ddx(d), Nsten);
   end
 
   NN = Nsten*ones(1,dim);
@@ -118,7 +116,7 @@ function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
     Es(:,s) = temp;
 
     for d=1:dim
-      gi{d} = (Ibpt(:,d) + ii{d} - 1);
+      gi{d} = (Ibpt{d} + ii{d} - 1);
     end
 
     Ej(:,s) = sub2ind(Ns, gi{:});

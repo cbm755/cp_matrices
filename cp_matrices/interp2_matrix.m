@@ -100,17 +100,17 @@ function [E,Ej,Es] = interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
   %tic
   % this used to be a call to buildInterpWeights but now most of
   % that is done here
-  [Ibpt, Xgrid] = findGridInterpBasePt_vec([xi yi], p, ptL, ddx);
-  xw = LagrangeWeights1D_vec(Xgrid(:,1), xi, ddx(1), N);
-  yw = LagrangeWeights1D_vec(Xgrid(:,2), yi, ddx(2), N);
+  [Ibpt, Xgrid] = findGridInterpBasePt_vec({xi yi}, p, ptL, ddx);
+  xw = LagrangeWeights1D_vec(Xgrid{1}, xi, ddx(1), N);
+  yw = LagrangeWeights1D_vec(Xgrid{2}, yi, ddx(2), N);
   %toc
 
   %tic
   % this is a good order for memory access: ijk just counts up
   for i=1:N
     for j=1:N
-      gi = (Ibpt(:,1) + i - 1);
-      gj = (Ibpt(:,2) + j - 1);
+      gi = (Ibpt{1} + i - 1);
+      gj = (Ibpt{2} + j - 1);
       ijk = sub2ind([N,N], j, i);
       weights(:,ijk) = xw(:,i) .* yw(:,j);
 

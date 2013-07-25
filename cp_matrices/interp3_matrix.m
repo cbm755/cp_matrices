@@ -99,10 +99,10 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
   %tic
   % this used to be a call to buildInterpWeights but now most of
   % that is done here
-  [Ibpt, Xgrid] = findGridInterpBasePt_vec([xi yi zi], p, ptL, ddx);
-  xw = LagrangeWeights1D_vec(Xgrid(:,1), xi, ddx(1), N);
-  yw = LagrangeWeights1D_vec(Xgrid(:,2), yi, ddx(2), N);
-  zw = LagrangeWeights1D_vec(Xgrid(:,3), zi, ddx(3), N);
+  [Ibpt, Xgrid] = findGridInterpBasePt_vec({xi yi zi}, p, ptL, ddx);
+  xw = LagrangeWeights1D_vec(Xgrid{1}, xi, ddx(1), N);
+  yw = LagrangeWeights1D_vec(Xgrid{2}, yi, ddx(2), N);
+  zw = LagrangeWeights1D_vec(Xgrid{3}, zi, ddx(3), N);
   %toc
 
   %tic
@@ -110,9 +110,9 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
   for k=1:N
     for i=1:N
       for j=1:N
-        gi = (Ibpt(:,1) + i - 1);
-        gj = (Ibpt(:,2) + j - 1);
-        gk = (Ibpt(:,3) + k - 1);
+        gi = (Ibpt{1} + i - 1);
+        gj = (Ibpt{2} + j - 1);
+        gk = (Ibpt{3} + k - 1);
         ijk = sub2ind([N,N,N], j, i, k);
         weights(:,ijk) = xw(:,i) .* yw(:,j) .* zw(:,k);
 

@@ -45,7 +45,7 @@ function [pass, str] = test_nd_ops_vs_3d()
   pass(c) = nnz(En - En2) == 0;
 
   E = interp3_matrix(x1d,y1d,z1d,  cpx, cpy, cpz, 1, band, true);
-  En = interpn_matrix({x1d y1d z1d}, [cpx cpy cpz], 1, band);
+  En = interpn_matrix({x1d y1d z1d}, {cpx cpy cpz}, 1, band);
 
   c = c + 1;
   pass(c) = nnz(E - En) == 0;

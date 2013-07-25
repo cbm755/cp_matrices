@@ -1,48 +1,49 @@
+% Compute on a circle embedded in 4D
 
-dx = 0.1;
+g.dim = 4;
+g.dx = 0.2;
 
 % make vectors of x, y, positions of the grid
-x1d = (-2.0:dx:2.0)';
+x1d = (-2.0:g.dx:2.0)';
 y1d = x1d;
 z1d = x1d;
 w1d = x1d;
 
-nx = length(x1d);
-ny = length(y1d);
-nz = length(z1d);
-nw = length(w1d);
-
-[xx yy zz ww] = ndgrid(x1d, y1d, z1d, w1d);
+g.x1d = {x1d y1d z1d w1d};
+%[xx yy zz ww] = ndgrid(x1d, y1d, z1d, w1d);
+[g.x{1:4}] = ndgrid(x1d, y1d, z1d, w1d);
+clear x1d y1d z1d w1d;
 
 % closest point to a circle in the xx,yy plane embedded in 4D.
-[th, r] = cart2pol(xx, yy);
-[cpx, cpy] = pol2cart(th, 1);
-ZC = dx/3;
-WC = dx/4;
-cpz = ZC*ones(size(cpx));
-cpw = WC*ones(size(cpx));
-dist = sqrt((xx-cpx).^2 + (yy-cpy).^2 + (zz-cpz).^2 + (ww-cpw).^2);
-u0 = cos(th);
+ZC = g.dx/3;
+WC = g.dx/5;
+cen = [0  0  ZC  WC];
+g.cpfun = @(x) cpCircleInHighDim(x, 1, cen);
+[g.cpx, g.dist] = g.cpfun(g.x);
+%[th, r] = cart2pol(xx, yy);
+%[cpx, cpy] = pol2cart(th, 1);
+%cpz = ZC*ones(size(cpx));
+%cpw = WC*ones(size(cpx));
+%dist = sqrt((xx-cpx).^2 + (yy-cpy).^2 + (zz-cpz).^2 + (ww-cpw).^2);
+
 
 
 % banding
-dim = 4;
 p = 3;       % max interpolation order
-stenrad = 1; % max stencil radius for finite differences
-bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((stenrad+(p+1)/2)^2));
-band = find(abs(dist) <= bw*dx);
+bw = rm_bandwidth(g.dim, p, 1);
 
-% store closest points in the band;
-cpx = cpx(band); cpy = cpy(band); cpz = cpz(band); cpw = cpw(band);
-xg = xx(band); yg = yy(band); zg = zz(band); wg = ww(band);
-dist = dist(band);
-u0 = u0(band);
+g = cpgrid_restrict_bw(g, bw);
+
+g0 = g;
+g = refine_cpgrid(g);
+g = refine_cpgrid(g);
+g = refine_cpgrid(g);
 
 
-E1 = interpn_matrix({x1d y1d z1d w1d}, [cpx cpy cpz cpw], 1, band);
-E3 = interpn_matrix({x1d y1d z1d w1d}, [cpx cpy cpz cpw], p, band);
+E1 = interpn_matrix(g.x1d, g.cpx, 1, g.band);
+E3 = interpn_matrix(g.x1d, g.cpx, p, g.band);
 
-L = laplacian_nd_matrix({x1d y1d z1d w1d}, 2, band);
+L = laplacian_nd_matrix(g.x1d, 2, g.band);
 
 
 %% Construct an interpolation matrix for plotting on circle
@@ -56,7 +57,7 @@ xp = xp(:);  yp = yp(:);
 zp = ZC*ones(size(xp));
 wp = WC*ones(size(xp));
 
-Eplot = interpn_matrix({x1d, y1d, z1d, w1d}, [xp yp zp wp], p, band);
+Eplot = interpn_matrix(g.x1d, {xp yp zp wp}, p, g.band);
 
 figure(1); clf;
 figure(2); clf;
@@ -66,15 +67,17 @@ figure(3); clf;
 %% Time-stepping for the heat equation
 Tf = 2;
 %dt = 0.2*dx^2;
-dt = 0.5*dx;
+dt = 0.5*g.dx;
 numtimesteps = ceil(Tf/dt)
 % adjust for integer number of steps
 dt = Tf / numtimesteps
 
+[th, tilde] = cart2pol(g.x{1}, g.x{2});
+u0 = cos(th);
 u = u0;
 
 
-lambda = 2*dim/dx^2;
+lambda = 2*g.dim/g.dx^2;
 I = speye(size(L));
 M1 = E1*L - lambda*(I - E3);
 A = I - dt*M1;

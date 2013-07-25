@@ -1,3 +1,4 @@
+% TODO
 
 dx = 0.25;
 
@@ -33,7 +34,7 @@ toc
 dim = 5;
 p = 3;       % max interpolation order
 stenrad = 1; % max stencil radius for finite differences
-bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((stenrad+(p+1)/2)^2));
+bw = rm_bandwidth(g.dim, p, stenrad);
 band = find(abs(dist) <= bw*dx);
 
 % keep only stuff in the band
@@ -45,54 +46,51 @@ dist = dist(band);
 
 % TODO: just put in a cpgrid and call a banding routine?
 
-cpgrid1.dim = 5;
-cpgrid1.dx = dx;
-cpgrid1.x1d = X1d;
-cpgrid1.cpfun = cpf;
-cpgrid1.band = band;
-cpgrid1.x = xg;
-cpgrid1.cpx = cpX;
-cpgrid1.dist = dist;
+g1.dim = 5;
+g1.dx = dx;
+g1.x1d = X1d;
+g1.cpfun = cpf;
+g1.band = band;
+g1.x = xg;
+g1.cpx = cpX;
+g1.dist = dist;
 
 
 
 disp('refining once');
-cpgrid2 = refine_cpgrid_bw(cpgrid1, bw);
+g2 = refine_cpgrid_bw(g1, bw);
 
 %disp('refining again');
-%cpgrid3 = refine_cpgrid_bw(cpgrid2, bw);
+%g3 = refine_cpgrid_bw(g2, bw);
 
-cpgrid = cpgrid2;
+g = g2;
 
-
-% TODO: make the matrix routinues support cell array
-cpXtemp = [cpgrid.cpx{1:5}];
 
 tic
-L = laplacian_nd_matrix(cpgrid.x1d, 2, cpgrid.band);
+L = laplacian_nd_matrix(g.x1d, 2, g.band);
 toc
 
 tic
-[Ei,Ej,Es] = interpn_matrix(cpgrid.x1d, cpXtemp, 1, cpgrid.band);
+[Ei,Ej,Es] = interpn_matrix(g.x1d, g.cpx, 1, g.band);
 toc
 
 % TODO: can call directly now
-%E1 = interpn_matrix(cpgrid.x1d, cpXtemp, 1, cpgrid.band);
+%E1 = interpn_matrix(g.x1d, g.cpx, 1, g.band);
 
 tic
-E1 = sparse(Ei, Ej, Es, length(cpgrid.band), length(cpgrid.band));
+E1 = sparse(Ei, Ej, Es, length(g.band), length(g.band));
 toc
 
 tic
-[Ei,Ej,Es] = interpn_matrix(cpgrid.x1d, cpXtemp, 2, cpgrid.band);
+[Ei,Ej,Es] = interpn_matrix(g.x1d, g.cpx, 2, g.band);
 toc
 
 tic
-E2 = sparse(Ei, Ej, Es, length(cpgrid.band), length(cpgrid.band));
+E2 = sparse(Ei, Ej, Es, length(g.band), length(g.band));
 toc
 
 disp('timing for matrix mult');
-n = length(cpgrid.band)
+n = length(g.band)
 u = rand(n,1);
 tic; v=L*u; toc
 tic; v=E1*u; toc

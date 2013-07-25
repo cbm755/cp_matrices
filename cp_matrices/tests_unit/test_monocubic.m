@@ -58,3 +58,4 @@ function [pass, str] = test_monocubic()
   %E = interp2_matrix(x1d, y1d, cpxg, cpyg, 2, band);
   %w2 = E*u;
   %max(abs(w2-u))
+
