@@ -19,10 +19,10 @@ function [cpx,cpy,cpz, sdist] = cpEllipsoid(x,y,z, AB, cen, ax)
 %   Note: returns signed distance (with negative inside).
 
   % defaults
-  if (nargin < 4) | isempty(AB)
+  if (nargin < 4) || isempty(AB)
     AB = [1.25 0.75];
   end
-  if (nargin < 5) | isempty(cen)
+  if (nargin < 5) || isempty(cen)
     cen = [0 0 0];
   end
   if (nargin < 6)

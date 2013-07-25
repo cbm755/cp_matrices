@@ -370,7 +370,7 @@ function [cp, dist, bdy, s] = helper_newton(xpt, mindd_guess, s_guess, paramf, p
       break;
     elseif (abs(s-snew) < tol)
       fail = 0;
-      if ( ((abs(snew(2)) > 1) & (abs(snew(2)) > 1.2))  |  ...
+      if ( ((abs(snew(2)) > 1) && (abs(snew(2)) > 1.2))  ||  ...
            (n > 20) )
         sdiffnorm = norm(s-s_guess);
         fprintf('converged: n=%d, sdiff=%f, s=(%f,%f), s0=(%f,%f), x=(%f,%f,%f)\n',n, sdiffnorm, snew(1), snew(2), s_guess(1), s_guess(2), xpt(1), xpt(2), xpt(3));
@@ -391,7 +391,7 @@ function [cp, dist, bdy, s] = helper_newton(xpt, mindd_guess, s_guess, paramf, p
 
 
   % somewhat hardcoded for mobius (no s1 here)
-  if ( (s(2) < LB(2)) | (s(2) > UB(2)) )
+  if ( (s(2) < LB(2)) || (s(2) > UB(2)) )
     bdy = true;
     % need to search the boundary (we haven't found it properly yet)
   else

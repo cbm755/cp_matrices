@@ -23,8 +23,8 @@ function [x, y, th] = paramArc(n, R, cen, angle1, angle2)
   n = max(n, 3);
 
   % (-pi,pi]
-  angle1 = angle(exp(i*angle1));
-  angle2 = angle(exp(i*angle2));
+  angle1 = angle(exp(1i*angle1));
+  angle2 = angle(exp(1i*angle2));
 
   if (angle1 <= angle2);
     %disp('lte');
@@ -38,7 +38,7 @@ function [x, y, th] = paramArc(n, R, cen, angle1, angle2)
 
   dth = ((a2-a1)/(n-1));
   th = (a1:dth:a2)';
-  th = angle(exp(i*th));
+  th = angle(exp(1i*th));
 
   x = cos(th);
   y = sin(th);

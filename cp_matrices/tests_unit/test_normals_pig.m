@@ -1,6 +1,12 @@
 function [pass, str] = test_normals_pig()
   str = 'normals test 3d: build oriented normals for the cp pig';
 
+  if isoctave()
+    warning('no tri2cp yet for octave, failing');
+    pass = 0;
+    return
+  end
+
   verb = 1;
   make_plot = 0;
   wh = 1;  % also supports genus3 but its quite thin and needs a
@@ -19,9 +25,13 @@ function [pass, str] = test_normals_pig()
   nz=length(z1d);
 
   if wh == 1
-    PlyFile = 'pig_loop2.ply';
-    disp( ['reading triangulation from "' PlyFile '"'] );
-    [Faces, Vertices] = plyread(PlyFile, 'tri');
+    if isoctave()
+      load data_pig  % plyready() doesn't work in Octave
+    else % matlab
+      PlyFile = 'pig_loop2.ply';
+      disp( ['reading triangulation from "' PlyFile '"'] );
+      [Faces, Vertices] = plyread(PlyFile, 'tri');
+    end
   else
     PlyFile = 'genus3.off';
     disp( ['reading triangulation from "' PlyFile '"'] );

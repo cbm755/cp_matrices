@@ -22,8 +22,8 @@ function [cpx, cpy, dist, bdy] = cpArc(x, y, R, cen, angle1, angle2)
     angle2 = pi/2;
   end
   % (-pi,pi]
-  angle1 = angle(exp(i*angle1));
-  angle2 = angle(exp(i*angle2));
+  angle1 = angle(exp(1i*angle1));
+  angle2 = angle(exp(1i*angle2));
   %  if (angle2 < angle1)
   %  temp = angle1;
   %  angle1 = angle2;

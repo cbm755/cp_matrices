@@ -32,7 +32,6 @@ function [cpx, cpy, d, bdy, ls] = cpYinYang(x, y, R, cen)
 
   cpx = zeros(size(x));
   cpy = zeros(size(x));
-  cpz = zeros(size(x));
   % for debugging
   d = -1000*ones(size(x));
   ls = -1000*ones(size(x));

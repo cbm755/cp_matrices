@@ -12,3 +12,4 @@
 .project
 .pydevproject
 *.pickle
+*.mat

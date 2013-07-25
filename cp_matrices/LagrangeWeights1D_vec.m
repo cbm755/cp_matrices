@@ -11,10 +11,22 @@ function ww = LagrangeWeights1D_vec(xg, x, dx, N)
 %   This is the vectorized version: xg, x, dx can be column
 %   vectors.  N must be a scalar.  If you want to do lots of scalar
 %   calls in a loop, than LAGRANGEWEIGHTS1D is faster.
+%
+%   Notes: this function will very likely divide by zero but this
+%   is intended.  In Octave, you can disable the warning with
+%     warning('off', 'Octave:divide-by-zero')
 
-  % If this is the first time you've looked at this, its rather amazing
-  % Barycentric Lagrange works in practice.  But it does: see the
-  % literature.
+% If this is the first time you've looked at this, its rather amazing
+% that Barycentric Lagrange works in practice.  But it does: see the
+% literature.
+
+%if exist('octave_config_info', 'builtin')
+%    % if octave, then temporarily ensure div-by-zero warning is disabled
+%    q = warning('query', 'Octave:divide-by-zero');
+%    if strcmp(q.state, 'on')
+%      warning('off', 'Octave:divide-by-zero')
+%    end
+%  end
 
 
   %% Calculate the basic weights
@@ -65,5 +77,11 @@ function ww = LagrangeWeights1D_vec(xg, x, dx, N)
   end
   % a repmat approach is roughly twice as slow
   %ww = ww ./ repmat(sum(ww,2), 1, N);
+
+  %  if exist('octave_config_info', 'builtin')
+  %  if strcmp(q.state, 'on')
+  %    warning('on', 'Octave:divide-by-zero')
+  %  end
+  %end
 end
 

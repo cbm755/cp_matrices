@@ -41,7 +41,12 @@ function w = LagrangeWeights1D(xg, x, dx, N)
   %for j=0:(N-1)
   %  w(j+1) = w(j+1) / ( x - (xg + j*dx) );
   %end
-  w = w ./ ( x - (xg + (0:(N-1))*dx) );
+
+  % next two lines should be same, but in Octave a:b is treated
+  % differently somehow than [a:b] and this makes my unit test
+  % against LagrangeWeights1D_vec fail.
+  %w = w ./ ( x - (xg + (0:(N-1))*dx) );
+  w = w ./ ( x - (xg + [0:(N-1)]*dx) );
   w = w / sum(w);
 end
 

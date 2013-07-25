@@ -42,7 +42,6 @@ function [cpx, cpy, d, bdy, ls] = cpMixedCodim2d(x, y, R, a, b, cen)
 
   cpx = zeros(size(x));
   cpy = zeros(size(x));
-  cpz = zeros(size(x));
   % for debugging
   d = -1000*ones(size(x));
   ls = -1000*ones(size(x));

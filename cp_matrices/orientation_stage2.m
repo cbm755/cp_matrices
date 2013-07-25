@@ -375,6 +375,10 @@ end
 function pat = make_binary_patterns(N)
 % Given 3, gives [0 0 0; 0 0 1; 0 1 0; etc]
 % a bit ugly but gets the job done
+  if N == 0
+    pat = [1];
+    return
+  end
   pat = zeros(2^N,N);
 
   NN = 2*ones(1,N);

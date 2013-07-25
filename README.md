@@ -20,7 +20,9 @@ TODO: add a reference to cite if one uses this
 
 readply:
     MATLAB functions to read and write 3D data PLY files
-    by Pascal Getreuer 2004.
+    by Pascal Getreuer, 2004.  License: unknown.
+    This code doesn't seem to work in Octave but I haven't
+    tried to fix it.
 
 ba_interp:
     fast matlab interpolation (not currently included in this
