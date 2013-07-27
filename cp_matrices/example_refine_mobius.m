@@ -4,12 +4,6 @@
 % big meshgrids (the only fully nD embedding space grid will be at the
 % coarest level---which can be negliable).
 
-% Include the cp_matrices folder (edit as appropriate)
-addpath('../cp_matrices');
-
-% add functions for finding the closest points
-addpath('../surfaces');
-
 
 tic
 %% Find an initial coarse band of closest points

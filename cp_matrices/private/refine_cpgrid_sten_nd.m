@@ -59,12 +59,15 @@ function gg = refine_cpgrid_sten_nd(g, p)
       fprintf('  refine iter%d: no change, stopping iteration\n', iter);
       break
     else
-      if ~isempty(setdiff(band,band2))
-        warning('new band missing entries in first band: can this happen?');
-      end
       [tilde,ii] = setdiff(band2,band);
-      [tilde,tilde,iii] = intersect(band,band2);
-      fprintf('  refine iter%d: found %d new points\n', iter, length(ii));
+      [tilde,i4,iii] = intersect(band,band2);
+      [tilde,i5] = setdiff(band,band2);
+      if isempty(i5)
+        fprintf('  refine iter%d: found %d new points\n', iter, length(ii));
+      else
+        fprintf('  refine iter%d: found %d new points (and lost %d others)\n', ...
+                iter, length(ii), length(i5));
+      end
       [I{1:dim}] = ind2sub(Ns, band2);
       [I2{1:dim}] = ind2sub(Ns, band2(ii));
       % build the xyz coordinates of the points in the band
@@ -77,12 +80,12 @@ function gg = refine_cpgrid_sten_nd(g, p)
       % find the closest point
       [cpxT, distT] = cpfun(xT);
       dist2 = zeros(size(band2));
-      dist2(iii) = dist;
+      dist2(iii) = dist(i4);
       dist2(ii) = distT;
       cpx2 = {};
       for d = 1:dim
         cpx2{d} = zeros(size(band2));
-        cpx2{d}(iii) = cpx{d};
+        cpx2{d}(iii) = cpx{d}(i4);
         cpx2{d}(ii) = cpxT{d};
       end
 

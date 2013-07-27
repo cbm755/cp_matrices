@@ -48,13 +48,21 @@ function gg = refine_cpgrid_sten_3d(g, p)
       fprintf('  refine iter%d: no change, stopping iteration\n', iter);
       break
     else
-      if ~isempty(setdiff(band,band2))
-        warning('new band missing entries in first band: can this happen?');
-      end
       [tilde,ii] = setdiff(band2,band);
-      [tilde,tilde,iii] = intersect(band,band2);
-      fprintf('  refine iter%d: found %d new points\n', iter, length(ii));
-      [J, I, K] = ind2sub([ny nx nz], band2);
+      [tilde,i4,iii] = intersect(band,band2);
+      [tilde,i5] = setdiff(band,band2);
+      if isempty(i5)
+        fprintf('  refine iter%d: found %d new points\n', iter, length(ii));
+      else
+        %warning('new band missing entries in first band: can this happen?');
+        %length(i5)
+        %figure(1); clf; plot3(x,y,z,'r.','markersize',1); hold on;
+        %plot3(x(i5),y(i5),z(i5),'ko')
+        %keyboard
+        fprintf('  refine iter%d: found %d new points (and lost %d others)\n', ...
+                iter, length(ii), length(i5));
+      end
+      [J, I, K] = ind2sub([ny nx nz], band2);   % only for debugging?
       [J2, I2, K2] = ind2sub([ny nx nz], band2(ii));
       % build the xyz coordinates of the points in the band
       x = relpt(1) + (I-1)*dx;
@@ -66,16 +74,16 @@ function gg = refine_cpgrid_sten_3d(g, p)
       % find the closest point
       [cpxT, cpyT, cpzT, distT] = cpfun(xT, yT, zT);
       dist2 = zeros(size(band2));
-      dist2(iii) = dist;
+      dist2(iii) = dist(i4);
       dist2(ii) = distT;
       cpx2 = zeros(size(band2));
-      cpx2(iii) = cpx;
+      cpx2(iii) = cpx(i4);
       cpx2(ii) = cpxT;
       cpy2 = zeros(size(band2));
-      cpy2(iii) = cpy;
+      cpy2(iii) = cpy(i4);
       cpy2(ii) = cpyT;
       cpz2 = zeros(size(band2));
-      cpz2(iii) = cpz;
+      cpz2(iii) = cpz(i4);
       cpz2(ii) = cpzT;
       if (1==0)  % debugging, check it matches recomputing everything
         [cpx3, cpy3, cpz3, dist3] = cpfun(x, y, z);
