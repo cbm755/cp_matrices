@@ -4,8 +4,7 @@ function [cpx, cpy, sdist] = cpEllipse(x, y, a, b, cen)
 %      An ellipse centered at the origin with major axis 'a' and
 %      minor axis 'b'.  'a' and 'b' default to 1.5 and 0.75.
 %   [cpx, cpy, sdist] = cpEllipse(x, y, a, b, cen)
-%      An ellipse centered at 'cen' with major axis 'a' and minor
-%      axis 'b'.
+%      An ellipse centered at 'cen'.
 %
 %   Internally, uses cpParamCurve with Newton solves to find cp
 %

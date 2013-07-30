@@ -5,6 +5,7 @@ function L = laplacian_nd_matrix(xs, order, band1, band2, invbandmap)
 %   L = laplacian_nd_matrix(X, 2, band)
 %   L = laplacian_nd_matrix(X, 2, band1, band2)
 %   L = laplacian_nd_matrix(X, 4, band1, band2)
+%   L = laplacian_nd_matrix(X, 2, band1, band2, invbandmap)
 %
 % Note only does ndgrid ordering.
 

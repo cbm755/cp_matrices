@@ -1,12 +1,9 @@
 function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid, use_loop)
 %LAPLACIAN_3D_MATRIX  Build a 3D discrete Laplacian
-%   ORDER: 2 or 4 for 2nd or 4th-order
-%   Does no error checking up the equispaced nature of x,y,z
-%
 %   L = laplacian_3d_matrix(x,y,z, order, band)
 %      'L' is a discrete laplacian over a grid.
 %      'order' can be 2 or 4.
-%      x,y,z are 1d vectors which form a meshgrid, 'band' is a
+%      x,y,z are 1D vectors which form a meshgrid, 'band' is a
 %      subset of this meshgrid given as linear indices.
 %      TODO: this will have a dirichlet boundary condition at the
 %      edge of the band, at least for order 2.
@@ -17,8 +14,11 @@ function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid, use_loo
 %
 %   To use ndgrid ordering pass "true" as an extra argument.
 %
-%   Pass "true" as a further argument to use the (slower)
+%   Pass "true" as a further argument to use the (older, slower)
 %   looping-based code.
+%
+%   Currently assumes dx=dy.  Does no error checking up the equispaced
+%   nature of x,y,z.
 
   if (nargin <= 7)
     use_loop = false;
