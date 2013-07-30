@@ -1,18 +1,38 @@
 function plot2d_compdomain(u,x,y,dx,dy,fignum)
 %PLOT2D_COMPDOMAIN  Plot a 2D Closest Point computational domain
 %   plot2d_compdomain(u,x,y,dx,dy)
-%   plot2d_compdomain(u,x,y,dx,dy,cpx,cpy,fignum)
+%   plot2d_compdomain(u,x,y,dx,dy,fignum)
 %   You must have already created the figure with "figure(fignum)"
 %   for the later version.
+%
+%   plot2d_compdomain(u, g);
+%   plot2d_compdomain(u, g, fignum);
+%   Alternatively, pass a cpgrid object 'g'.
 %
 %   TODO: could add the outerband as well
 %   TODO: allow plotting a parameterization as well
 
-  if (nargin < 6) || isempty(fignum)
+  if nargin == 2 || nargin == 3
+    g = x;
+    if nargin == 3
+      fignum = y;
+    else
+      fignum = [];
+    end
+    x = g.x;
+    y = g.y;
+    dx = g.dx;
+    dy = g.dx;  % TODO: hardcoped for dx=dy
+  end
+
+  if nargin == 5
+    fignum = []
+  end
+
+  if isempty(fignum)
     fignum = figure();
   end
 
-  %figure(fignum);
   set(0, 'CurrentFigure', fignum);
   clf;
   % plot a patch for each grid point
