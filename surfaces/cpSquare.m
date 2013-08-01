@@ -60,6 +60,6 @@ function [cpxx, cpyy, sdist] = cpSquare(xx, yy, cen)
   sdist = (sdist>0) .* max(dist, sdist)  +   (sdist <= 0) .* sdist;
 
   % shift back
-  cpx = cpx + cen(1);
-  cpy = cpy + cen(2);
+  cpxx = cpxx + cen(1);
+  cpyy = cpyy + cen(2);
 
