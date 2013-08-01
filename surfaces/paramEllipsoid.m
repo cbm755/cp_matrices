@@ -8,10 +8,10 @@ function [x,y,z] = paramEllipsoid(N, AB, cen, ax)
 %
 
   % defaults
-  if (nargin < 2) | isempty(AB)
+  if (nargin < 2) || isempty(AB)
     AB = [1.25 0.75];
   end
-  if (nargin < 3) | isempty(cen)
+  if (nargin < 3) || isempty(cen)
     cen = [0 0 0];
   end
   if (nargin < 4)

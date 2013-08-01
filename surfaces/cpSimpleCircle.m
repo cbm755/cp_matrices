@@ -6,7 +6,9 @@ function [cpx, cpy, dist] = cpSimpleCircle(x, y, R)
 %      A circle of radius R centered at the origin
 
   % default value for R
-  if (nargin < 3)  R = 1;  end
+  if (nargin < 3)
+    R = 1;
+  end
 
   % convert to polar and then back with a new radius
   [th, r] = cart2pol(x, y);

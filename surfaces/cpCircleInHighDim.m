@@ -11,7 +11,9 @@ function [cpx, dist] = cpCircleInHighDim(x, R, cen)
 
   dim = length(x);
 
-  [th, r] = cart2pol(x{1}-cen(1), x{2}-cen(2));
+  cpx = cell(1,dim);
+
+  [th, tilde] = cart2pol(x{1}-cen(1), x{2}-cen(2));
   [cpx{1}, cpx{2}] = pol2cart(th, R);
 
   for d = 1:2

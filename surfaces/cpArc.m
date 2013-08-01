@@ -34,12 +34,12 @@ function [cpx, cpy, dist, bdy] = cpArc(x, y, R, cen, angle1, angle2)
   x = x - cen(1);
   y = y - cen(2);
 
-  [th,r] = cart2pol(x, y);
+  [th, tilde] = cart2pol(x, y);
 
   %if ( (th >= angle1) && (th <= angle2) )
   [cpx0,cpy0] = pol2cart(th, R);
   %bdy0 = zeros(size(th));
-  dist0 = sqrt( (x-cpx0).^2 + (y-cpy0).^2 );
+  %dist0 = sqrt( (x-cpx0).^2 + (y-cpy0).^2 );
 
   [cpx1,cpy1] = pol2cart(angle1, R);
   [cpx2,cpy2] = pol2cart(angle2, R);

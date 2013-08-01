@@ -38,11 +38,11 @@ function [cpx,cpy,cpz, sdist] = cpEllipsoid(x,y,z, AB, cen, ax)
 
   switch ax
     case 'x'
-      [cpx cpy cpz sdist] = cpSurfOfRevolution(x, y, z, @cpEllipse, 'x', P);
+      [cpx, cpy, cpz, sdist] = cpSurfOfRevolution(x, y, z, @cpEllipse, 'x', P);
     case 'y'
-      [cpy cpx cpz sdist] = cpSurfOfRevolution(y, x, z, @cpEllipse, 'x', P);
+      [cpy, cpx, cpz, sdist] = cpSurfOfRevolution(y, x, z, @cpEllipse, 'x', P);
     case 'z'
-      [cpz cpy cpx sdist] = cpSurfOfRevolution(z, y, x, @cpEllipse, 'x', P);
+      [cpz, cpy, cpx, sdist] = cpSurfOfRevolution(z, y, x, @cpEllipse, 'x', P);
     otherwise
       error('invalid axis of revolution');
   end

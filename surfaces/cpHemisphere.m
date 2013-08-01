@@ -33,7 +33,7 @@ function [cpx,cpy,cpz, dist, bdy] = cpHemisphere(x,y,z, R, cen)
   bdy = (z < 0);
 
   % points with z < 0 map to the z=0 plane circle of radius R
-  [th, r, zp] = cart2pol(x, y, z);
+  [th, tilde, tilde] = cart2pol(x, y, z);
   cpth = th;
   cpr = R*ones(size(th));
   cpzp = zeros(size(th));

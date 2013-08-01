@@ -29,4 +29,5 @@ y1 = (2*cpy(lbdy) - y(lbdy));
 
 % recompute just those ones (it should be ok to do all of them, but
 % this should be faster).
-[cpx(lbdy),cpy(lbdy), disttemp, bdytemp] = f(x1, y1, varargin{:});
+[cpx(lbdy),cpy(lbdy), tilde, tilde] = f(x1, y1, varargin{:});
+

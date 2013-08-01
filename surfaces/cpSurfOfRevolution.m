@@ -1,4 +1,4 @@
-function [cpx cpy cpz dist varargout] = cpSurfOfRevolution(x, y, z, cpf, whichaxis, cpfdata)
+function [cpx, cpy, cpz, dist, varargout] = cpSurfOfRevolution(x, y, z, cpf, whichaxis, cpfdata)
 %CPSURFOFREVOLUTION  Rotate a curve to make a surface
 %   [cpx cpy cpz dist] = cpSurfOfRevolution(x, y, z, @cpEllipse)
 %      Takes a curve in 2D (here an ellipse) and spins it around the
@@ -43,11 +43,11 @@ function [cpx cpy cpz dist varargout] = cpSurfOfRevolution(x, y, z, cpf, whichax
   switch whichaxis
     case 'x'
       [th,r,zz] = cart2pol(y,z,x);
-      [cpzz cpr dist P{:}] = cpf(zz, r, cpfdata{:});
+      [cpzz, cpr, dist, P{:}] = cpf(zz, r, cpfdata{:});
       [cpy,cpz,cpx] = pol2cart(th, cpr, cpzz);
     case 'y'
       [th,r,zz] = cart2pol(z,x,y);
-      [cpr cpzz dist P{:}] = cpf(r, zz, cpfdata{:});
+      [cpr, cpzz, dist, P{:}] = cpf(r, zz, cpfdata{:});
       [cpz,cpx,cpy] = pol2cart(th, cpr, cpzz);
     otherwise
       error('invalid axis input: can only rotate around x or y axis');

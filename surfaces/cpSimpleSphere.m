@@ -5,7 +5,9 @@ function [cpx,cpy,cpz, dist] = cpSimpleSphere(x,y,z, R)
 %   defaults to a unit sphere, centered at the origin.
 
   % default radius of 1
-  if (nargin < 4)  R = 1;  end
+  if (nargin < 4)
+    R = 1;
+  end
 
   [th, phi, r] = cart2sph(x,y,z);
   [cpx,cpy,cpz] = sph2cart(th, phi, R);

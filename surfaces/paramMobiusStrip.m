@@ -14,13 +14,13 @@ function [x,y,z,u,v] = paramMobiusStrip(N, Rad, Thick, cen, onlyedge)
 %   TODO: add an (optional) parameter to just return the edge?
 
   % defaults
-  if (nargin < 2) | (isempty(Rad))
+  if (nargin < 2) || (isempty(Rad))
     Rad = 1;
   end
-  if (nargin < 3) | (isempty(Thick))
+  if (nargin < 3) || (isempty(Thick))
     Thick = 0.35;
   end
-  if (nargin < 4) | (isempty(cen))
+  if (nargin < 4) || (isempty(cen))
     cen = [0 0 0];
   end
   if (nargin < 5)

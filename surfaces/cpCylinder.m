@@ -7,11 +7,11 @@ function [cpx,cpy,cpz, dist, bdy] = cpCylinder(x,y,z, zlim, R, cen)
 
 
   % default radius
-  if (nargin < 5)   R = 1;   end
+  if (nargin < 5),   R = 1;   end
   % default bottom/top
-  if (nargin < 4)   zlim = [-1  1];   end
+  if (nargin < 4),   zlim = [-1  1];   end
   % default center (in x,y) is the origin
-  if (nargin < 6)   cen = [0,0];   end
+  if (nargin < 6),   cen = [0,0];   end
 
   % shift to the origin
   x = x - cen(1);
@@ -23,7 +23,7 @@ function [cpx,cpy,cpz, dist, bdy] = cpCylinder(x,y,z, zlim, R, cen)
   bdy1 = (z < zlo);
   bdy2 = (z > zhi);
 
-  [th, r, zp] = cart2pol(x, y, z);
+  [th, tilde, zp] = cart2pol(x, y, z);
   cpth = th;
   cpr = R*ones(size(th));
   cpzp = zp;

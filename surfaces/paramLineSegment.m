@@ -13,7 +13,7 @@ function [varargout] = paramLineSegment(n, p, q)
     dim = length(p);
   end
 
-  varargout = {};
+  varargout = cell(1,dim);
   for j=1:dim
     varargout{j} = linspace(p(j), q(j), max(n,2))';
   end

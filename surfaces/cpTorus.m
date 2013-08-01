@@ -27,7 +27,7 @@ function [cpx,cpy,cpz, sdist] = cpTorus(x,y,z, A, B, cen)
   z = z - cen(3);
 
   % cyclindrical coors
-  [th, r, temp] = cart2pol(x,y,z);
+  [th, r, tilde] = cart2pol(x,y,z);
 
   % now we can work in a 2D plane
   [cpr, cpz, sdist] = cpCircle(r, z, B, [A 0]);

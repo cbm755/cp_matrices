@@ -14,7 +14,9 @@ function [cpx, dist] = cpSphereInHighDim(x, R, cen)
     cen = zeros(1,dim);
   end
 
-  [th, phi, r] = cart2sph(x{1}-cen(1), x{2}-cen(2), x{3}-cen(3));
+  cpx = cell(1,dim);
+
+  [th, phi, tilde] = cart2sph(x{1}-cen(1), x{2}-cen(2), x{3}-cen(3));
   [cpx{1},cpx{2},cpx{3}] = sph2cart(th, phi, R);
 
   for d = 1:3

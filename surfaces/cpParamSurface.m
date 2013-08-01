@@ -113,37 +113,37 @@ function [cpx,cpy,cpz, dist, bdy, uu, vv] = cpParamSurface(xx,yy,zz, paramf, par
     r = xpt(3);
 
     %% initial guess
-    A = tic;
+    time_guess = cputime();
     % vectorized:
     dds = (xp - xpt(1)).^2 + (yp - xpt(2)).^2 + (zp - xpt(3)).^2;
     [mindd_guess,I] = min(dds(:));
     s_initial_guess = [up(I); vp(I)];
     %[s_initial_guess, mindd_guess] = helper_initialguess(xpt, surfmesh);
-    time_guess = toc(A);
+    time_guess = cputime() - time_guess;
 
     out = [];
 
     if (How == 0)
-      A = tic;
+      opt_time = cputime();
       [cp, dist1, bdy1, s] = helper_fmincon(xpt, optf, s_initial_guess, paramf, fmincon_opt, LB, UB, paramAdjust);
       u1 = s(1);  v1 = s(2);
-      out = [out toc(A)];
+      out = [out  cputime() - opt_time];
     end
 
 
     if (How == 1)
       % in my tests this was much slower
-      A = tic;
+      opt_time = cputime();
       [cp, dist1, bdy1, s] = helper_lsq(xpt, optf, s_initial_guess, paramf, lsq_opt, LB, UB, paramAdjust);
       u1 = s(1);  v1 = s(2);
-      out = [out toc(A)];
+      out = [out  cputime() - opt_time];
     end
 
 
     if (How == 2)
       % fastest by an order of magnitude, maybe less reliable, lots
       % of parameters to tune (!)
-      A = tic;
+      opt_time = cputime();
       [cp, dist1, bdy1, s] = helper_newton(xpt, mindd_guess, s_initial_guess, paramf, paramf2nd, LB, UB, paramAdjust);
       u1 = s(1);  v1 = s(2);
       if (bdy1 == 1)
@@ -153,7 +153,7 @@ function [cpx,cpy,cpz, dist, bdy, uu, vv] = cpParamSurface(xx,yy,zz, paramf, par
         u1 = s2;
         v1 = 1;   % TODO: hardcoded for mobius
       end
-      out = [out toc(A)];
+      out = [out  cputime() - opt_time];
     end
 
     %disp([time_guess out])

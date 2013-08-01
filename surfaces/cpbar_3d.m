@@ -42,4 +42,4 @@ z2 = (2*cpz(lbdy) - z(lbdy));
 
 % recompute just those ones (it should be ok to do all of them, but
 % this should be faster).
-[cpx(lbdy),cpy(lbdy),cpz(lbdy), disttemp, bdytemp] = f(x2,y2,z2, varargin{:});
+[cpx(lbdy), cpy(lbdy), cpz(lbdy), tilde, tilde] = f(x2,y2,z2, varargin{:});

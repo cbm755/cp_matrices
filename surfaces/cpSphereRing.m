@@ -39,13 +39,13 @@ function [cpx,cpy,cpz,dist,bdy] = cpSphereRing(x,y,z,zlim,R,cen)
   philim = [philo  phihi];
   radlim = [cos(philim(1))  cos(philim(2))];
 
-  [th, r, zp] = cart2pol(x, y, z);
+  [th, tilde, tilde] = cart2pol(x, y, z);
   cpth = th;
   cpr = radlim(1)*ones(size(th));
   cpzp = zlim(1)*ones(size(th));
   [cpx1, cpy1, cpz1] = pol2cart(cpth, cpr, cpzp);
 
-  [th, r, zp] = cart2pol(x, y, z);
+  [th, tilde, tilde] = cart2pol(x, y, z);
   cpth = th;
   cpr = radlim(2)*ones(size(th));
   cpzp = zlim(2)*ones(size(th));

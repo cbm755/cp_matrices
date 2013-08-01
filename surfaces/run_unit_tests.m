@@ -5,7 +5,7 @@ tests = dir('tests');
 cd('tests');
 
 
-totaltime = tic;
+totaltime = cputime();
 num_tests = 0;
 num_failed = 0;
 for i=1:length(tests)
@@ -13,12 +13,12 @@ for i=1:length(tests)
   % detect tests b/c directory contains other stuff (e.g., surdirs and
   % helper files)
   if ( (~tests(i).isdir) && strncmp(test, 'test', 4) )
-    testtime = tic;
+    testtime = cputime();
     f = str2func(test(1:end-2));
     num_tests = num_tests + 1;
     %disp(['** Running test(s) in: ' test ]);
     [pass,str] = f();
-    testtime = toc(testtime);
+    testtime = cputime() - testtime;
     if all(pass)
       fprintf('** PASS: %s  [%g sec]\n', str, testtime);
     else
@@ -29,7 +29,7 @@ for i=1:length(tests)
   end
 end
 
-totaltime = toc(totaltime);
+totaltime = cputime() - totaltime;
 fprintf('\n***** Passed %d/%d tests passed (%g seconds) *****\n', ...
         num_tests-num_failed, num_tests, totaltime);
 if (num_failed > 0)
