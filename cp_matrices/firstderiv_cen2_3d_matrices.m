@@ -1,8 +1,17 @@
 function [Dxc, Dyc, Dzc] = firstderiv_cen2_3d_matrices(x,y,z, band1, band2, use_ndgrid)
-%FIRSTDERIV_CEN2_MATRICES3D  Build discrete first derivatives
-%   Matrices for 2nd-order centred differences in 3D
+%FIRSTDERIV_CEN2_3D_MATRICES  2nd-order centered first derivatives
+%   [Dxc, Dyc, Dzc] = firstderiv_cen2_3d_matrices(x, y, z, band)
+%   generates the matrices that perform central differencing in the x-
+%   and y-directions respectively. Grid spacing is included in the
+%   matrix.
 %
-%   To use ndgrid ordering pass "true" as the final argument
+%   [...] = firstderiv_cen2_3d_matrices(x, y, z, band1, band2)
+%   performs the same, with an optional outer band.
+%
+%   [...] = firstderiv_cen2_3d_matrices(x,y,z,band1,band2,use_ndgrid)
+%   with 'use_ndgrid' set as 'true' uses ndgrid ordering instead of
+%   meshgrid ordering.
+
 
   if (nargin <= 5)
     use_ndgrid = false;

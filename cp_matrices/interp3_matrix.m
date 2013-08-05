@@ -26,8 +26,8 @@ function [E,Ej,Es] = interp3_matrix(x, y, z, xi, yi, zi, p, band, use_ndgrid)
 %      Uses ndgrid instead of meshgrid ordering.
 %
 %   Notes:
-%      This is faster replacement for INTERP2_MATRIX_OLDLOOP.
-%      Inputs X and Y must be equispaced but this is not checked.
+%      This is faster replacement for INTERP3_MATRIX_OLDLOOP.
+%      Inputs X, Y, Z must be equispaced but this is not checked.
 
 
   % input checking

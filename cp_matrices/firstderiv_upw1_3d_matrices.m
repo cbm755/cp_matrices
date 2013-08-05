@@ -1,13 +1,16 @@
 function [Dxb,Dxf, Dyb,Dyf, Dzb,Dzf] = ...
   firstderiv_upw1_3d_matrices(x,y,z, band1, band2, use_ndgrid)
-%FIRSTDERIV_UPW1_3D_MATRICES  Build discrete first derivatives
-% Matrices for 1st-derivatives which are 1st-order upwinded
-% differences in 3D.  Dxb is backward differences in x direction,
-% Dxf is forward differences in the x direction, etc.
+%FIRSTDERIV_UPW1_3D_MATRICES  1st-order upwinded first derivatives
+%   [Dxb,Dxf, Dyb,Dyf, Dzb,Dzf] = ...
+%      firstderiv_upw1_3d_matrices(x,y,z, band)
+%   Dxb is backward differences in x direction,
+%   Dxf is forward differences in the x direction, etc.
 %
-% To use ndgrid ordering:
-% [Dxb,Dxf, Dyb,Dyf, Dzb,Dzf] = ...
-%    firstderiv_upwind1_matrices3d(x,y,z, band1, band2, true)
+%   [...] = firstderiv_upw1_3d_matrices(x,y,z, band1, band2)
+%   Dual banded.
+%
+%   [...] = firstderiv_upw1_3d_matrices(x,y,z, band1, band2, true)
+%   Pass 'true' as final argument to use ndgrid ordering.
 
   if (nargin <= 5)
     use_ndgrid = false;

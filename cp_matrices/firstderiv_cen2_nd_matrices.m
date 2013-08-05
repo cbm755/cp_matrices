@@ -1,18 +1,18 @@
 function [Dc] = firstderiv_cen2_nd_matrices(xs, band1, band2, invbandmap)
-%FIRSTDERIV_CEN2_ND_MATRICES  Build discrete first derivatives
-% Matrices for 1st-derivatives which are 2nd-order centered
-% differences in n dimensions.
+%FIRSTDERIV_CEN2_ND_MATRICES  2nd-order centered first derivatives
+%   Matrices for 1st-derivatives which are 2nd-order centered
+%   differences in n dimensions.
 %
 %   Dc = firstderiv_cen2_nd_matrices(X, band)
 %   Dc = firstderiv_cen2_nd_matrices(X, band1, band2)
 %
-% Dc is a cell array of centered differences in each coordinate
-% direction.
+%   Dc is a cell array of centered differences in each coordinate
+%   direction.
 %
-% TODO: support a call like:
+%   Note only does ndgrid ordering.
+%
+%   TODO: support a call like:
 %   [Dxc,Dyc,...Dwc] = firstderiv_cen2_nd_matrices(X, band1, band2)
-%
-% Note only does ndgrid ordering.
 
   if (nargin < 3)
     band2 = band1;

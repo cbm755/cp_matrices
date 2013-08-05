@@ -1,16 +1,13 @@
 function [Db, Df] = ...
   firstderiv_upw1_nd_matrices(xs, band1, band2, invbandmap)
-%FIRSTDERIV_UPW1_ND_MATRICES  Build discrete first derivatives
-% Matrices for 1st-derivatives which are 1st-order upwinded
-% differences in n dimensions.
-%
+%FIRSTDERIV_UPW1_ND_MATRICES  1st-order upwinded first derivatives
 %   [Db, Df] = firstderiv_upw1_nd_matrices(X, band)
 %   [Db, Df] = firstderiv_upw1_nd_matrices(X, band1, band2)
 %
-% Db is a cell array of backward differences in each coordinate
-% direction.  Df is cell array of forward differences.
+%   Db is a cell array of backward differences in each coordinate
+%   direction.  Df is cell array of forward differences.
 %
-% Note only does ndgrid ordering.
+%   Note only does ndgrid ordering.
 
   if (nargin < 3)
     band2 = band1;
