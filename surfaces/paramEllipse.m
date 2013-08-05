@@ -1,10 +1,13 @@
-function [x,y] = paramEllipse(n, aa, bb, cen)
+function [x,y,th] = paramEllipse(n, aa, bb, cen)
 %PARAMELLIPSE  A parameterization of an ellipse
 %   [x,y] = paramEllipse(N,A,B) returns an N-point mesh for an ellipse
 %   centered at the origin with major axis A and minor axis B.
 %
 %   [x,y] = paramEllipse(N,A,B,CEN) returns a mesh for an ellipse
 %   centered at CEN.
+%
+%   [x,y,th] = paramEllipse(...) returns the value of the parameter
+%   as well.
 
   % defaults
   if (nargin < 3)
