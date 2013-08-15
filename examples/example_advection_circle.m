@@ -2,6 +2,18 @@
 % This example solves the advection equation on a 2D circle using a
 % specified velocity field tangent to the circle.
 %
+%% Advection on a curve
+% The surface PDE is
+%
+% $$ u_t + \vec{W} \cdot \nabla_S u = 0, $$
+%
+% or more generally
+%
+% $$ u_t + \textrm{div}_S (u \vec{W} ) = 0, $$
+%
+% where $\vec{W}$ is a tangent vector field.
+%
+
 %% Build a meshgrid
 % Construct a grid in the embedding space
 
@@ -12,14 +24,14 @@ x1d = (-2.0:dx:2.0)';
 y1d = x1d;
 
 % meshgrid is only needed for finding the closest points, not afterwards
-[xx yy] = meshgrid(x1d, y1d);
+[x y] = meshgrid(x1d, y1d);
 
 
 %% Find closest points on the surface
 % For each point (x,y), we store the closest point on the circle
 % (cpx,cpy)
 
-[cpx, cpy, dist] = cpCircle(xx,yy);
+[cpx, cpy, dist] = cpCircle(x, y);
 
 
 %% Banding: do calculation in a narrow band around the circle
@@ -29,8 +41,8 @@ bw = rm_bandwidth(dim, p);
 band = find(abs(dist) <= bw*dx);
 
 % store closest points in the band;
-cpxg = cpx(band); cpyg = cpy(band);
-xg = xx(band); yg = yy(band);
+cpx = cpx(band); cpy = cpy(band);
+x = x(band); y = y(band);
 
 
 %% Function u in the embedding space
@@ -38,17 +50,21 @@ xg = xx(band); yg = yy(band);
 % surface is a circle, we use the parameterization to define an
 % initial condition.  We define a function with the exact solution
 % for calculating error later.
-[th, r] = cart2pol(cpxg, cpyg);
+[th, r] = cart2pol(cpx, cpy);
 uex = @(th,t) (cos(th-t)).^3;
 u0 = uex(th, 0);
 
 
 %% Velocity vector in embedded space
 % Unlike the instrinsic surface diffusion equation $u_t = \Delta_S u$,
-% the wave equation on a curve needs a velocity field: a least a speed
-% in the tangent direction is required as part of the *model*.  We
-% then need that velocity field embedded and extended into the 2D
+% the advection equation on a curve needs a velocity field: a least a
+% speed in the tangent direction is required as part of the *model*.
+% We then need that velocity field embedded and extended into the 2D
 % domain.
+%
+% Here we cheat a little and use the parameterization to define the
+% tangent field.
+
 w1 = -sin(th);
 w2 = cos(th);
 
@@ -57,7 +73,7 @@ w2 = cos(th);
 % This creates a matrix which interpolates data from the grid x1d y1d,
 % onto the points cpx cpy.
 
-E = interp2_matrix(x1d, y1d, cpxg, cpyg, p, band);
+E = interp2_matrix(x1d, y1d, cpx, cpy, p, band);
 
 L = laplacian_2d_matrix(x1d, y1d, 2, band);
 [Dxb,Dxf, Dyb,Dyf] = firstderiv_upw1_2d_matrices(x1d, y1d, band);
@@ -88,16 +104,16 @@ figure(1); clf;  figure(2); clf;  figure(3); clf;
 
 u = u0;
 for kt = 1:numsteps
-  % explicit Euler timestepping
-  % u_t + div_S . (u*vec{w}) = 0
+  % more generally, could compute velocities here:
   % w1 = ...
   % w2 = ...
   % w1 = E*w1;
   % w2 = E*w2;
-  rhs = - ( ...
-      (w1 < 0) .* (Dxf*(u.*w1)) + (w1 >= 0) .* (Dxb*(u.*w1)) + ...
-      (w2 < 0) .* (Dyf*(u.*w2)) + (w2 >= 0) .* (Dyb*(u.*w2)) ...
-      );
+
+  % upwinding discretization of u_t + div_S . (u*vec{w}) = 0
+  rhs = -( (w1 < 0) .* (Dxf*(u.*w1)) + (w1 >= 0) .* (Dxb*(u.*w1)) + ...
+           (w2 < 0) .* (Dyf*(u.*w2)) + (w2 >= 0) .* (Dyb*(u.*w2)) );
+  % explicit Euler timestepping
   unew = u + dt*rhs;
 
   % closest point extension
@@ -107,10 +123,9 @@ for kt = 1:numsteps
 
   if ( (kt < 10) || (mod(kt,10) == 0) || (kt == numsteps) )
     % plot over computation band
-    plot2d_compdomain(u, xg, yg, dx, dx, 1)
-    title( ['embedded domain: soln at time ' num2str(t) ...
-            ', timestep #' num2str(kt)] );
-    xlabel('x'); ylabel('y');
+    plot2d_compdomain(u, x, y, dx, dx, 1)
+    title(sprintf('embedded domain: soln at time %g, timestep #%d', t, kt));
+    xlabel('x');  ylabel('y');
     plot(xp, yp, 'k-', 'linewidth', 2);
 
     % plot value on circle
@@ -120,14 +135,14 @@ for kt = 1:numsteps
     plot(thetas, circplot);
     hold on;
     plot(thetas, exactplot, 'r--');
-    title( ['soln at time ' num2str(t) ' on circle'] );
+    title(['soln at time ' num2str(t) ' on circle']);
     xlabel('\theta'); ylabel('u');
-    legend('explicit Euler', 'exact answer', 'Location', 'SouthEast');
+    legend('explicit Euler', 'exact answer', 'Location', 'NorthEast');
     error_circ_inf = max(abs( exactplot - circplot ));
 
     set(0, 'CurrentFigure', 3); clf;
     plot(thetas, circplot - exactplot);
-    title( ['error at time ' num2str(t) ' on circle'] );
+    title(['error at time ' num2str(t) ' on circle']);
     xlabel('\theta'); ylabel('error');
 
     fprintf('step %d of %d, max_err=%g\n', kt, numsteps, error_circ_inf);
