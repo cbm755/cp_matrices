@@ -1,4 +1,4 @@
-function [cpx, cpy, sdist, t] = cpEllipse_nonEuclidean(x, y, a, b, cen)
+function [cpx, cpy, sdist, tt] = cpEllipse_nonEuclidean(x, y, a, b, cen)
 %CPELLIPSE_NONEUCLIDEAN Closest points for ellipse, w/ non-Euclidean distance
 %   [cpx, cpy, sdist] = cpEllipse_nonEuclidean(x, y, a, b)
 %      An ellipse centered at the origin with major axis 'a' and
@@ -50,10 +50,13 @@ function [cpx, cpy, sdist, t] = cpEllipse_nonEuclidean(x, y, a, b, cen)
   % deal with axis exactly
   cpx = zeros(size(x));
   cpy = zeros(size(x));
+  tt = zeros(size(x));
   cpx(Iax) = a;
   cpy(Iax) = 0;
   cpx(Iay) = 0;
   cpy(Iay) = b;
+  tt(Iax) = 0;
+  tt(Iay) = pi/2;
 
   % get the ones that aren't on axis, we will do bisection on these
   X = x( ~Iax & ~Iay );
@@ -100,6 +103,7 @@ function [cpx, cpy, sdist, t] = cpEllipse_nonEuclidean(x, y, a, b, cen)
 
     cpx( ~Iax & ~Iay ) = a*cos(t);
     cpy( ~Iax & ~Iay ) = b*sin(t);
+    tt( ~Iax & ~Iay ) = t;
   end
 
   cpx(Q2) = -cpx(Q2);
