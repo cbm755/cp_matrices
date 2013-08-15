@@ -5,7 +5,7 @@ bug #2:
   Tom's cpPolygon code returns incorrect signdist (sometimes 0 off the surface)
   There is a unit test that shows this failing.
 
-bug #3:
+bug #3:, closed
   There is no torus CP function.  Jeff Springer is supposed to be working on this.
 
 bug #4:
@@ -13,3 +13,6 @@ bug #4:
 
 bug #5: FIXED 2012-07-01
   cpSurfOfRevolution not working yet
+
+bug #6: move cpPolygon out of subdir, move support code to private, maybe take a look at bugs above first
+

@@ -33,7 +33,7 @@ gp = @(t,x,y) 2*xp(t).*xp(t) + 2*(xs(t) - x).*xpp(t) + 2*yp(t).*yp(t) + 2*(ys(t)
 %% Initial guess
 % use M equispaced samples in the parameter space
 M = 100;
-tic
+%tic
 s_guess = zeros(size(x));
 mindd_guess = zeros(size(x));
 ss = linspace(endpt(1), endpt(2), M);
@@ -61,7 +61,7 @@ for i=1:numchunks
   s_guess(I) = ss(ii)';
   mindd_guess(I) = temp;
 end
-toc
+%toc
 
 
 
@@ -94,7 +94,7 @@ end
 %[cpx2 cpy2 dist2 fail2] = newton(g, gp, x, y, xs, ys, s_guess, mindd_guess, endpt);
 %toc
 
-tic
+%tic
 totalN = length(x);
 N = 1000;
 numchunks = ceil(totalN/N);
@@ -119,7 +119,7 @@ for i=1:numchunks
     gfail(I) = 0;
   end
 end
-toc
+%toc
 
 %if (globalfail)
 %  varargout = {1};

@@ -1,85 +1,71 @@
 %% Advection equation on a circle
-% cp_matrices is a folder of useful functions to make implementing the
-% closest point method easier. These include closest point extension
-% matrices, and differentiation matrices.
-
-% This example solves the advection equation on a 2D circle, with
-% initial conditions u = cos(theta), using a specified velocity
-% field tangent to the circle.
-
-
-%% 2D example on a circle
+% This example solves the advection equation on a 2D circle using a
+% specified velocity field tangent to the circle.
+%
+%% Build a meshgrid
 % Construct a grid in the embedding space
 
-dx = 0.05;                   % grid size
+dx = 0.05;   % grid size
 
 % make vectors of x, y, positions of the grid
 x1d = (-2.0:dx:2.0)';
 y1d = x1d;
 
-nx = length(x1d);
-ny = length(y1d);
-
+% meshgrid is only needed for finding the closest points, not afterwards
+[xx yy] = meshgrid(x1d, y1d);
 
 
 %% Find closest points on the surface
 % For each point (x,y), we store the closest point on the circle
 % (cpx,cpy)
 
-% meshgrid is only needed for finding the closest points, not afterwards
-[xx yy] = meshgrid(x1d, y1d);
-% function cpCircle for finding the closest points on a circle
 [cpx, cpy, dist] = cpCircle(xx,yy);
-% make into vectors
-cpxg = cpx(:); cpyg = cpy(:);
 
 
 %% Banding: do calculation in a narrow band around the circle
 dim = 2;  % dimension
 p = 3;    % interpolation order
-% "band" is a vector of the indices of the points in the computation
-% band.  The formula for bw is found in [Ruuth & Merriman 2008] and
-% the 1.0001 is a safety factor.
-bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((1+(p+1)/2)^2));
+bw = rm_bandwidth(dim, p);
 band = find(abs(dist) <= bw*dx);
 
 % store closest points in the band;
-cpxg = cpxg(band); cpyg = cpyg(band);
+cpxg = cpx(band); cpyg = cpy(band);
 xg = xx(band); yg = yy(band);
 
 
 %% Function u in the embedding space
-% u is a function defined on the grid
-[th, r] = cart2pol(xg,yg);
-u = cos(th);
-initialu = u;       % store initial value
+% u is a function defined on the grid and because we know the the
+% surface is a circle, we use the parameterization to define an
+% initial condition.  We define a function with the exact solution
+% for calculating error later.
+[th, r] = cart2pol(cpxg, cpyg);
+uex = @(th,t) (cos(th-t)).^3;
+u0 = uex(th, 0);
 
+
+%% Velocity vector in embedded space
+% Unlike the instrinsic surface diffusion equation $u_t = \Delta_S u$,
+% the wave equation on a curve needs a velocity field: a least a speed
+% in the tangent direction is required as part of the *model*.  We
+% then need that velocity field embedded and extended into the 2D
+% domain.
 w1 = -sin(th);
 w2 = cos(th);
 
 
-
-
-%% Construct an interpolation matrix for closest point
+%% Construct interpolation and differentiation matrices
 % This creates a matrix which interpolates data from the grid x1d y1d,
 % onto the points cpx cpy.
 
-disp('Constructing interpolation and laplacian matrices');
-
 E = interp2_matrix(x1d, y1d, cpxg, cpyg, p, band);
 
-% e.g., closest point extension:
-%u = E*u;
+L = laplacian_2d_matrix(x1d, y1d, 2, band);
+[Dxb,Dxf, Dyb,Dyf] = firstderiv_upw1_2d_matrices(x1d, y1d, band);
 
-%% Create differentiation matrices
 
-order = 2;  % Laplacian order: bw will need to increase if changed
-L = laplacian_2d_matrix(x1d,y1d, order, band);
-[Dxb,Dxf, Dyb,Dyf] = firstderiv_upw1_2d_matrices(x1d,y1d, band);
-
-%% Construct an interpolation matrix for plotting on circle
-
+%% Construct an interpolation matrix for plotting
 % plotting grid on circle, using theta as a parameterization
+
 thetas = linspace(0,2*pi,512)';
 r = ones(size(thetas));
 % plotting grid in Cartesian coords
@@ -88,20 +74,20 @@ xp = xp(:); yp = yp(:);
 Eplot = interp2_matrix(x1d, y1d, xp, yp, p, band);
 
 
-figure(1); clf;
-figure(2); clf;
-figure(3); clf;
 
 
-%% Time-stepping for the heat equation
+%% Time-stepping
 
-Tf = 1;
+Tf = 2;
 dt = 0.25*dx;
-numtimesteps = ceil(Tf/dt)
+numsteps = ceil(Tf/dt)
 % adjust for integer number of steps
-dt = Tf / numtimesteps
+dt = Tf / numsteps
 
-for kt = 1:numtimesteps
+figure(1); clf;  figure(2); clf;  figure(3); clf;
+
+u = u0;
+for kt = 1:numsteps
   % explicit Euler timestepping
   % u_t + div_S . (u*vec{w}) = 0
   % w1 = ...
@@ -119,37 +105,32 @@ for kt = 1:numtimesteps
 
   t = kt*dt;
 
-  if ( (kt < 10) || (mod(kt,10) == 0) || (kt == numtimesteps) )
+  if ( (kt < 10) || (mod(kt,10) == 0) || (kt == numsteps) )
     % plot over computation band
     plot2d_compdomain(u, xg, yg, dx, dx, 1)
     title( ['embedded domain: soln at time ' num2str(t) ...
             ', timestep #' num2str(kt)] );
     xlabel('x'); ylabel('y');
-    %hold on
-    plot(xp,yp,'k-', 'linewidth', 2);
-    %axis equal;  axis tight;
+    plot(xp, yp, 'k-', 'linewidth', 2);
 
     % plot value on circle
-    set(0, 'CurrentFigure', 2);
-    clf;
+    set(0, 'CurrentFigure', 2); clf;
     circplot = Eplot*u;
-    exactplot = cos(thetas-t);
+    exactplot = uex(thetas, t);
     plot(thetas, circplot);
-    title( ['soln at time ' num2str(t) ', on circle'] );
-    xlabel('theta'); ylabel('u');
     hold on;
-    % plot analytic result
     plot(thetas, exactplot, 'r--');
+    title( ['soln at time ' num2str(t) ' on circle'] );
+    xlabel('\theta'); ylabel('u');
     legend('explicit Euler', 'exact answer', 'Location', 'SouthEast');
-    error_circ_inf = max(abs( exactplot - circplot ))
+    error_circ_inf = max(abs( exactplot - circplot ));
 
-    set(0, 'CurrentFigure', 3);
-    clf;
+    set(0, 'CurrentFigure', 3); clf;
     plot(thetas, circplot - exactplot);
-    title( ['error at time ' num2str(t) ', on circle'] );
-    xlabel('theta'); ylabel('error');
+    title( ['error at time ' num2str(t) ' on circle'] );
+    xlabel('\theta'); ylabel('error');
 
-    %pause(0);
+    fprintf('step %d of %d, max_err=%g\n', kt, numsteps, error_circ_inf);
     drawnow();
   end
 end
