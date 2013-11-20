@@ -1,9 +1,23 @@
-function [Dxx,Dyy,Dxc,Dyc,Dxb,Dyb,Dxf,Dyf,Dxyc] = bulk2d_matrices(x, y, use_ndgrid)
+function [Dxx,Dyy,Dxc,Dyc,Dxb,Dyb,Dxf,Dyf,Dxyc] = bulk2d_matrices(x,y,use_ndgrid,BC)
 %BULK2D_MATRICES  Build discrete derivative matrices
 %
-%   To use ndgrid ordering pass "true" as the final argument
+%   Usage:
+%   [Dxx,Dyy,Dxc,Dyc,Dxb,Dyb,Dxf,Dyf,Dxyc] = ...
+%       bulk2d_matrices(x,y,use_ndgrid,BC);
+%   By default, this assumes meshgrid ordering and periodic BCs.
+%
+%   To use ndgrid ordering pass "true" as the third argument.
+%
+%   Select different BCs with the fourth argument (see "help
+%   diff_matrices1d").
 
   if (nargin <= 2)
+    use_ndgrid = false;
+  end
+  if (nargin <= 3)
+    BC = 'p';
+  end
+  if isempty(use_ndgrid)
     use_ndgrid = false;
   end
 
@@ -14,8 +28,8 @@ function [Dxx,Dyy,Dxc,Dyc,Dxb,Dyb,Dxf,Dyf,Dxyc] = bulk2d_matrices(x, y, use_ndgr
   ny = length(y);
 
   %% build 1D operators
-  [Ix,D1xx,D1xc,D1xb,D1xf] = diff_matrices1d(nx, dx);
-  [Iy,D1yy,D1yc,D1yb,D1yf] = diff_matrices1d(ny, dy);
+  [Ix,D1xx,D1xc,D1xb,D1xf] = diff_matrices1d(nx, dx, BC);
+  [Iy,D1yy,D1yc,D1yb,D1yf] = diff_matrices1d(ny, dy, BC);
 
   % Use kronecker products to build 2D operators
   if (use_ndgrid)
