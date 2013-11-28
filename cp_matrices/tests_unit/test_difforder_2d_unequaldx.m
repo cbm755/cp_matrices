@@ -1,30 +1,32 @@
 function [pass, str] = test_difforder_2d_unequaldx()
-  str = 'Order tests of 2D derivatives, with dx != dy';
+  str = 'Order tests of 2D derivatives and Laplacian, with dx != dy';
 
-ds = 0.1;
-[maxerrx1,maxerry1] = helper1(ds);
+  ds = 0.1;
+  [maxerrx1,maxerry1,maxLerr1] = helper1(ds);
 
-ds = ds / 2;
-[maxerrx2,maxerry2] = helper1(ds);
+  ds = ds / 2;
+  [maxerrx2,maxerry2,maxLerr2] = helper1(ds);
 
-ordersx = maxerrx1 ./ maxerrx2;
-ordersy = maxerry1 ./ maxerry2;
+  ordersx = maxerrx1 ./ maxerrx2;
+  ordersy = maxerry1 ./ maxerry2;
+  ordersL = maxLerr1 ./ maxLerr2;
 
-fuzz = 0.95;
+  fuzz = 0.95;
 
-% design orders at 2 1 1 2.
-passx = ordersx > (fuzz * 2.^[2 1 1 2]);
-passy = ordersy > (fuzz * 2.^[2 1 1 2]);
+  % design orders at 2 1 1 2.
+  passx = ordersx > (fuzz * 2.^[2 1 1 2]);
+  passy = ordersy > (fuzz * 2.^[2 1 1 2]);
+  passL = ordersL > (fuzz * 2.^2);
 
-passvec = [passx passy];
-
-pass = all(passvec);
-
+  pass = [passx passy passL];
+end
 
 
-function [maxerrx,maxerry] = helper1(ds)
+function [maxerrx,maxerry,maxLerr] = helper1(ds)
 pad = 4;
 
+% we don't care about a surface here, really just want a banded
+% grid to play in
 R=1;  % Radius
 x1d=(-R-pad*ds):ds:(R+pad*ds)';
 y1d=(-R-pad*2*ds):(ds*1.5):(R+pad*2*ds)';
@@ -42,8 +44,9 @@ if (pad < bw)
 end
 band = find(dist <= bw*ds);
 outband = find(dist > bw*ds);
-% TODO: this is kind wonky anyway, but especially here where
-% dx!=dy, so need to think about bw...
+% this is kind wonky anyway, just need some grid with enough
+% padding to use our finite difference schemes without worrying
+% about BCs.
 inband = find(dist(band) <= (bw/3)*ds);
 %inband = find(dist <= (bw/2)*ds);
 
@@ -55,6 +58,7 @@ cpyg = cpy(band);
 [Dx1f,Dx1b, Dy1f,Dy1b] = firstderiv_upw1_2d_matrices(x1d,y1d, band,band);
 [Dx2c, Dy2c] = firstderiv_cen2_2d_matrices(x1d,y1d, band,band);
 [Dxx2c, Dyy2c] = secondderiv_cen2_2d_matrices(x1d,y1d, band,band);
+L = laplacian_2d_matrix(x1d, y1d, 2, band, band);
 
 u = sin(2*xg) .* cos(3*yg);
 ux_ex = 2*cos(2*xg) .* cos(3*yg);
@@ -70,7 +74,7 @@ uy1 = Dy2c*u;
 uy2 = Dy1f*u;
 uy3 = Dy1b*u;
 uyy = Dyy2c*u;
-
+Lu = L*u;
 
 errx = ux1(inband)-ux_ex(inband);
 erry = uy1(inband)-uy_ex(inband);
@@ -83,6 +87,7 @@ maxerry(1) = max(abs( uy1(inband)-uy_ex(inband) ));
 maxerry(2) = max(abs( uy2(inband)-uy_ex(inband) ));
 maxerry(3) = max(abs( uy3(inband)-uy_ex(inband) ));
 maxerry(4) = max(abs( uyy(inband)-uyy_ex(inband) ));
+maxLerr = max(abs( Lu(inband)-uxx_ex(inband)-uyy_ex(inband) ));
 
 if (1==0)
   figure(1); clf; hold on;
@@ -95,3 +100,5 @@ if (1==0)
   plot(uy_ex(inband), 'gx');
   plot(uy1(inband), 'ms');
 end
+end
+
