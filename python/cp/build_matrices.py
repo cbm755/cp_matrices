@@ -5,15 +5,17 @@ from scipy.sparse import coo_matrix
 from cp.cpOps import findGridInterpBasePt, buildInterpWeights
 
 
-def build_diff_matrix(int_band, dx, shape):
+def build_diff_matrix(int_band, dxvec, shape):
+    """Builds a Laplacian matrix"""
+    # TODO: generalize this!
     dim = len(shape)
     if dim == 3:
         # Assume now that band is not a linear index, but a 3D index (ie, int_band)
-        #weights = np.array([-6, 1, 1, 1, 1, 1, 1]) / np.max(dx)**2
-        weights = np.array([-2/dx[0]**2 -2/dx[1]**2 -2/dx[2]**2,
-                             1/dx[0]**2, 1/dx[0]**2,
-                             1/dx[1]**2, 1/dx[1]**2, 
-                             1/dx[2]**2, 1/dx[2]**2])
+        dx, dy, dz = dxvec
+        weights = np.array([-2/dx**2 -2/dy**2 -2/dz**2,
+                             1/dx**2, 1/dx**2,
+                             1/dy**2, 1/dy**2,
+                             1/dz**2, 1/dz**2])
 
         offsets = np.array([[ 0, 0, 0],
                             [ 1, 0, 0],
@@ -38,10 +40,10 @@ def build_diff_matrix(int_band, dx, shape):
                        (int_band.shape[0], shape[0] * shape[1] * shape[2])).tocsr()
         return L[:, np.ravel_multi_index(int_band.T, shape)]
     elif dim == 2:
-        #weights = np.array([-4, 1, 1, 1, 1]) / np.max(dx)**2
-        weights = np. array([-2/dx[0]**2 -2/dx[1]**2,
-                              1/dx[0]**2, 1/dx[0]**2,
-                              1/dx[1]**2, 1/dx[1]**2])
+        dx, dy, dz = dxvec
+        weights = np. array([-2/dx**2 -2/dy**2,
+                              1/dx**2, 1/dx**2,
+                              1/dy**2, 1/dy**2])
         offsets = np.array([[ 0, 0],
                             [ 1, 0],
                             [-1, 0],
@@ -96,3 +98,4 @@ def build_linear_diagonal_splitting(L, E):
     # elementwise.
     M = Ldiag + (L - Ldiagpad)*E
     return M
+

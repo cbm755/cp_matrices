@@ -1,4 +1,5 @@
-"""Controlled patterns on a true sphere."""
+"""Controlled patterns using the Grey-Scott reaction-diffusion equations
+and a forcing term."""
 import numpy as np
 from scipy.sparse import eye
 import matplotlib.pyplot as plt
@@ -9,9 +10,6 @@ except ImportError:
 
 from cp.surfaces import Sphere
 from cp.build_matrices import build_interp_matrix, build_diff_matrix
-from cp.surfaces.coordinate_transform import cart2sph, cart2pol
-
-
 PLOT = True
 
 s = Sphere()
@@ -28,6 +26,7 @@ cp, distance, grid, dx = s.grid(num_blocks_per_dim=41,
                                    diff_stencil_arm=diff_stencil_arm)
 
 # Corners of the virtual grid, superset of `grid`
+# TODO: Hide this inside grid
 ll = np.array(dim * [grid.min()]) - 3 * dx
 ur = np.array(dim * [grid.max()]) + 3 * dx
 virtual_grid_shape = np.abs(ur-ll) / dx + 1
@@ -40,13 +39,13 @@ E = build_interp_matrix(int_grid, cp, dx, p, ll, virtual_grid_shape)
 L = build_diff_matrix(int_grid, dx, virtual_grid_shape)
 I = eye(*E.shape)
 
-# forcing factor
+# Forcing factor
 gslam = -0.05 / 5
-# plane of image projection
+# Plane of image projection
 surf_plane = 0
 
 # Load png and select non-zero channel
-image = plt.imread('examples/RD_mask.png')[..., 3]
+image = np.flipud(plt.imread('examples/RD_mask.png')[..., 3])
 vertical_res, horizontal_res = image.shape
 
 # Image limits
@@ -61,9 +60,9 @@ chi = np.zeros(grid.shape[0])
 # Create forcing function
 ix = grid[:, 2] >= surf_plane
 chi[ix] = image[xi[ix], yi[ix]]
-# make sure forcing is a cp extension
+# Make sure forcing is a cp extension
 chi = E * chi
-# re thresold
+# Re-threshold
 chi = (chi > 0.9).astype(np.int)
 
 xp, yp, zp = s.parametric_grid(256)
@@ -74,12 +73,13 @@ Eplot = build_interp_matrix(int_grid,
                             dx, p, ll, virtual_grid_shape)
 
 # Plot forcing function
-mlab.figure(1)
+mlab.figure(1,fgcolor=(1.0,1.0,1.0))
 mlab.mesh(xp, yp, zp, scalars=(Eplot*(1-chi)).reshape(xp.shape))
+mlab.view(azimuth=158, elevation=25, distance=7)
 mlab.title('forcing function')
 
-# parameters and functions for Gray--Scott
-# 120 works with 0.025
+
+# Parameters and functions for Gray--Scott
 F = 0.054
 kk = 0.063
 nuu = 1 / (3/dx.min())**2
@@ -95,17 +95,18 @@ u = u0
 v = v0
 
 if PLOT:
-    mlab.figure(2)
+    mlab.figure(2, fgcolor=(1.0,1.0,1.0))
     # Plotting code. Build a pipeline to be able to change the data later.
     src = mlab.pipeline.grid_source(xp, yp, zp,
                                     scalars=np.zeros(xp.shape))
     normals = mlab.pipeline.poly_data_normals(src)
     surf = mlab.pipeline.surface(normals)
+    mlab.view(azimuth=158, elevation=25, distance=7)
     mlab.colorbar()
 
 
-# cpmol
-lambda_ = 4 * nuu / (dx.min()**2)
+# CPMOL
+lambda_ = 6 * nuu / (dx.min()**2)
 Au = nuu * E * L - lambda_ * (I - E)
 Av = nuv * E * L - lambda_ * (I - E)
 
@@ -116,7 +117,7 @@ numtimesteps = int(Tf // dt + 1)
 # Explicit Forward Euler time stepping
 for kt in xrange(numtimesteps):
     if kt < 10:  # No forcing
-        unew = u + dt * (E * f(u,v) + Au * u)
+        unew = u + dt * (E * f(u, v) + Au * u)
         vnew = v + dt * (E * g(u, v) + Av * v)
     else:  # Turn on forcing function
         unew = u + dt * (E * f(u, v) + Au*u + gslam * chi * (u-0.3))
@@ -125,7 +126,7 @@ for kt in xrange(numtimesteps):
     v = vnew.copy()
     t = kt * dt
     if not kt%20 or kt == (numtimesteps-1) or kt <=50:
-        print "time: {0:2f}, {1:2f} %".format(t, float(kt) / numtimesteps)
+        print "time: {0:2f}, {1:2f} %".format(t, 100 * float(kt) / numtimesteps)
         sphplot = Eplot * u
         if PLOT:
             src.data.point_data.scalars = sphplot
