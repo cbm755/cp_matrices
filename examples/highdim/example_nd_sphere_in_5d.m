@@ -34,7 +34,7 @@ toc
 dim = 5;
 p = 3;       % max interpolation order
 stenrad = 1; % max stencil radius for finite differences
-bw = rm_bandwidth(g.dim, p, stenrad);
+bw = rm_bandwidth(dim, p, stenrad);
 band = find(abs(dist) <= bw*dx);
 
 % keep only stuff in the band
@@ -46,7 +46,7 @@ dist = dist(band);
 
 % TODO: just put in a cpgrid and call a banding routine?
 
-g1.dim = 5;
+g1.dim = dim;
 g1.dx = dx;
 g1.x1d = X1d;
 g1.cpfun = cpf;

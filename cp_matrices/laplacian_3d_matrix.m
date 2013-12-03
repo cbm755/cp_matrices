@@ -1,5 +1,8 @@
 function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid, use_loop)
 %LAPLACIAN_3D_MATRIX  Build a 3D discrete Laplacian
+%
+%   DEPRECATED?: you may want laplacian_matrix()
+%
 %   L = laplacian_3d_matrix(x,y,z, order, band)
 %      'L' is a discrete laplacian over a grid.
 %      'order' can be 2 or 4.
@@ -17,8 +20,12 @@ function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid, use_loo
 %   Pass "true" as a further argument to use the (older, slower)
 %   looping-based code.
 %
-%   Currently assumes dx=dy.  Does no error checking up the equispaced
-%   nature of x,y,z.
+%   Currently if dx is within 10*macheps of dy and dz, this assumes
+%   dx==dy==dz, otherwise it uses a more general formula.  The logic
+%   is to have marginally less rounding error in the common dx==dy==dz
+%   case: is it worth it?
+%
+%   Does no error checking up the equispaced nature of x,y,z.
 
   if (nargin <= 7)
     use_loop = false;
@@ -47,19 +54,19 @@ function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid, use_loo
   dx = x(2)-x(1);
   dy = y(2)-y(1);
   dz = z(2)-z(1);
-  if ~assertAlmostEqual([dx dx], [dy dz], 100*eps)
-    error('this particular routine requires dx == dy == dz');
+  if assertAlmostEqual([dx dx], [dy dz], 10*eps)
+    dxequal = 1;
+  else
+    dxequal = 0;
   end
-  %ddx = [dx  dy  dz];
-  %dim = length(ddx);
-  %Nx = round( (x(end)-x(1)) / dx ) + 1;
-  %Ny = round( (y(end)-y(1)) / dy ) + 1;
-  %Nz = round( (z(end)-z(1)) / dz ) + 1;
-  %ptL = [x(1) y(1) z(1)];
-  %ptH = [x(end) y(end) z(end)];
 
   if (order == 2)
-    weights = [-6 1 1 1 1 1 1] / dx^2;
+    if dxequal
+      weights = [-6 1 1 1 1 1 1] / dx^2;
+    else
+      weights = [ -2/dx^2 - 2/dy^2 - 2/dz^2  ...
+                  [1 1]/dx^2   [1 1]/dy^2   [1 1]/dz^2 ];
+    end
     PTS = [ 0   0   0; ...
             1   0   0; ...
            -1   0   0; ...
@@ -68,11 +75,18 @@ function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid, use_loo
             0   0   1; ...
             0   0  -1];
   elseif (order == 4)
-    weights = [-15.0/2.0 ...
-               (-1.0/12.0)  (4.0/3.0)  (4.0/3.0)  (-1.0/12.0) ...
-               (-1.0/12.0)  (4.0/3.0)  (4.0/3.0)  (-1.0/12.0) ...
-               (-1.0/12.0)  (4.0/3.0)  (4.0/3.0)  (-1.0/12.0) ...
-              ] / dx^2;
+    if dxequal
+      weights = [-15.0/2.0 ...
+                 (-1.0/12.0)  (4.0/3.0)  (4.0/3.0)  (-1.0/12.0) ...
+                 (-1.0/12.0)  (4.0/3.0)  (4.0/3.0)  (-1.0/12.0) ...
+                 (-1.0/12.0)  (4.0/3.0)  (4.0/3.0)  (-1.0/12.0) ...
+                ] / dx^2;
+    else
+      weights = [ -5/(2*dx^2) - 5/(2*dy^2) - 5/(2*dz^2)  ...
+                  [-1/12  4/3  4/3  -1/12] / dx^2  ...
+                  [-1/12  4/3  4/3  -1/12] / dy^2  ...
+                  [-1/12  4/3  4/3  -1/12] / dz^2 ];
+    end
     PTS = [  0   0   0; ...
             -2   0   0; ...
             -1   0   0; ...
@@ -95,3 +109,4 @@ function L = laplacian_3d_matrix(x,y,z, order, band1, band2, use_ndgrid, use_loo
   else
     L = helper_diff_matrix3d(x, y, z, band1, band2, weights, PTS, use_ndgrid);
   end
+
