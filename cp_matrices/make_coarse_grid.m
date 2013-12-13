@@ -11,14 +11,24 @@ function g = make_coarse_grid(dim, cpfun, dx, bb)
 %   g = make_coarse_grid(2, @cpCircle, 0.1, [-2 -2 2 2])
 %   plot2d_compdomain
 %
-%   TODO: currently only works for meshgrids in 2D and 3D
+%   TODO: works for meshgrids in 2D and 3D, n-D is still TODO
+%
+%   TODO: a form like following would be convenient
+%   g = make_coarse_grid(dim, cpfun, x1d, y1d, ...)?
 
   if nargin < 4
     bb = [-2*ones(1,dim)  2*ones(1,dim)];
   end
 
   g.dim = dim;
-  g.dx = dx;
+  g.dx = dx;   % TODO: some votes for not keeping this in the
+               % struct, instead maybe a helper function that
+               % gives a scalar or vector of dx's.
+
+  if length(dx) > 1
+    warning('TODO: some work to do on refinement of nonequal dx')
+    warning('TODO: this function currently also doesn''t support it')
+  end
 
   if g.dim == 2
     g.x1d = bb(1):dx:bb(3);

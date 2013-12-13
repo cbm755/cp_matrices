@@ -1,6 +1,8 @@
 function [Dxyc, Dxzc, Dyzc] = secondderiv_mixcen2_3d_matrices(x,y,z, band1, band2, use_ndgrid)
 %SECONDDERIV_MIXCEN2_3D_MATRICES  Build discrete second mixed partials
 %   Matrices for 2nd-order centred differences in 3D (mixed partials)
+%   [Dxy, Dxz, Dyz] = ...
+%     secondderiv_mixcen2_3d_matrices(x1d,y1d,z1d, band1, band2, use_ndgrid)
 %
 %   To use ndgrid ordering pass "true" as the final argument
 
