@@ -52,6 +52,7 @@ function L = helper_diff_matrix2d(x, y, band1, band2, weights, PTS, ndgrid)
   end
   L = sparse(Li(:), Lj(:), Ls(:), length(band1), Nx*Ny);
 
+
   % TODO: these sorts of checks could move to the ops and bands replacement
   % If we're using careful banding a la iCPM2009 then as a sanity
   % check all of the columns outside of band2 should be zero.

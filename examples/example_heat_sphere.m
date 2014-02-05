@@ -98,7 +98,7 @@ figure(2); set(gcf,'Position', [410 700 800 800]);
 
 %% Time-stepping for the heat equation
 
-Tf = 2;
+Tf = 0;
 dt = 0.1*dx^2;
 numtimesteps = ceil(Tf/dt)
 % adjust for integer number of steps
@@ -134,3 +134,30 @@ for kt = 1:numtimesteps
     end
 end
 t_explicit = toc
+
+
+
+E1 = interp3_matrix(x1d, y1d, z1d, cpxg, cpyg, cpzg, 1,band);
+E3 = interp3_matrix(x1d, y1d, z1d, cpxg, cpyg, cpzg, 3,band);
+I = speye(size(L));
+M = E1*L - 6/dx^2*(I-E3);
+% if dt=0.25*dx^2, then norm(A^k,inf) seems to grow all the time, might be
+% unstable?
+dt = 1/6*dx^2;
+A = I + dt*M;
+
+kk = 1:100;
+norm_Ak = zeros(size(kk));
+Ak = I;
+for i = kk
+    Ak1 = A*Ak;
+    tmp = (sum(abs(Ak1),2) - sum(abs(Ak),2));
+    dAk = norm(Ak1-Ak,inf);
+    Ak = Ak1;
+    norm_Ak(i) = norm(Ak,inf);
+    if mod(i,5) == 0
+        disp(['i=',num2str(i),'; norm(A^k,inf)=',num2str(norm_Ak(i)), ...
+              '; abs row sum diff: ', num2str(max(tmp)),'  ', num2str(min(tmp)), ...
+              '; diff: ', num2str(dAk)]);
+    end
+end
