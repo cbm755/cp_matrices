@@ -1,0 +1,385 @@
+Oct 2011, Cannot Rember the Date
+
+Tf = 0.25 relax by M, Gauss-Seidel
+
+multigrid v-cycles
+0.1     0.001310738479559  5
+0.05    0.000564767026623  6
+0.025   0.000262446051933  7
+0.0125  0.000126394384122  7
+0.00625 0.000062020403559  7
+
+full multigrid (5 or 4 v-cycles for each level)
+0.1     0.001310738478666  0.001310738358972
+0.05    0.000564766984711  0.000564768600737
+0.025   0.000262445642555  0.000262465286664
+0.0125  0.000126394315510  0.000126429005369
+0.00625 0.000062020916500  0.000062066066565
+
+matlab
+0.1     0.001310738480037
+0.05    0.000564767018368
+0.025   0.000262446053741
+0.0125  0.000126394515283
+0.00625 0.000062020417375
+
+
+Tf = 0.1 test relax by L, Jacobi; stopping 10^(-15) bw+=1
+0.1     0.000560545006983
+0.05    0.000089317399114
+0.025   0.000068443498657
+0.0125  0.000044330983650  20
+0.00625 0.000025080254349  20
+
+Tf = 0.1 
+
+test relax L, Jacobi; stopping 10^(-10) bw+=2 
+(attention:p_mg = 3, so that number of vcycle decreases)
+(the downward branch of Vcycle is like this :
+    v = weighted_jacobi(Lc{i}, v, f, w, n1);
+    res = f - Lc{i}*v;  
+    v = Ec{i}*v;
+    F{i+1} = TMf2c{i}*res; 
+    V{i} = v;
+    
+    % please note order of computing 'res' and applying 
+    % the interpolation operator to v is important
+    % when computing 'res', we can use v = f-Mc{i}*v, and
+    % this will acheive more similar result as matlab
+)
+(
+   stopping criterion norm(v-v1)/norm(v) < 10^(-10)
+   if using stopping rule as norm(v-v1) < 10^(-10), then
+   there will be more v-cycles
+)
+0.1        0.000560571346747  5
+0.05       0.000089317738142  4
+0.025      0.000068443248217  3
+0.0125     0.000044330946733  2
+0.00625    0.000025080165635  2
+0.003125   0.000013326436282  2
+0.003125/2 0.000006854968005  1
+
+if we just use 'res = f - Mc{i}*v' and do not
+apply any interpolation, then we get
+
+0.1        0.000550641972823  7
+0.05       0.000261461074129  6
+0.025      0.000124260526079  3
+0.0125     0.000059754177407  2
+0.00625    0.000029101906509  2
+0.003125   0.000014353366594  2
+0.003125/2 0.000007119316336  1
+
+matlab Tf = 0.1
+0.1        0.000706847583247
+0.05       0.000285340720237
+0.025      0.000127569570769
+0.0125     0.000060143119839
+0.00625    0.000029172904883
+0.003125   0.000014362338831
+0.003125/2 0.000007127447178
+
+
+Thu 27 Oct, 2011
+Today, I really find something interesting, amazing, but somewhat scaring.
+I really cannot remember what I have done with this code. p_mg need not be 3,
+'bw' need not +1, number of v-cycle is always 1, 'g-s' is OK, in fact, no smoother
+is OK! And the result is really almost the same as the solution of Matlab.
+
+I never get the same result I got a week ago. 
+
+When trying different modes to the time-dependent problem, error are big, I think I
+should deal with time discretization more carefully. (Ah... That's because I made a
+stupid mistake)
+
+
+Fri 28 Oct, 2011
+As for the poisson equation, with exact solution sin(theta), Dirichlet boundary condition,
+weighted jacobi. Very sensitive to the weight w. If we let w always be 1, then 2-order
+convergence can be seen, though the error is always 10 times larger than the solution 
+given by matlab. We may change different w to make the error smaller. However, the right 
+choice of w with respect to different dx should be totally different. 
+
+dx = 0.1,   w = 0.442   err_mg 4.0460e-04 err_matlab 0.0010
+dx = 0.05,  w = 0.725   err_mg 2.7447e-04 err_matlab 2.4619e-04
+dx = 0.025, w = 0.7573  err_mg 8.4010e-05 err_matlab 6.1122e-05
+dx = 0.0125 w = 0.8210  err_mg 1.1399e-04
+
+
+I find that when computing the residual, I should use 'res = f - M*v', where
+the 'M' is acquired by 'lapsharp', it cannot be replaced by L, or L*E, or E*L.
+After finding this, jacobi works well, needing not to find w; but g-s does not work.
+
+Now I also find out the reason for the 'scaring' thing yesterday. In fact, I should
+have worked it out because the result are almost the same as solution given by matlab,
+without Gauss-Jacobi even is OK, gauss-seidel even work; all these phenomenons show that
+the downward and upward V-cycle loop did nothing! Which means n_level = 1. Then I find
+in the function 'helper_set_variables_t_test.m', somehow there is a stupid line 'n_level=1'!
+OK, now things go right. 
+
+If the code is like this, it is likely to acheive a solution which is very near to matlab:
+(in both time-dependent and static poisson equations, the order between (1) and (2) may not matter)
+for i = start:1:n_level-1
+    f = F{i};
+    v = V{i};
+    v = weighted_jacobi(Lc{i}, v, f, w, n1);  
+    v = Ec{i}*v;        %(1)                       
+    res = f - Mc{i}*v;  %(2)
+
+    F{i+1} = TMf2c{i}*res; 
+    V{i} = v;
+end
+
+In fact, in the downward branch of vcyle, even without (2) is OK; but the upward branch must have
+an interpolation operation after relaxing by Jacobi.
+
+7 Nov,2011
+Relax by L:
+
+exactfn: exp(-t)*cos(t) + exp(-9*t)*cos(3*t)
+Tf = 0.1
+
+res = f - Lc{i}*v;
+v = Ec{i}*v;
+0.1        0.015657274666449  7
+0.05       0.007939753202139  6
+0.025      0.004064251644723  5
+0.0125     0.002068534172252  4
+0.00625    0.001045259299383  3
+0.003125   0.000525567903330  2
+0.003125/2 0.000263554806078  2
+if we force the number of vcycle to be 1,
+then the errors are:
+0.015335761279683
+0.007883049891065
+0.004064542570724
+0.002070367376860
+0.001045262586890
+0.000525461481792
+0.000263532391967  
+
+
+v = Ec{i}*v;
+res = f - Lc{i}*v;
+0.003125   0.000530274846467  2
+0.003125/2 0.000264746611024  2
+if we force the number of vcycle to be 1,
+then the errors are:
+0.018653938775428
+0.008848684121767
+0.004331677950483
+0.002143210201218
+0.001064122745620
+0.000530264896627
+0.000264749050405  
+
+
+res = f - Mc{i}*v;
+0.003125   0.000530793106646  2
+0.003125/2 0.000264887668402  2
+if we force the number of vcycle to be 1,
+then the error of the last two are
+0.018259708562066
+0.008859998677276
+0.004352597924653
+0.002148919948088
+0.001065900185095
+0.000530752031067
+0.000264880702377 
+
+30 Nov, 2011
+I haven't added something new to this 'log.txt' for a long time.
+When I tested the simplest case of heat equation on a sphere, I came 
+across something interesting. I am not familiar with the spherical coordinate,
+and learn it from wikipedia; but I should have been careful enough to realize
+at first time the notation of wikipedia is somehow the inverse of matlab, and 
+their ranges are different in wiki and matlab. In matlab, if you type 'help 
+cart2sph', you will find that in [theta, phi, r] = cart2sph(x,y,z), theta represents
+the counterclockwise angle in the xy plane measured from the positive x axis, phi is
+the elevation angle from the xy plane. And theta ranges (-pi,pi], phi ranges [-pi/2,pi/2].
+However, in wikipedia, phi represents the angle in xy plane and ranges from 0 to 2*pi,
+theta describes the elevation angle from the xy plane, and ranges from 0 to pi.
+In the notation of WIKIPEDIA, cos(theta) is an eigenmode of the Beltrami-Laplacian operator
+on the sphere, where theta is the elevation angle from the xy plane, and ranges from 0 to pi.
+When I did numerical test with exact solution exp(-2*t)*cos(theta) ($\theta\in[0,\pi]$),
+I should do the following in matlab: [THETA,PHI,R] = cart2sph(x,y,z); uexactfn = 
+exp(-2*t)*cos(PHI+pi/2). We should be careful the notation are inverse, and the range is
+shifted. After noting these two things, I could finally get the right results.
+
+During the process of debugging, I doubted whether there are some bugs in functions constructing
+interpolation or laplacian matrix, and I even doubted the effectiveness for closest point method.
+I think this kind of thought somehow like a girl quarrelling with her boyfriend for some tiny 
+unhappiness doubts he does not love her anymore. Anyway, the process of doubting has its meaning.
+I also find that if we choose the initial guess as cos(4*THETA) where THETA is the counterclockwise
+angle in the xy plane, then there occurs singularity at point (0,0,1). If you type '[th phi r] =
+cart2sph(0,0,1)' in matlab, it will give you answer: th = 0, phi = pi/2, r = 1, which meets our 
+expectation. So at point (0,0,1), cos(4*THETA) will be 1; but if you draw a very small circle around
+that point, then the values on the circle will changes periodically corresponding to cos(4*THETA), 
+which causes discontinuity at point (0,0,1). But barycentric interpolation will smooth the discontinuity
+even before the numerical evolution of the heat equation, which is somehow not accuarate. 
+For heat equation, I think that may not matter, since Laplacian will smooth it anyway; but for other
+cases, maybe we shall turn to other ways of interpolation, such as WENO, as Colin has done. 
+
+For the heat equation on sphere I mentioned above, multigrid may be faster than gmres if dx is small, but 
+will take more memory, and in 3D cases, constructing transforming matrices could be very time-consuming.
+I also found that the accuarcy of Implicit Euler is worse than explicit scheme. Though I have not found reasons
+about this, I decide to develop a Crank-Nicolson scheme combined with closest point methods. So I have 
+to come back to circle. I test a scheme imitating the standard Crank-Nicolson scheme, though the truncation
+error and stability for that scheme is not clear. For big dx, the scheme seems to achieve second order in
+time and space; but when dx decreases, the scheme is not as stable as the implicit Euler. But multigrid 
+seems to smooth out the numerical oscillation somehow, since if I increase n1 or n2, the scheme will become
+more stable. For dx=0.0125, taking n1=2 and n1=1 is enough; for dx=0.00625, taking both n1 and n2 to be 2 
+will be enough;and for dx=0.003125, we should take n1=3,n2=2, which will makes the algorithm slower, but
+anyway...OK.. This is worth thinking, because I have no way to make the scheme stable if I just use matlab
+backslash or gmres to solve the linear system. So after I found that multigrid is not so fast compared to 
+gmres in 2-D case, which is somewhat disappointing, I may be able to find another way to illustrate the 
+advantage of multigrid.
+
+Ah, after talking with Jude and Lian, I think the lower accuarcy for implicit Euler in the sphere case may
+be because the scheme is only O(dt) in time direction, so taking dt=dx/10 may result in larger errors than
+letting dt = dx^2/10 in the explicit case.
+
+5 Dec,2011
+Over the weekend, I made some modifications to Colin's codes constructing cp matrices E,L, and speed them up
+a lot, though sacrificing twice memory in 2D and three times memory in 3D. But memory issue is very serious
+when computing 3D problems, so I am not sure whether I have made 'real' improvement to Colin's codes, and
+whether my effort to eliminate the big loop for all closest points in the initial band is really meanfull.
+Anyway, eliminating loops will speed up matlab codes, but sacrificing some memory, and makes the codes hard
+to read. I will discuss this issue with Colin, see how he thinks.
+
+On the coarsest level grid, remember to use gmres when solving time-dependent problem, since its faster than
+backslash; but when solving poisson problem, backslash is more accuarate than gmres.
+
+I find that multigrid method is only nearly the same fast as gmres, which somehow frustrating. Though I am
+trying to improve my code to make it more effecient, but that only makes a slight change. One thing I find
+may matter is the degree used for interpolation of tranformation matrices. Since using high degree to do
+prolongation and restriction may slow down the whole process of multigrid.
+
+Then I find that the interpolation degree of transform matrices may be reduced moderately, which means if
+using degree 3 interpolation when doing normal closest point extension, using degree 2 for transformation
+interpolation seems to be enough to ensure the desired accuracy.
+
+Trying if we only do extension to points in oband\iband. heat equation on
+a circle, exp(-t)*sin(theta), Tf = 0.25
+
+Explicit:  dt = dx^2/10;
+dx          only oband\iband      all
+0.1         0.010664              0.00026495
+0.05        0.0033017             0.0000607298
+0.025       0.0010617             0.0000148977
+0.0125      0.00045451            0.00000355397
+0.00625     0.00015441            0.00000089906
+0.003125    0.000041606           0.00000022569
+
+Implicit: dt = dx/10; 
+the linear system are solved by gmres except where I pointed out
+dx          only oband\iband      all
+0.1         0.0093816             0.0013061
+0.05        0.0027484             0.00055327
+0.025       0.00078540            0.00024698
+0.0125      0.00021619            0.00012259
+0.00625     0.000030539           0.000059218
+0.003125    0.000011137           0.000030277
+0.003125/2  0.00000468096         0.000015292  <- backslash
+                                  0.0000047774 <- gmres (strange)
+0.003125/4  0.00000466548         0.0000046899
+
+6 Dec, 2011
+Crank-Nicolson, heat equation on circle, multigrid. 
+exact: exp(-t)*sin(theta)+exp(-9*t)*sin(3*theta)
+p_f2c = p_c2f = 2; Tf = 0.25, dt = dx/10;
+dx          vcycle   relative error
+0.1         1-1      1.8496e-3
+0.05        1-1      4.00325e-4
+0.025       1-1      1.1920e-4
+0.0125      2-1      3.5012e-5
+0.00625     2-2      8.5205e-6
+0.003125    3-2      2.1911e-6
+0.003125/2  3-3      5.8402e-7        
+
+Gmres seems cannot get accurate solution when dx get very small. For example,
+when testing the heat equation on a circle, dx=0.003125/2, u=exp(-t)*sin(theta)
++exp(-9*t)*sin(3*theta), gmres cannot get good answer even letting the
+tolerance to be 1e-14. Backslash could get a desired answer, though in a slower
+way. After finding that multigrid seems not that fast compared to gmres, it 
+would be nice to find that multigrid is more accurate than gmres.
+
+But for u = exp(-t)*cos(theta),gmres works very well, better than multigrid or
+backslash both in accuracy and speed, especially when dx = 0.00625, the magnitude
+of error by gmres is one less than multigrid, which I cannot explain..
+
+Maybe gmres works well with simple low modes, but not not that well
+if we add some slightly higher mode; but multigrid seems to be opposite. 
+
+31 Jan, 2012
+Ah, it is already 2012... Nearly two months has passed since last time I modified the txt file. 
+When testing the 'example_poisson_semicircle.m', I find two things worth mentioning: one is that
+after doing restriction F{i+1} = TMf2c{i}*res, better do an closest point extension since the 
+original rhs is constant along the normal direction; the other is that when adding the prolonged
+modification of v to the next finer grid, better do a closest point extension: V{i} = V{i} + E{i}*v,
+where v = TMc2f{i}*V{i+1}. This is extremely important when we want to enforce the 
+Nuemann boundary condition; if we don't do this extension, the solution will not converge.
+
+When solving poisson equation on a surface, we should specify a point's value to make the problem 
+well-posed. Better to choose the value as 0, hopefully it will make multigrid converge faster;
+this may be because our initial guess is taken to be all 0, but not sure why. I should also mention
+that taking the initial guess randomly usually leads to unconvergence of multigrid, this makes me
+a little worried, better to talk with Colin or Andy about it.
+
+1 Feb, 2012
+Poisson Equation on a Hemisphere, Nuemann boundary condition. Two different type of exact solution:
+first:
+rhsfn = @(th, phi, r) -l*(l+1)*cos(l*th).*sin(phi+pi/2).^l;
+uexactfn1 = @(th, phi) cos(l*th).*sin(phi+pi/2).^l;
+uexactfn = @(th, phi) uexactfn1(th, phi) - uexactfn1(0,0);
+second:
+l = 5;
+rhsfn = @(th, phi, r) ( -l*(l+1)*sin(l*th).*sin(phi+pi/2).^l );
+uexactfn1 = @(th, phi) sin(l*th).*sin(phi+pi/2).^l;
+uexactfn = @(th, phi) uexactfn1(th, phi);
+And we set the value of point (1,0,0) to be 0. 
+
+The second type converges fast, while the first not so fast starting from dx=0.025. Similar phenomenon
+occurs in solving the poisson equation on a whole sphere with the same exact solution.
+Likely reason?
+For the first type, uexactfn1(0,0) is 1; while in the second type, uexactfn1(0,0) is exactly 0.
+Another phenomenon:
+For the first type, using higher order interpolation in the transform matrix (p_c2f = p_f2c = 3) will result
+in slower convergence, while in the second type, nothing like this happen. (only tested until dx=0.025)
+I don't know why...
+
+2 Feb, 2012
+Heat equation on a hemisphere, backward Euler, Exact solution: e^(-2*t)*cos(phi+pi/2), Dirichlet Boundary condition.
+dx = 0.05; dx_coarsest = 0.2;
+Multigrid seems need to enforce the boundary condition twice, i.e. do twice closest point extension at the first time
+step. Only once is roughly enough, but twice would be better. Gmres seems do not need to do this. Theoretically, we have
+to do the closest point extension once if we want to impose the dirichlet boundary condition; if we use an implicit scheme,
+we only need to do this at the initial time, since the impact of boundary condition has been evolved in the matrix; but if 
+we use an explicit scheme, we may need to enforce boudnary condition at each time step, though it is easy--nothing different
+from doing the normal explicit closest point method.
+The interpolation order of the transform matrix seems to matter in our heat equation. If p_c2f = p_f2c = 2, then one round
+of V-Cycle is enough to achieve the same error as gmres, and more V-Cycles would not help; but if p_c2f = p_f2c = 1, we need
+three round of V-Cylces to achieve the same error as gmres.
+
+27 Feb, 2012
+I think I have not made much progress on my research this term. Neither of the two things I was hoping to do this term
+has been done yet. One is theoretically analyze the convergence speed of the multigrid closest point algorithm; and the other
+is to test more complicated numerical cases. 
+
+8 Mar, 2012
+A bug in the cpmatrix test functions! In the LagrangeWeights1D_test.m, when dealing with the case that a closest is exactly 
+the grid point, I put the wrong entry of the weights to be exactly one. This was first discovered by testing a codimension 
+zero case where there are so many closest points which are exactly grid points. Need to test some of my multigrid code!!
+
+21 Aug, 2012
+Haven't kept track of this log.txt for nearly half a year!
+I am trying to test multigrid on open curves. Found that cpParamCurveOpen is not very reliable or accurate.
+Sometimes it might find a local maximum instead of a local minimum of the distance function; and 
+norm(Ef-f) where f is the closest point extension of the exact quantity does not show the desired convergence
+rate. Need to work out solutions for these issues.
+But I might need to change my multigrid code sometime because it is not user-friendly at dealing with boundary conditions.
+When dealing Dirichlet boundary condtions, I change those boundary points lines in the 'TM_c2f' and 'TM_f2c' matrices 
+to be oposite sign. However, I forget this when dealing with Neumann boundary conditions, making the v-cycle convergence
+extremely slow. It is a bad behavior to modify the helper functions without any telling the user (this time turns out
+to be myself...) Better way would be pass boundary conditions into the interface of the 'helper_set_TM' function.

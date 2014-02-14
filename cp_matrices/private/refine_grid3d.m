@@ -12,9 +12,9 @@ function [band,xg,yg,zg,cpxg,cpyg,cpzg,distg,bdyg,dx,x1d,y1d,z1d] = refine_grid3
   Ny0 = length(y1d0);
   Nz0 = length(z1d0);
   % new 1d grids (the theoretical meshgrid)
-  x1d = (x1d0(1):dx:x1d0(end))';
-  y1d = (y1d0(1):dx:y1d0(end))';
-  z1d = (z1d0(1):dx:z1d0(end))';
+  x1d = x1d0(1):dx:x1d0(end);
+  y1d = y1d0(1):dx:y1d0(end);
+  z1d = z1d0(1):dx:z1d0(end);
   Nx = length(x1d);
   Ny = length(y1d);
   Nz = length(z1d);

@@ -3,8 +3,6 @@ function [varargout] = refine_grid(varargin)
 %   Given a banded cp grid, perform one or more steps of grid refinement.
 %   Works in 2D or 3D.
 %
-%   DEPRECATED: use refine_cpgrid() and refine_cpgrid_bw() instead.
-%
 %   [cpGrid2] = refine_grid(M, cpGrid)
 %      This call refines the grid specified by 'cpGrid' through 'M'
 %      steps of refinement (each step halves the grid spacing).
@@ -26,7 +24,7 @@ function [varargout] = refine_grid(varargin)
 %
 %         cpf: cp function handle.
 %
-%         dx0: grid spacing of current grid.  Must be same in x and y.
+%         dx0: grid spacing of current grid.
 %
 %         x1d0,y1d0: the 1d grids, these form a "theoretical"
 %                    meshgid() (which is not created).
@@ -48,8 +46,6 @@ function [varargout] = refine_grid(varargin)
 %         refine_grid(M, cpf, dx0, x1d0,y1d0,z1d0, bw, band0, dist0)
 %
 %   See "example_refine_grid.m".
-
-  warning('Deprecated: see refine_cpgrid_bw(), refine_cpgrid()')
 
   %[nargin  nargout]
   %varargout = {};
@@ -103,6 +99,11 @@ function [varargout] = refine_grid(varargin)
     else
       use_ndgrid = varargin{c+3};
     end
+	if (nargin < c+4)
+		need_param = 0;
+	else
+		need_param = varargin{c+4};
+	end
   end
 
 
@@ -112,26 +113,26 @@ function [varargout] = refine_grid(varargin)
     %[band, xg,yg,zg, cpxg,cpyg,cpzg, distg, bdyg, dx, x1d,y1d,z1d] = ...
     %    refine_grid3d(input{:});
     for k=1:M
-      A = cputime();
+      A = tic;
       [band, xg,yg,zg, cpxg,cpyg,cpzg, dist, bdy, dx, x1d,y1d,z1d] = ...
           refine_grid3d(cpf, dx, x1d,y1d,z1d, bw, band, dist, bdy, use_ndgrid);
-      fprintf('level %d (dx=%g) processing time: %g\n', k, dx, cputime()-A);
+      fprintf('level %d (dx=%g) processing time: %g\n', k, dx, toc(A));
     end
     varargout = {band, xg,yg,zg, cpxg,cpyg,cpzg, dist, bdy, dx, x1d,y1d,z1d};
   else
     for k=1:M
-      A = cputime();
-      [band, xg,yg, cpxg,cpyg, dist, bdy, dx, x1d,y1d] = ...
-          refine_grid2d(cpf, dx, x1d,y1d, bw, band, dist, bdy, use_ndgrid);
+      A = tic;
+      [band, xg,yg, cpxg,cpyg, dist, bdy, dx, x1d,y1d, param] = ...
+          refine_grid2d(cpf, dx, x1d,y1d, bw, band, dist, bdy, use_ndgrid, need_param);
       if (M>1)
-        fprintf('level %d (dx=%g) processing time: %g\n', k, dx, cputime()-A);
+        fprintf('level %d (dx=%g) processing time: %g\n', k, dx, toc(A));
       else
-        fprintf('dx=%g processing time: %g\n', dx, cputime()-A);
+        fprintf('dx=%g processing time: %g\n', dx, toc(A));
       end
     end
     if (withbdy)
-      varargout = {band, xg,yg, cpxg,cpyg, dist, bdy, dx, x1d,y1d};
+      varargout = {band, xg,yg, cpxg,cpyg, dist, bdy, dx, x1d,y1d, param};
     else
-      varargout = {band, xg,yg, cpxg,cpyg, dist, dx, x1d,y1d};
+      varargout = {band, xg,yg, cpxg,cpyg, dist, dx, x1d,y1d,param};
     end
   end

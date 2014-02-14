@@ -1,4 +1,4 @@
-function [band,xg,yg,cpxg,cpyg,distg,bdyg,dx,x1d,y1d] = refine_grid2d(cpf,dx0,x1d0,y1d0,bw0,band0,dist0,bdy0,use_ndgrid)
+function [band,xg,yg,cpxg,cpyg,distg,bdyg,dx,x1d,y1d,param] = refine_grid2d(cpf,dx0,x1d0,y1d0,bw0,band0,dist0,bdy0,use_ndgrid,need_param)
 %REFINE_GRID2D   Make a finer CP representation
 %   Call parent wrapper function "refine_grid" instead.
 
@@ -11,8 +11,8 @@ function [band,xg,yg,cpxg,cpyg,distg,bdyg,dx,x1d,y1d] = refine_grid2d(cpf,dx0,x1
   Nx0 = length(x1d0);
   Ny0 = length(y1d0);
   % new 1d grids (the theoretical meshgrid)
-  x1d = (x1d0(1):dx:x1d0(end))';
-  y1d = (y1d0(1):dx:y1d0(end))';
+  x1d = x1d0(1):dx:x1d0(end);
+  y1d = y1d0(1):dx:y1d0(end);
   Nx = length(x1d);
   Ny = length(y1d);
 
@@ -72,11 +72,21 @@ function [band,xg,yg,cpxg,cpyg,distg,bdyg,dx,x1d,y1d] = refine_grid2d(cpf,dx0,x1
   xg = relpt(1) + (ii-1)*dx;
   yg = relpt(2) + (jj-1)*dx;
 
-  if isempty(bdy0)
-    [cpx, cpy, dist] = cpf(xg, yg);
-    bdy = [];
+  if need_param
+    if isempty(bdy0)
+      [cpx, cpy, dist, param] = cpf(xg, yg);
+      bdy = [];
+    else
+      [cpx, cpy, dist, bdy, param] = cpf(xg, yg);
+    end
   else
-    [cpx, cpy, dist, bdy] = cpf(xg, yg);
+	param = [];
+    if isempty(bdy0)
+      [cpx, cpy, dist] = cpf(xg, yg);
+      bdy = [];
+    else
+      [cpx, cpy, dist, bdy] = cpf(xg, yg);
+    end
   end
 
   %% our grid should be an overesimate
@@ -91,6 +101,11 @@ function [band,xg,yg,cpxg,cpyg,distg,bdyg,dx,x1d,y1d] = refine_grid2d(cpf,dx0,x1
     bdyg = bdy(I);
   else
     bdyg = [];
+  end
+  if ~isempty(param)
+      param = param(I);
+  else
+      param = [];
   end
 
 
