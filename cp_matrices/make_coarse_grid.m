@@ -15,6 +15,11 @@ function g = make_coarse_grid(dim, cpfun, dx, bb)
 %
 %   TODO: a form like following would be convenient
 %   g = make_coarse_grid(dim, cpfun, x1d, y1d, ...)?
+%
+%   TODO: should document which fields g can/should have
+%     - invbandmap
+%     - dx  (votes to delete)
+%     - how to deal with inner/outer bands?
 
   if nargin < 4
     bb = [-2*ones(1,dim)  2*ones(1,dim)];
