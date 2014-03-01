@@ -7,11 +7,12 @@ function varargout = interp_matrix(g, p, other)
 %       interpolation (defaults to 3 if omitted).  E will be a
 %       'length(g.x)' by 'length(g.band)' sparse matrix
 %
-%   E = interpn_matrix(g, {XI YI ZI ... WI}, p)
+%   E = interp_matrix(g, {XI YI ZI ... WI}, p)
 %       As above but you can specify a cell array of column vectors
-%       for the interpolation points.
+%       for the interpolation points.  Often used for the "Eplot"
+%       matrix
 %
-%   [Ei, Ej, Es] = interpn_matrix(...)
+%   [Ei, Ej, Es] = interp_matrix(...)
 %       Here the entries of the matrix are returned as three vectors
 %       (like in FEM).  This avoids some overhead of constructing the
 %       matrix (and can be useful in determining computational bands).

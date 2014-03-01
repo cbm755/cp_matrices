@@ -1,6 +1,11 @@
 function [cpx,cpy,cpz, dist, bdy] = cpCylinder(x,y,z, zlim, R, cen)
 %CPCYLINDER  Closest point function for a cylinder without caps
-%   ...
+%   A cylinder rising in the z-direction.
+%   [cpx,cpy,cpz, dist, bdy] = cpCylinder(x,y,z, zlim, R, cen)
+%     'zlim' defaults to [-1 1]
+%     radius 'R' defaults to 1.
+%     'cen', location in xy-plane of cylinder, default: [0,0].
+%
 %   TODO: version with end-caps?
 %
 %   Code is vectorized: any size/shape for x should work.
