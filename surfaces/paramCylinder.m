@@ -10,11 +10,20 @@ function [x,y,z] = paramCylinder(n, zlim, R, cen)
 
   zlo = zlim(1);  zhi = zlim(2);
 
-  theta = linspace (0, 2*pi, n+1);
-  % estimate how many grids to use in the vertical direction
-  sidelen = 2*pi*R/n;
-  nv = ceil((zhi - zlo) / sidelen);
-  z1d = linspace (zlo, zhi, nv+1);
+  % depending on which way is larger
+  if (2*pi*R > (zhi-zlo))
+    nt = n;
+    % estimate how many grids in the vertical direction
+    nz = ceil((zhi-zlo) / (2*pi*R/nt));
+  else
+    nz = n;
+    % estimate how many grids in the angular direction
+    nt = ceil(2*pi*R / ((zhi-zlo)/nz));
+  end
+  nz = max(nz,4);
+  z1d = linspace (zlo, zhi, nz+1);
+  nt = max(nt,8);
+  theta = linspace (0, 2*pi, nt+1);
 
   [theta, z] = meshgrid(theta, z1d);
 
