@@ -4,39 +4,37 @@ function porcupine_plot3d_param(x, y, z, cpx, cpy, cpz, bdy, paramf, fignum)
 %   figure(fignum);
 %   porcupine_plot3d_param(x,y,z, cpx,cpy,cpz, bdy, paramf, fignum);
 %      paramf is the name of function that return a parameterization
-%      fignum must already exist
+%      fignum must already exist.  Works for codim-1 (surfaces) and
+%      codim-2 (curves/filaments).
 
-
-%if nargin < 8
-%    fignum = figure();
-%  end
-%  if nargin < 9
-%    N = length(cpx(:));
-% end
-
-  figure(fignum); clf; hold on;
-  xlabel('x'); ylabel('y'); zlabel('z');
   [xp,yp,zp] = paramf(64);
-  surf(xp,yp,zp,zeros(size(xp)));
-  shading flat
-  %xlabel('x'); ylabel('z');
-
+  figure(fignum); clf;
+  if isvector(xp)
+    plot3(xp,yp,zp, 'g-', 'linewidth',4);
+  else
+    surf(xp,yp,zp,zeros(size(xp)));
+    shading flat
+  end
+  hold on;
+  xlabel('x'); ylabel('y'); zlabel('z');
   N = length(x(:));
   %N = 1000;
+  bdycolorset = {'r' 'b' 'm' 'c' 'y'};
   for j=1:N
     %i = ceil(rand*NN);
     i = j;
-    %if (abs(y(i)) < 0.1)
+    %if (abs(z(i)) < 0.2)
       if (bdy(i) == 0)
         plot3([x(i) cpx(i)], [y(i) cpy(i)], [z(i) cpz(i)], 'k-');
         plot3(cpx(i),cpy(i),cpz(i), 'k.');
       else
-        plot3([x(i) cpx(i)], [y(i) cpy(i)], [z(i) cpz(i)], 'r-');
-        plot3(cpx(i),cpy(i),cpz(i), 'r');
+        h1 = plot3([x(i) cpx(i)], [y(i) cpy(i)], [z(i) cpz(i)], '-');
+        h2 = plot3(cpx(i),cpy(i),cpz(i), '-');
+        set(h1, 'color', bdycolorset{bdy(i)});
+        set(h2, 'color', bdycolorset{bdy(i)});
       end
-      %plot([x(i) cpx(i)], [z(i) cpz(i)], 'k-');
-      %plot(cpx(i),cpz(i), 'r*');
-      %bend
+      %end
   end
 
   axis equal
+  grid on
