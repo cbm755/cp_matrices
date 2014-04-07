@@ -30,10 +30,10 @@ function [x, y] = paramRoundedSquare(n, radii, cen)
   Pts{6} = [ 1-radii(4)  -1];
   Pts{7} = [ 1  -1+radii(4)];
   Pts{8} = [ 1   1-radii(1)];
-  paramfs{2} = @(n) paramLineSegment(n, Pts{1}, Pts{2});
-  paramfs{4} = @(n) paramLineSegment(n, Pts{3}, Pts{4});
-  paramfs{6} = @(n) paramLineSegment(n, Pts{5}, Pts{6});
-  paramfs{8} = @(n) paramLineSegment(n, Pts{7}, Pts{8});
+  paramfs{2} = @(n) paramLineSegment2d(n, Pts{1}, Pts{2});
+  paramfs{4} = @(n) paramLineSegment2d(n, Pts{3}, Pts{4});
+  paramfs{6} = @(n) paramLineSegment2d(n, Pts{5}, Pts{6});
+  paramfs{8} = @(n) paramLineSegment2d(n, Pts{7}, Pts{8});
 
   % how many points per segment?  first compute the arclenths
   arclens = [radii(1)*pi/2  ...

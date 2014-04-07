@@ -43,10 +43,10 @@ function [cpx, cpy, sdist] = cpRoundedSquare(x, y, radii, cen)
   Pts{6} = [ 1-radii(4)  -1];
   Pts{7} = [ 1  -1+radii(4)];
   Pts{8} = [ 1   1-radii(1)];
-  cpfs{2} = @(x,y) cpLineSegment(x,y, Pts{1}, Pts{2});
-  cpfs{4} = @(x,y) cpLineSegment(x,y, Pts{3}, Pts{4});
-  cpfs{6} = @(x,y) cpLineSegment(x,y, Pts{5}, Pts{6});
-  cpfs{8} = @(x,y) cpLineSegment(x,y, Pts{7}, Pts{8});
+  cpfs{2} = @(x,y) cpLineSegment2d(x,y, Pts{1}, Pts{2});
+  cpfs{4} = @(x,y) cpLineSegment2d(x,y, Pts{3}, Pts{4});
+  cpfs{6} = @(x,y) cpLineSegment2d(x,y, Pts{5}, Pts{6});
+  cpfs{8} = @(x,y) cpLineSegment2d(x,y, Pts{7}, Pts{8});
 
   [cpx, cpy, dist] = cpCompoundObject(x,y, cpfs);
 
