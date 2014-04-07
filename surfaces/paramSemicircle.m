@@ -6,7 +6,7 @@ function [x,y,th] = paramSemicircle(n, R, cen)
     R = 1;
   end
   if (nargin < 3)
-    cen = [0,0];
+    cen = [0 0];
   end
 
   th = ( 0:pi/n:pi )';

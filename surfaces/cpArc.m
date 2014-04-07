@@ -13,7 +13,10 @@ function [cpx, cpy, dist, bdy] = cpArc(x, y, R, cen, angle1, angle2)
     R = 1;
   end
   if (nargin < 4)
-    cen = [0,0];
+    cen = [];
+  end
+  if (isempty(cen))
+    cen = [0 0];
   end
   if (nargin < 5)
     angle1 = 0;

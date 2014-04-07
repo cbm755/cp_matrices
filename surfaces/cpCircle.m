@@ -15,7 +15,7 @@ function [cpx, cpy, sdist] = cpCircle(x, y, R, cen)
     R = 1;
   end
   if (nargin < 4)
-    cen = [0,0];
+    cen = [0 0];
   end
 
   % shift to the origin
