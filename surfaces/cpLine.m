@@ -2,10 +2,15 @@ function [varargout] = cpLine(varargin)
 %CPLINE  Closest Point function for a line in 2D or 3D
 %   [cpx,cpy, dist, bdy] = cpLine(x,y,dir)
 %   [cpx,cpy, dist, bdy] = cpLine(x,y,dir,pt)
-%   [cpx,cpy,cpz, dist, bdy] = cpLine(x,y,z,dir)
-%   [cpx,cpy,cpz, dist, bdy] = cpLine(x,y,z,dir,pt)
+%   [cpx,cpy,cpz, dist, bdy] = ...
+%   [cpx,cpy,cpz, dist, bdy, s] = ...
 %   'pt' specifies any point on the line and 'dir' specifies the
-%   tangential direction
+%   tangential direction.
+%
+%   Outputs: 'bdy' will always be 0.  's' gives the
+%   parameter value measuring distance of the closest point from pt
+%   in direction 'dir' (measured in units of magnitude 'dir').
+
 
   %% last input is a vector, use it determine dimension
   vec = varargin{nargin};
@@ -20,7 +25,11 @@ function [varargout] = cpLine(varargin)
   for j=1:dim
     x{j} = varargin{j};
   end
+
   dir = varargin{dim+1};
+  if (norm(dir) < 100*eps)
+    error('direction has norm almost zero')
+  end
   if (nargin == dim+2) % there is a point
     p = varargin{dim+2};
   else
