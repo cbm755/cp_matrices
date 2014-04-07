@@ -7,6 +7,11 @@ function [cpx,cpy,cpz,dist,bdy,s] = cpLineSegment3d(x,y,z, p, q)
 %   (outputs 'dist', 'bdy' and 's' are optional).  's' is the
 %   parameter of the line.
 
+  if (nargin == 3)
+    p = [0 0 0];
+    q = [1 0 0];
+  end
+
   [cpx0,cpy0,cpz0, dist0, bdy0, s0] = cpLine(x,y,z, q-p, p);
 
   cpx = ((s0 >= 0) & (s0 <= 1)) .* cpx0 + ...
