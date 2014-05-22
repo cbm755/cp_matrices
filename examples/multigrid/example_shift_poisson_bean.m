@@ -19,7 +19,8 @@ x1 = 3;
 y0 = -3;
 y1 = 3;
 
-dx = 0.003125/2;
+%dx = 0.003125/2;
+dx = 0.00625;
 dx_coarsest = 0.2;   % coarsest grid size
 x1d_coarsest = x0 : dx_coarsest : x1;
 y1d_coarsest = y0 : dx_coarsest : y1;
@@ -181,7 +182,7 @@ for i = 1:1:n_level-1
     x = (x0:dx_tmp:x1)';
     y = (y0:dx_tmp:y1)';
     
-    Eplot{i} = interp2_matrix_test( x, y, xplot, yplot, p );
+    Eplot{i} = interp2_matrix( x, y, xplot, yplot, p );
     Eplot{i} = Eplot{i}(:,a_band{i});
     dx_tmp = 2*dx_tmp;
 end
@@ -356,3 +357,25 @@ hold on, plot(a_xcp{i},a_ycp{i},'.');
 set(gca,'Fontsize',12)
 xlabel('\fontsize{15} x')
 ylabel('\fontsize{15} y')
+
+
+
+%% some tests:
+for i = 1:n_level
+Lc{i} = Lc{i} + shift*speye(size(Ec{i}));
+Mc{i} = Mc{i} + shift*speye(size(Ec{i}));
+end
+
+for i = n_level:-1:1;
+i
+A = Ec{i} * (speye(size(Ec{i})) + 0.25*a_dx{i}^2*Lc{i});
+for cnt = 1:10000
+a = 2*(rand(length(A),1)-0.5);
+%b = Ec{i}*a;
+b = a;
+%if norm(A*b,inf) > norm(b,inf)
+if norm(A*b) > norm(b)    
+disp('bad')
+end
+end
+end

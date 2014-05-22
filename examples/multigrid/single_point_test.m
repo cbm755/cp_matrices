@@ -1,8 +1,8 @@
 function [] = single_point_test(alpha,beta)
 
-    cpx = 0.3;
-    cpy = 0.4;
-    cpz = 1e-4;
+    cpx = 0.1;
+    cpy = 0.9;
+    cpz = 0.2;
     
     dx = 1;
     x1d = (-2:dx:3)';
@@ -26,21 +26,40 @@ function [] = single_point_test(alpha,beta)
     %L  = laplacian_3d_matrix(x1d,y1d,z1d,2,band);
     L  = laplacian_wider_stencil_3d_matrix(x1d,y1d,z1d,2,alpha,beta,1-alpha-beta,band,band);
     
-    Eaverage = buildCPmatrixFromLaplacian3d(x1d,y1d,z1d,cpx,cpy,cpz,3,band);
+    [Eaverage1,DiagwLinverse1] = buildCPmatrixFromLaplacian3d2ndOrder3rdAttempt(x1d,y1d,z1d,cpx,cpy,cpz,3,band);
+    [GAMMA1, GAMMA2] = find2GammaMatrices(x1d, y1d, z1d, cpx, cpy, cpz, 3);
     
-    [GAMMA1, GAMMA2] = findGammaMatrix2(x1d, y1d, z1d, cpx, cpy, cpz, 3)
-    for lambda1 = 6:0.01:6
-      lambda1
-      for lambda2 = 1:1e-10:1
-        tmp = E1*L + GAMMA1*E3 +GAMMA2*Eaverage;
-        ind = tmp<-1e-10;
-%         [lambda1, lambda2]
-         min(tmp(ind))
-         [xg(ind), yg(ind), zg(ind)]
-        if (nnz(tmp<-1e-14) == 0)
-            [lambda1,lambda2]
+%    [Eaverage1,DiagwLinverse1] = buildCPmatrixFromLaplacian3d2ndOrder(x1d,y1d,z1d,cpx,cpy,cpz,3,band);
+%    [GAMMA1, GAMMA2] = find2GammaMatrices2ndOrder(x1d, y1d, z1d, cpx, cpy, cpz, 3);
+
+%    [Eaverage2,DiagwLinverse2] = buildCPmatrixFromLaplacian3d2ndOrder2ndAttempt(x1d,y1d,z1d,cpx,cpy,cpz,3,band);
+%    [GAMMA1, GAMMA2] = find2GammaMatrices2ndOrder2ndAttempt(x1d, y1d, z1d, cpx, cpy, cpz, 3);
+%    Lcp = buildLaplacianMatrixAtCP(x1d,y1d,z1d,cpx,cpy,cpz,3,band);
+
+
+    GAMMA1
+    GAMMA2
+    
+    for lambda1 = 6:0.1:6
+%      lambda1
+      for lambda2 = 1:0.1:1
+%        for lambda3 = 0:0.1:1
+          %tmp = E1*L + lambda1*E3 + lambda2*(DiagwLinverse1*Eaverage1) - lambda3*DiagwLinverse1*Lcp;
+          tmp = E1*L + GAMMA1*E3 +GAMMA2*DiagwLinverse1*Eaverage1;
+          reshape(full(tmp),4,4,4)
+          %tmp = (1-lambda2)*E1*L + lambda2*Lcp + lambda1*E3;
+          ind = tmp<-1e-14;
+%           nnz(ind)
+%           [lambda1, w]
+%           min(tmp(ind))
+           [xg(ind), yg(ind), zg(ind)]
+%           tmp(ind)
+          if (nnz(tmp<-1e-14) == 0)
+            
+            %[lambda1,lambda2]
             disp('good')
-        end
+          end
+%        end
       end
     end
     

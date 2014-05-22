@@ -18,10 +18,10 @@ x1 = 3;
 % 2D example on a circle
 % Construct a grid in the embedding space
 
-%dx = 0.2; % grid size
-dx = 0.1;
+dx = 0.1; % grid size
+%dx = 0.025;
 %dx = 0.00625;  % lots of memory...
-dx_coarsest = 0.1;   % coarsest grid size
+dx_coarsest = 0.2;   % coarsest grid size
 x1d_coarsest = (x0:dx_coarsest:x1)';
 y1d_coarsest = x1d_coarsest;
 z1d_coarsest = x1d_coarsest;
@@ -364,3 +364,62 @@ ylabel('\fontsize{15} ||u^h-u||_{\infty}/||u||_{\infty}')
 %title('\fontsize{15}cos(phi), Dirichlet B.C.s')
 set(gca,'Fontsize',12)
 xlim([0 10])
+
+
+%% some tests 1:
+for i = 1:n_level
+    Lc{i} = Lc{i} + shift*speye(size(Ec{i}));
+    Mc{i} = Mc{i} + shift*speye(size(Ec{i}));
+end
+
+i = n_level-1;
+I = speye(size(Ec{i}));
+
+%A = Ec{i} * (I + 1/6*a_dx{i}^2*Lc{i});
+A = I + 1/6*a_dx{i}^2*Mc{i};
+a_vec = [];
+for cnt = 1:10000
+a = 2*(rand(length(A),1)-0.5);
+b = Ec{i}*a;
+%b = a;
+%if norm(A*b,inf) > norm(b,inf)
+if norm(A*b) > norm(b)
+disp('bad')
+a_vec = [a_vec, a];
+end
+end
+
+
+
+%% some tests 2:
+shift = 1;
+for i = 1:1:n_level
+    Mc{i} = Mc{i} + shift*speye(size(Mc{i}));
+    Lc{i} = Lc{i} + shift*speye(size(Lc{i}));
+end
+
+
+i = n_level;
+% if dt=0.25*dx^2, then norm(A^k,inf) seems to grow all the time, might be
+% unstable?
+% dt = 1/6*dx^2;
+% A = speye(size(Ec{i})) + dt*Mc{i};
+
+A = Ec{i} * (speye(size(Ec{i})) + 1/12*a_dx{i}^2*Lc{i});
+kk = 1:100;
+norm_Ak = zeros(size(kk));
+Ak = speye(size(Lc{i}));
+for cnt = kk
+    Ak1 = A*Ak;
+%    tmp = (sum(abs(Ak1),2) - sum(abs(Ak),2));
+%    dAk = norm(Ak1-Ak,inf);
+    Ak = Ak1;
+    norm_Ak(cnt) = norm(Ak,inf);
+    norm(Ak,inf)
+%     if mod(cnt,5) == 0
+%         disp(['cnt=',num2str(cnt),'; norm(A^k,inf)=',num2str(norm_Ak(cnt)), ...
+%               '; abs row sum diff: ', num2str(max(tmp)),'  ', num2str(min(tmp)), ...
+%               '; diff: ', num2str(dAk)]);
+%     end
+end
+

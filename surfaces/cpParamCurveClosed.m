@@ -1,4 +1,4 @@
-function [cpx, cpy, dist, gfail] = cpParamCurveClosed(x,y,xs,ys,xp,yp,xpp,ypp,endpt,DEBUG)
+function [cpx, cpy, dist, gfail, param] = cpParamCurveClosed(x,y,xs,ys,xp,yp,xpp,ypp,endpt,DEBUG)
 % matlab version of function in python code ParamCurve
 % Find closest points of parameterised curves using Newton's method
 %
@@ -33,7 +33,7 @@ gp = @(t,x,y) 2*xp(t).*xp(t) + 2*(xs(t) - x).*xpp(t) + 2*yp(t).*yp(t) + 2*(ys(t)
 %% Initial guess
 % use M equispaced samples in the parameter space
 M = 100;
-tic
+%tic
 s_guess = zeros(size(x));
 mindd_guess = zeros(size(x));
 ss = linspace(endpt(1), endpt(2), M);
@@ -61,7 +61,7 @@ for i=1:numchunks
   s_guess(I) = ss(ii)';
   mindd_guess(I) = temp;
 end
-toc
+%toc
 
 
 
@@ -94,7 +94,7 @@ end
 %[cpx2 cpy2 dist2 fail2] = newton(g, gp, x, y, xs, ys, s_guess, mindd_guess, endpt);
 %toc
 
-tic
+%tic
 totalN = length(x);
 N = 1000;
 numchunks = ceil(totalN/N);
@@ -103,6 +103,7 @@ cpx = zeros(size(x));
 cpy = zeros(size(x));
 dist = zeros(size(x));
 gfail = zeros(size(x));
+param = zeros(size(x));
 
 for i=1:numchunks
   if i < numchunks
@@ -110,7 +111,7 @@ for i=1:numchunks
   else
     I = (1+(i-1)*N):totalN;
   end
-  [cpx(I) cpy(I) dist(I) fail] = newton(g, gp, x(I), y(I), xs, ys, s_guess(I), mindd_guess(I), endpt);
+  [cpx(I) cpy(I) dist(I) fail param(I)] = newton(g, gp, x(I), y(I), xs, ys, s_guess(I), mindd_guess(I), endpt);
   if (fail)
     warning('one chunk failed');
     warning('TODO: could process in a loop here, or otherwise be more robust');
@@ -119,7 +120,7 @@ for i=1:numchunks
     gfail(I) = 0;
   end
 end
-toc
+%toc
 
 %if (globalfail)
 %  varargout = {1};
@@ -131,7 +132,7 @@ end % function
 
 
 
-function [cpx cpy dist fail] = newton(g, gp, x, y, xs, ys, s_guess, mindd_guess, endpt)
+function [cpx cpy dist fail s] = newton(g, gp, x, y, xs, ys, s_guess, mindd_guess, endpt)
 %%
 % Newton's method
 

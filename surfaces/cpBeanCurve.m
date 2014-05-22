@@ -1,4 +1,4 @@
-function [cpx, cpy, dist] = cpBeanCurve(x, y)
+function [cpx, cpy, dist, param] = cpBeanCurve(x, y, scale)
 %CPBEANCURVE  Closest Point function for a bean-shaped curve
 %
 %   Depends on the spline toolbox
@@ -11,8 +11,9 @@ function [cpx, cpy, dist] = cpBeanCurve(x, y)
 
   % interactive tool to make a new spline:
   %[xy, spcv] = getcurve
-
-  scale = 1.0;
+  if nargin<3
+      scale = 1.0;
+  end
   pts = [...
          -0.4          0.42
          -0.6          0.4
@@ -40,4 +41,4 @@ function [cpx, cpy, dist] = cpBeanCurve(x, y)
   myspline = cscvn(pts');
 
   DEBUG = 0;
-  [cpx, cpy, dist] = cpSpline2D(x, y, myspline, 1, DEBUG);
+  [cpx, cpy, dist, param] = cpSpline2D(x, y, myspline, 1, DEBUG);

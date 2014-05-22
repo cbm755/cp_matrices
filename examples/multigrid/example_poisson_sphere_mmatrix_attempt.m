@@ -79,17 +79,39 @@ for i = 1:1:n_level
     
     E = interp3_matrix(a_x1d{i}, a_y1d{i}, a_z1d{i}, a_xcp{i}, a_ycp{i}, a_zcp{i}, 1);
     E = E(:,a_band{i});
-    
-    [Average,DiagwLinverse{i}] = buildCPmatrixFromLaplacian3d(a_x1d{i}, a_y1d{i}, a_z1d{i}, ...
-                                                    a_xcp{i}, a_ycp{i}, a_zcp{i}, 3, a_band{i});
-    
     I = speye(size(E));
-    [GAMMA1{i}, GAMMA2{i}] = findGammaMatrix2(a_x1d{i}, a_y1d{i}, a_z1d{i}, a_xcp{i}, a_ycp{i}, a_zcp{i}, 3);
+    
+     [Average,DiagwLinverse{i}] = buildCPmatrixFromLaplacian3d2ndOrder3rdAttempt(a_x1d{i}, a_y1d{i}, a_z1d{i}, ...
+                                                     a_xcp{i}, a_ycp{i}, a_zcp{i}, 3, a_band{i});
+     [GAMMA1{i}, GAMMA2{i}] = find2GammaMatrices(a_x1d{i}, a_y1d{i}, a_z1d{i}, a_xcp{i}, a_ycp{i}, a_zcp{i}, 3);
+    
+    
+%     [Average,DiagwLinverse{i}] = buildCPmatrixFromLaplacian3d2ndOrder2ndAttempt(a_x1d{i}, a_y1d{i}, a_z1d{i}, ...
+%                                                     a_xcp{i}, a_ycp{i}, a_zcp{i}, 3, a_band{i});
+%     [GAMMA1{i}, GAMMA2{i}] = find2GammaMatrices2ndOrder2ndAttempt(a_x1d{i}, a_y1d{i}, a_z1d{i}, a_xcp{i}, a_ycp{i}, a_zcp{i}, 3);
+    
+%     [Average,DiagwLinverse{i}] = buildCPmatrixFromLaplacian3d2ndOrder(a_x1d{i}, a_y1d{i}, a_z1d{i}, ...
+%                                                     a_xcp{i}, a_ycp{i}, a_zcp{i}, 3, a_band{i});
+%     [GAMMA1{i}, GAMMA2{i}] = find2GammaMatrices2ndOrder(a_x1d{i}, a_y1d{i}, a_z1d{i}, a_xcp{i}, a_ycp{i}, a_zcp{i}, 3);
+
+%     [Average,DiagwLinverse{i}] = buildCPmatrixFromLaplacian3d(a_x1d{i}, a_y1d{i}, a_z1d{i}, ...
+%                                                     a_xcp{i}, a_ycp{i}, a_zcp{i}, 3, a_band{i});
+%     [GAMMA1{i}, GAMMA2{i}] = find2GammaMatrices(a_x1d{i}, a_y1d{i}, a_z1d{i}, a_xcp{i}, a_ycp{i}, a_zcp{i}, 3);
+    
+
+    
     % this approach needs to modify rhs:
     %Mc{i} = E*Lc{i} - GAMMA1{i}*(I-Ec{i}) - GAMMA2{i}*(I-DiagwLinverse{i}*Average) - shift*I - shift*GAMMA2{i}*DiagwLinverse{i};
+    
     % this approach does not need to modify rhs:
     Mc{i} = (I + GAMMA2{i}*DiagwLinverse{i})^(-1) * ...
         ( E*Lc{i} - GAMMA1{i}*(I-Ec{i}) - GAMMA2{i}*(I-DiagwLinverse{i}*Average) ) - shift*I;
+    
+    
+    % Another approach using a linear combination of Lcp
+%     Lcp = buildLaplacianMatrixAtCP(a_x1d{i}, a_y1d{i}, a_z1d{i}, a_xcp{i}, a_ycp{i}, a_zcp{i}, 3, a_band{i});
+%     w = 1;
+%     Mc{i} = (1-w)*E*Lc{i} - 6/ddx^2*(I-Ec{i}) + w*Lcp- shift*I;
 end
 
 % test whether M-matrix property holds

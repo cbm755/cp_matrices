@@ -1,11 +1,13 @@
-function [x,y,tt] = paramBeanCurve(N)
+function [x,y,tt] = paramBeanCurve(N,scale)
 %PARAMBEANCURVE   A parameterization of the bean curve
 
 
   % TODO: The spline data here is duplicated in the cp file, should use
   % a common helper function?
 
-  scale = 1.0;
+  if nargin<2
+      scale = 1.0;
+  end
   pts = [...
          -0.4          0.42
          -0.6          0.4

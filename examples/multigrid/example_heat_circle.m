@@ -109,7 +109,7 @@ for i = 1:1:n_level-1
     x = (x0:dx_tmp:x1)';
     y = (y0:dx_tmp:y1)';
 
-    Eplot{i} = interp2_matrix_test( x, y, xp, yp, p );
+    Eplot{i} = interp2_matrix( x, y, xp, yp, p );
     Eplot{i} = Eplot{i}(:, a_band{i});
     dx_tmp = 2*dx_tmp;
 end
@@ -258,20 +258,20 @@ dt = 0.25*dx^2;
 A = I + dt*M;
 
 
-kk = 1:1000;
-norm_Ak = zeros(size(kk));
-Ak = I;
-for i = kk
-    Ak1 = A*Ak;
-    tmp = (sum(abs(Ak1),2) - sum(abs(Ak),2));
-    %dAk = norm(Ak1-Ak,inf);
-    %dAk = max(max(Ak1)) - max(max(Ak));
-    dAk = min(min(Ak1)) - min(min(Ak));
-    Ak = Ak1;
-    norm_Ak(i) = norm(Ak,inf);
-    if mod(i,5) == 0
-        disp(['i=',num2str(i),'; norm(A^k,inf)=',num2str(norm_Ak(i)), ...
-              '; abs row sum diff: ', num2str(max(tmp)),'  ', num2str(min(tmp)), ...
-              '; diff: ', num2str(dAk)]);
-    end
-end
+% kk = 1:1000;
+% norm_Ak = zeros(size(kk));
+% Ak = I;
+% for i = kk
+%     Ak1 = A*Ak;
+%     tmp = (sum(abs(Ak1),2) - sum(abs(Ak),2));
+%     %dAk = norm(Ak1-Ak,inf);
+%     %dAk = max(max(Ak1)) - max(max(Ak));
+%     dAk = min(min(Ak1)) - min(min(Ak));
+%     Ak = Ak1;
+%     norm_Ak(i) = norm(Ak,inf);
+%     if mod(i,5) == 0
+%         disp(['i=',num2str(i),'; norm(A^k,inf)=',num2str(norm_Ak(i)), ...
+%               '; abs row sum diff: ', num2str(max(tmp)),'  ', num2str(min(tmp)), ...
+%               '; diff: ', num2str(dAk)]);
+%     end
+% end
