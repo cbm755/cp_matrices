@@ -45,7 +45,7 @@ if (loaddata == 1)
   I = speye(size(E));
 
   %% plotting grid
-  [xp,yp,zp] = paramf(128);
+  [xp,yp,zp] = paramf(256);
   % Eplot is a matrix which interpolations data onto the plotting grid
   Eplot = interp3_matrix(x1d, y1d, z1d, xp(:), yp(:), zp(:), p, band);
 end
@@ -77,7 +77,7 @@ figure(1);
 sphplot = Eplot*u;
 sphplot = reshape(sphplot, size(xp));
 Hplot = surf(xp, yp, zp, sphplot);
-title( ['u at time ' num2str(t) ', kt= ' num2str(kt)] );
+title('initial u')
 xlabel('x'); ylabel('y'); zlabel('z');
 axis equal
 view(-10, 60)
@@ -117,7 +117,7 @@ for kt = 1:numtimesteps
 
   t = kt*dt;
 
-  if ( (mod(kt,20)==0) || (kt<=10) || (kt==numtimesteps) )
+  if ( (mod(kt,25)==0) || (kt<=10) || (kt==numtimesteps) )
     disp([kt t]);
     sphplot = Eplot*u;
     sphplot = reshape(sphplot, size(xp));
