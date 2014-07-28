@@ -1,3 +1,6 @@
+# project specific
+python/build
+
 # compiled python and shared objects
 *.pyc
 *.pyo
@@ -13,3 +16,9 @@
 .pydevproject
 *.pickle
 *.mat
+*.png
+*.jpg
+# archives
+*.tar
+*.tar.gz
+*.zip
