@@ -1,7 +1,7 @@
 function gg = refine_cpgrid_sten_2d(g, p)
 %REFINE_CPGRID_STEN_2D CP grid refinement in 2D using interp stencil
 %
-%   Private: you probably want refine_grid()
+%   Private: you probably want refine_cpgrid()
 %
 %   gg = refine_cpgrid_sten_2d(g, p)
 %     uses (stencils for) degree p interpolation.  p=3 is the

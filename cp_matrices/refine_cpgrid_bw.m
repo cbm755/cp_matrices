@@ -1,9 +1,9 @@
 function gg = refine_cpgrid_bw(g, bw)
 %REFINE_CPGRID_BW  CP grid refinement using bandwidth
 %
-%   cpgrid_new = refine_cpgrid(cpgrid_old)
+%   cpgrid_new = refine_cpgrid_bw(cpgrid_old)
 %
-%   cpgrid_new = refine_cpgrid(cpgrid_old, bw)
+%   cpgrid_new = refine_cpgrid_bw(cpgrid_old, bw)
 %     uses a bandwidth bw*dx to determine the band.  bw defaults to output of
 %     rm_bandwidth() if omitted.
 %

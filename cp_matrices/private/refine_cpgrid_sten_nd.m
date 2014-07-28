@@ -1,7 +1,7 @@
 function gg = refine_cpgrid_sten_nd(g, p)
 %REFINE_CPGRID_STEN_ND CP grid refinement in n-dimensions using stencil
 %
-%   Private: you probably want refine_grid()
+%   Private: you probably want refine_cpgrid()
 
   % see refine_cpgrid_sten_2d for comments
 

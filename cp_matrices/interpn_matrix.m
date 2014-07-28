@@ -1,5 +1,8 @@
 function [Ei, Ej, Es] = interpn_matrix(xs, xi, p, band, invbandmap)
 %INTERPN_MATRIX  Return a n-D interpolation matrix
+%
+%   You probably want the "interp_matrix" frontend.
+%
 %   E = INTERPN_MATRIX(X, XI, P)
 %   E = INTERPN_MATRIX({x y z ... w}, {xi yi zi ... wi}, P)
 %   Build a matrix which interpolates grid data on a grid defined by

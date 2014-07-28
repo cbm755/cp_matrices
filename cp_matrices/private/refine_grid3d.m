@@ -1,6 +1,6 @@
 function [band,xg,yg,zg,cpxg,cpyg,cpzg,distg,bdyg,dx,x1d,y1d,z1d] = refine_grid3d(cpf,dx0,x1d0,y1d0,z1d0,bw0,band0,dist0,bdy0,use_ndgrid)
 %REFINE_GRID3D   Make a finer CP representation
-%   Call parent wrapper function "refine_grid" instead.
+%   Call parent wrapper function "refine_grid_bw" instead.
 
   dim = 3;
 
