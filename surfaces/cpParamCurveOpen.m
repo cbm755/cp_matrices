@@ -27,6 +27,9 @@ g = @(t,x,y) 2*(xs(t) - x).*xp(t) + 2*(ys(t) - y).*yp(t);
 gp = @(t,x,y) 2*xp(t).*xp(t) + 2*(xs(t) - x).*xpp(t) + 2*yp(t).*yp(t) + 2*(ys(t) - y).*ypp(t);
 
 
+warning('This code doesn''t work (yet), see _oldloop version and cpSpline2D.m');
+
+
 %% Initial guess
 % use M equispaced samples in the parameter space
 M = 100
