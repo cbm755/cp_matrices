@@ -1,12 +1,14 @@
 function varargout = interp_matrix(g, p, other)
 %INTERP_MATRIX  Return an interpolation matrix
-%   E = interpn_matrix(g, p)
+%   E = interp_matrix(g, p)
 %       Build a matrix which interpolates grid data on a grid defined
 %       by the cpgrid object 'g' onto its closest points.
 %       Interpolation is done using degree 'p' barycentric Lagrange
 %       interpolation (defaults to 3 if omitted).  E will be a
 %       'length(g.x)' by 'length(g.band)' sparse matrix
 %
+%   E = interp_matrix(g, {XI YI}, p)
+%   E = interp_matrix(g, {XI YI ZI}, p)
 %   E = interp_matrix(g, {XI YI ZI ... WI}, p)
 %       As above but you can specify a cell array of column vectors
 %       for the interpolation points.  Often used for the "Eplot"
