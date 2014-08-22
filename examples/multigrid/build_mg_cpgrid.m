@@ -3,11 +3,14 @@ function [a_band, a_xcp, a_ycp, a_distg, a_bdyg, a_dx, a_x1d, a_y1d, a_xg, a_yg,
 
 % setting up cp grids, invoking function 'refine_grid'
 
+if (nargin < 7)
+    use_ndgrid = 0;
+end
 if (nargin < 8)
     use_ndgrid = 0;
 end
 if (nargin < 9)
-    use_ndgrid = 0;
+    need_param = false;
 end
 
 n_level = round(log(dx_coarsest/dx)/log(2)) + 1;
@@ -71,9 +74,17 @@ a_xg{i} = xg;
 a_yg{i} = yg;
 a_param{i} = paramg;
 
+if need_param == true
 for i = n_level-1:-1:1
     [a_band{i}, a_xg{i}, a_yg{i}, a_xcp{i}, a_ycp{i}, a_distg{i}, a_bdyg{i}, a_dx{i}, a_x1d{i}, a_y1d{i}, a_param{i}] = ...
         refine_grid(1, cpf, a_dx{i+1}, a_x1d{i+1}, a_y1d{i+1}, bw, a_band{i+1}, a_distg{i+1}, a_bdyg{i+1}, use_ndgrid, need_param);
 end
+else
+for i = n_level-1:-1:1
+    [a_band{i}, a_xg{i}, a_yg{i}, a_xcp{i}, a_ycp{i}, a_distg{i}, a_bdyg{i}, a_dx{i}, a_x1d{i}, a_y1d{i}, a_param{i}] = ...
+        refine_grid(1, cpf, a_dx{i+1}, a_x1d{i+1}, a_y1d{i+1}, bw, a_band{i+1}, a_distg{i+1}, a_bdyg{i+1}, use_ndgrid);
+end
+end
+
 
 end

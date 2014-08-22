@@ -2,6 +2,11 @@ function [band,xg,yg,cpxg,cpyg,distg,bdyg,dx,x1d,y1d,param] = refine_grid2d(cpf,
 %REFINE_GRID2D   Make a finer CP representation
 %   Call parent wrapper function "refine_grid" instead.
 
+
+  if nargin < 10
+    need_param = false;
+  end
+
   dim = 2;
 
   relpt = [x1d0(1) y1d0(1)];

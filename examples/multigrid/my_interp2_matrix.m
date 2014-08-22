@@ -1,4 +1,4 @@
-function [E,Ej,Es] = my_interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
+function [E,GAMMA] = my_interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
 
   %% linear interpolation using cubic stencil. 
   
@@ -34,16 +34,6 @@ function [E,Ej,Es] = my_interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
     error('unexpected inputs');
   end
 
-  if (nargout > 1)
-    makeListOutput = true;
-  else
-    makeListOutput = false;
-  end
-
-  if makeBanded && makeListOutput
-    error('currently cannot make both Banded and Ei,Ej,Es output');
-  end
-
   T = tic;
   dx = x(2)-x(1);   Nx = length(x);
   dy = y(2)-y(1);   Ny = length(y);
@@ -55,7 +45,7 @@ function [E,Ej,Es] = my_interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
   end
 
   dim = 2;
-  N = 2;
+  N = p+1;
   EXTSTENSZ = N^dim;
 
   %tic
@@ -71,9 +61,12 @@ function [E,Ej,Es] = my_interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
   %tic
   % this used to be a call to buildInterpWeights but now most of
   % that is done here
-  [Ibpt, Xgrid] = findGridInterpBasePt_vec([xi yi], 3, ptL, ddx);
-  xw = LagrangeWeights1D_vec(Xgrid(:,1), xi, 3*ddx(1), N);
-  yw = LagrangeWeights1D_vec(Xgrid(:,2), yi, 3*ddx(2), N);
+  [Ibpt, Xgrid] = findGridInterpBasePt_vec([xi yi], p, ptL, ddx);
+  xw3 = LagrangeWeights1D_vec(Xgrid(:,1), xi, ddx(1), N);
+  yw3 = LagrangeWeights1D_vec(Xgrid(:,2), yi, ddx(2), N);
+  
+  xw1 = LagrangeWeights1D_vec(Xgrid(:,1)+dx, xi, ddx(1), 2);
+  yw1 = LagrangeWeights1D_vec(Xgrid(:,2)+dy, yi, ddx(2), 2);
   %toc
 
   %tic
@@ -82,14 +75,16 @@ function [E,Ej,Es] = my_interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
     for j=1:N
       gi = (Ibpt(:,1) + i - 1);
       gj = (Ibpt(:,2) + j - 1);
-      ijk = sub2ind([N,N], j, i);
-      weights(:,ijk) = xw(:,i) .* yw(:,j);
-
+      ij = sub2ind([N,N], j, i);
+      if i==2 || i==3
+          weights(:,ij) = xw1(:,i-1) .* yw3(:,j);
+      end
+      
       if (use_ndgrid)
-        Ej(:,ijk) = sub2ind([Nx,Ny], gi, gj);
+        Ej(:,ij) = sub2ind([Nx,Ny], gi, gj);
       else
         %Ej(:,ijk) = sub2ind([Ny,Nx], gj, gi);
-        Ej(:,ijk) = (gi-1)*Ny + gj;
+        Ej(:,ij) = (gi-1)*Ny + gj;
       end
     end
   end
@@ -97,15 +92,42 @@ function [E,Ej,Es] = my_interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
   T1 = toc(T);
   %fprintf('done new Ei,Ej,weights, total time: %g\n', T1);
 
-
+  for j = 2:3
+      ij = sub2ind([N,N], j, 1);
+      weights(:,ij) = weights(:,ij) + yw1(:,j-1) .* xw3(:,1);
+  end
+  
+  for j = 2:3
+      ij = sub2ind([N,N], j, 2);
+      weights(:,ij) = weights(:,ij) - 2*yw1(:,j-1) .* xw3(:,1);
+  end
+  
+  for j = 2:3
+      ij = sub2ind([N,N], j, 3);
+      weights(:,ij) = weights(:,ij) + yw1(:,j-1) .* xw3(:,1);
+  end
+  
+  for j = 2:3
+      ij = sub2ind([N,N], j, 2);
+      weights(:,ij) = weights(:,ij) + yw1(:,j-1) .* xw3(:,4);
+  end
+  
+  for j = 2:3
+      ij = sub2ind([N,N], j, 3);
+      weights(:,ij) = weights(:,ij) - 2*yw1(:,j-1) .* xw3(:,4);
+  end
+  
+  for j = 2:3
+      ij = sub2ind([N,N,N], j, 4);
+      weights(:,ij) = weights(:,ij) + yw1(:,j-1) .* xw3(:,4);
+  end
+  
   % TODO: is there any advantage to keeping Ei as matrices?  Then each
   % column corresponds to the same point in the stencil...
-  if ~makeListOutput
+  
     tic
     E = sparse(Ei(:), Ej(:), weights(:), length(xi), Nx*Ny);
     T2 = toc;
-    %fprintf('call to "sparse" time: %g\n', toc);
-  end
 
   if (makeBanded)
     %disp('band the large matrix:');
@@ -127,9 +149,8 @@ function [E,Ej,Es] = my_interp2_matrix(x, y, xi, yi, p, band, use_ndgrid)
     end
   end
 
-  if (makeListOutput)
-    E = Ei(:);   % first output is called E
-    Ej = Ej(:);
-    Es = weights(:);
-  end
+  b = yi - Xgrid(:,2) - dx;
+  gamma = 8 ./ ( (dx+b).*(2*dx-b) );
+  GAMMA = spdiags(gamma,[0],length(xi),length(xi));
+  
 end

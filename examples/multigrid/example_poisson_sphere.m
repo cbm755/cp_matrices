@@ -18,10 +18,10 @@ x1 = 3;
 % 2D example on a circle
 % Construct a grid in the embedding space
 
-dx = 0.1; % grid size
-%dx = 0.025;
+%dx = 0.2; % grid size
+dx = 0.05;
 %dx = 0.00625;  % lots of memory...
-dx_coarsest = 0.2;   % coarsest grid size
+dx_coarsest = 0.4;   % coarsest grid size
 x1d_coarsest = (x0:dx_coarsest:x1)';
 y1d_coarsest = x1d_coarsest;
 z1d_coarsest = x1d_coarsest;
@@ -68,21 +68,30 @@ gamma = 1 - alpha - beta;
 
 for i = 1:1:n_level
     ddx = a_x1d{i}(2) - a_x1d{i}(1);
-    Ec{i} = interp3_matrix(a_x1d{i}, a_y1d{i}, a_z1d{i}, a_xcp{i}, a_ycp{i}, a_zcp{i}, p);
-    Ec{i} = Ec{i}(:, a_band{i});
-    %Lc{i} = laplacian_3d_matrix(a_x1d{i}, a_y1d{i}, a_z1d{i}, order, a_band{i}, a_band{i});
-    Lc{i} = laplacian_wider_stencil_3d_matrix(a_x1d{i}, a_y1d{i}, a_z1d{i}, order, alpha, beta, gamma, a_band{i}, a_band{i});
+    Lc{i} = laplacian_3d_matrix(a_x1d{i}, a_y1d{i}, a_z1d{i}, order, a_band{i}, a_band{i});
+    %Lc{i} = laplacian_wider_stencil_3d_matrix(a_x1d{i}, a_y1d{i}, a_z1d{i}, order, alpha, beta, gamma, a_band{i}, a_band{i});
     
     E = interp3_matrix(a_x1d{i}, a_y1d{i}, a_z1d{i}, a_xcp{i}, a_ycp{i}, a_zcp{i}, 1);
     E = E(:,a_band{i});
     
-%     lambda = 2*dim/ddx^2;
-%     Mc{i} = E*Lc{i} - lambda*(speye(size(E))-Ec{i});
-    gamma1 = 6 * ( alpha + beta/3 + gamma/2 );
-    GAMMA = findGammaMatrix(alpha,beta,gamma1,a_x1d{i},a_y1d{i},a_z1d{i},a_xcp{i},a_ycp{i},a_zcp{i},p);
-    
-    Mc{i} = E*Lc{i} - GAMMA*(speye(size(E))-Ec{i});
-    
+   Ec{i} = interp3_matrix(a_x1d{i}, a_y1d{i}, a_z1d{i}, a_xcp{i}, a_ycp{i}, a_zcp{i}, p);
+   Ec{i} = Ec{i}(:, a_band{i});
+
+%% normal approach    
+    lambda = 2*dim/ddx^2;
+    Mc{i} = E*Lc{i} - lambda*(speye(size(E))-Ec{i});
+
+%% attempt using wider Laplacian stencil
+%    gamma1 = 6 * ( alpha + beta/3 + gamma/2 );
+%    GAMMA = findGammaMatrix(alpha,beta,gamma1,a_x1d{i},a_y1d{i},a_z1d{i},a_xcp{i},a_ycp{i},a_zcp{i},p);
+%    Mc{i} = E*Lc{i} - GAMMA*(speye(size(E))-Ec{i});
+ 
+%% new attempt: interp matrix E without corner weights
+%    [Ec{i}, GAMMA] = my_interp3_matrix(a_x1d{i},a_y1d{i},a_z1d{i},a_xcp{i},a_ycp{i},a_zcp{i},p,a_band{i});
+%    Mc{i} = E*Lc{i} - GAMMA*(speye(size(E))-Ec{i});
+
+
+%   Mc_old{i} = Lc{i}*Ec{i} - 2*dim/ddx^2*(speye(size(E))-Ec{i});
 end
 
 % test whether M-matrix property holds
@@ -366,17 +375,17 @@ set(gca,'Fontsize',12)
 xlim([0 10])
 
 
-%% some tests 1:
+%% some tests:
 for i = 1:n_level
     Lc{i} = Lc{i} + shift*speye(size(Ec{i}));
     Mc{i} = Mc{i} + shift*speye(size(Ec{i}));
 end
 
-i = n_level-1;
+i = n_level;
 I = speye(size(Ec{i}));
 
-%A = Ec{i} * (I + 1/6*a_dx{i}^2*Lc{i});
-A = I + 1/6*a_dx{i}^2*Mc{i};
+A = Ec{i} * (I + 1/6*a_dx{i}^2*Lc{i});
+%A = I + 1/6*a_dx{i}^2*Mc{i};
 a_vec = [];
 for cnt = 1:10000
 a = 2*(rand(length(A),1)-0.5);
@@ -390,36 +399,9 @@ end
 end
 
 
-
-%% some tests 2:
-shift = 1;
-for i = 1:1:n_level
-    Mc{i} = Mc{i} + shift*speye(size(Mc{i}));
-    Lc{i} = Lc{i} + shift*speye(size(Lc{i}));
-end
-
-
-i = n_level;
-% if dt=0.25*dx^2, then norm(A^k,inf) seems to grow all the time, might be
-% unstable?
-% dt = 1/6*dx^2;
-% A = speye(size(Ec{i})) + dt*Mc{i};
-
-A = Ec{i} * (speye(size(Ec{i})) + 1/12*a_dx{i}^2*Lc{i});
-kk = 1:100;
-norm_Ak = zeros(size(kk));
-Ak = speye(size(Lc{i}));
-for cnt = kk
-    Ak1 = A*Ak;
-%    tmp = (sum(abs(Ak1),2) - sum(abs(Ak),2));
-%    dAk = norm(Ak1-Ak,inf);
-    Ak = Ak1;
-    norm_Ak(cnt) = norm(Ak,inf);
-    norm(Ak,inf)
-%     if mod(cnt,5) == 0
-%         disp(['cnt=',num2str(cnt),'; norm(A^k,inf)=',num2str(norm_Ak(cnt)), ...
-%               '; abs row sum diff: ', num2str(max(tmp)),'  ', num2str(min(tmp)), ...
-%               '; diff: ', num2str(dAk)]);
-%     end
+B = A;
+for cnt = 1:100
+    B = B*A;
+    norm(B,inf)
 end
 

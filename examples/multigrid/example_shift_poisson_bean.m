@@ -90,6 +90,22 @@ for i = 1:1:n_level
     
     Mc{i} = E*Lc{i} - 2*dim/ddx^2*(speye(size(E))-Ec{i});
     %Mc{i} = Ec{i}*Lc{i} - 2*dim/ddx^2*(speye(size(E))-Ec{i});
+    
+    Mc_old{i} = Lc{i}*Ec{i} - 2*dim/ddx^2*(speye(size(E))-Ec{i});
+    
+%      [Ec{i}, GAMMA] = my_interp2_matrix(a_x1d{i},a_y1d{i},a_xcp{i},a_ycp{i},p,a_band{i});
+%      Mc{i} = E*Lc{i} - GAMMA*(speye(size(E))-Ec{i});
+end
+
+% test whether M-matrix property holds
+for i = 1:1:length(Mc)
+diagM = diag(diag(Mc{i}));
+flag1 = diagM > 0;
+nnz(flag1)
+tmp = Mc{i} - diagM;
+flag2 = tmp < 0;
+nnz(flag2)
+max(abs(tmp(flag2)))
 end
 
 shift = 1;
@@ -374,7 +390,7 @@ a = 2*(rand(length(A),1)-0.5);
 %b = Ec{i}*a;
 b = a;
 %if norm(A*b,inf) > norm(b,inf)
-if norm(A*b) > norm(b)    
+if norm(A*b,inf) > norm(b,inf)    
 disp('bad')
 end
 end
