@@ -8,8 +8,8 @@ v = zeros(size(V{start}));
 
 % if the (relative) difference of v after two successive vcylces is less
 % than 'tol', then stop doing vcycles
-tolV = 1e-6;    
-tolRes = 1e-7;
+tolV = 1e-12;    
+tolRes = 1e-12;
 
 % cnt and res are used for debugging and seeing effectiveness of multigrid
 % method
@@ -32,7 +32,7 @@ while cnt < MAX
    if r < tolRes
        break;
    end
-   if norm((v-v1))/norm(v) < tolV
+   if norm((v(not_bdy)-v1(not_bdy)),inf)/norm(v(not_bdy),inf) < tolV
       break;
    end
    v = v1;

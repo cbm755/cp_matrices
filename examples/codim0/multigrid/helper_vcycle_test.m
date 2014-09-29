@@ -28,10 +28,10 @@ for i = start:1:n_level-1
     res = F{i} - (L{i}*V{i});
     F{i+1}(~BDY{i+1}) = TMf2c{i}(~BDY{i+1},:)*res;
     
-    FonS{i} = FonS{i} - Ecp_Omega_S{i}*V{i};
-    F{i+1}(BDY{i+1}) = Ecp_f2c_Omega_S{i} * FonS{i}; %- Ecp_f2c_Omega{i} * V{i};
-    %FonS{i} = FonS{i} - Ecp_Omega_S{i}*V{i};
-    FonS{i+1} = Ecp_f2c_S{i}*FonS{i};
+%     FonS{i} = FonS{i} - Ecp_Omega_S{i}*V{i};
+%     F{i+1}(BDY{i+1}) = Ecp_f2c_Omega_S{i} * FonS{i}; %- Ecp_f2c_Omega{i} * V{i};
+%     %FonS{i} = FonS{i} - Ecp_Omega_S{i}*V{i};
+%     FonS{i+1} = Ecp_f2c_S{i}*FonS{i};
 
 end
 

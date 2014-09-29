@@ -1,4 +1,4 @@
-function [v, error_circ_inf_mg, res] = gmg(L, E_out_out, E_out_in, Ecp_f2c,V, F, TMf2c, TMc2f, BAND, BDYG, n1, n2, start, w, uexact, MAX)
+function [v, error_circ_inf_mg, res] = gmg(L, E_out_out, E_out_in, V, F, TMf2c, TMc2f, BAND, BDYG, n1, n2, start, w, uexact, MAX)
 
 % geometric multigrid method, if the solution still has the potential to be 
 % 'improved', then invoke function 'helper_vcycle_test' to improve it
@@ -24,7 +24,7 @@ res(1) = 1;
 not_bdy = ~BDYG{start};
 
 while cnt < MAX
-   v1 = helper_vcycle(L, E_out_out, E_out_in, Ecp_f2c, V, F, TMf2c, TMc2f, BAND, BDYG, n1, n2, start, w);
+   v1 = helper_vcycle(L, E_out_out, E_out_in, V, F, TMf2c, TMc2f, BAND, BDYG, n1, n2, start, w);
    error = uexact{start} - v1;
    error_circ_inf_mg(cnt+1) = norm(error(not_bdy),inf) / norm(uexact{start}(not_bdy),inf);
    res(cnt+1) = norm((F{start}(not_bdy) - L{start}(not_bdy,:)*v1),inf) / norm(F{start}(not_bdy),inf);
@@ -32,7 +32,7 @@ while cnt < MAX
    if r < tolRes
        break;
    end
-   if norm((v-v1))/norm(v) < tolV
+   if norm((v(not_bdy)-v1(not_bdy)),inf)/norm(v(not_bdy),inf) < tolV
       break;
    end
    v = v1;

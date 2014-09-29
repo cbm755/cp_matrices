@@ -25,7 +25,7 @@ function [cpx, cpy, dist, bdy] = cpCircleInterior(x, y, R, cen)
   [cpx, cpy] = pol2cart(th, R);
 
   dist = r - R;
-  bdy = dist>0;
+  bdy = dist>10*eps;
   dist(~bdy) = 0;
   cpx(~bdy) = x(~bdy);
   cpy(~bdy) = y(~bdy);
