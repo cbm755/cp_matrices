@@ -36,7 +36,7 @@ n2 = 3;
 p_f2c = 1;
 p_c2f = 1;
 
-w = 3/4;
+w = 0.8;
 
 cpf = @cpCircleInterior;
 %cpf = @cpSquareInterior;

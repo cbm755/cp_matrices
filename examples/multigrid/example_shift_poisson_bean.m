@@ -33,7 +33,7 @@ order = 2;  % Laplacian order: bw will need to increase if changed
 bw = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((order/2+(p+1)/2)^2));
 
 
-w = 1; 
+w = 0.8; 
 
 scale = 2;
 pts = [...
@@ -120,26 +120,26 @@ disp('building transform matrices to do restriction and prolongation later ... '
 [TMf2c, TMc2f] = helper_set_TM(a_x1d, a_y1d, a_xcp, a_ycp, a_band, a_bdyg, p_f2c, p_c2f);
 
   
-  sp = cscvn(pts');
-  sp1 = fnder(sp);
-  sp2 = fnder(sp,2);
-  
-  S1.type='()';
-  S1.subs = {1,':'};
-  S2.type='()';
-  S2.subs = {2,':'};
+sp = cscvn(pts');
+sp1 = fnder(sp);
+sp2 = fnder(sp,2);
 
-  % parameterised curve:
-  xs = @(t) subsref(ppval(sp,t), S1)';
-  ys = @(t) subsref(ppval(sp,t), S2)';
+S1.type='()';
+S1.subs = {1,':'};
+S2.type='()';
+S2.subs = {2,':'};
+
+% parameterised curve:
+xs = @(t) subsref(ppval(sp,t), S1)';
+ys = @(t) subsref(ppval(sp,t), S2)';
   
-  % derivative of parametrisation:
-  xp = @(t) subsref(ppval(sp1,t), S1)';
-  yp = @(t) subsref(ppval(sp1,t), S2)';
+% derivative of parametrisation:
+xp = @(t) subsref(ppval(sp1,t), S1)';
+yp = @(t) subsref(ppval(sp1,t), S2)';
   
-  % second derivative:
-  xpp = @(t) subsref(ppval(sp2,t), S1)';
-  ypp = @(t) subsref(ppval(sp2,t), S2)';
+% second derivative:
+xpp = @(t) subsref(ppval(sp2,t), S1)';
+ypp = @(t) subsref(ppval(sp2,t), S2)';
 
 
 %% Setting up right hand side
@@ -233,11 +233,24 @@ matlab_order = log(error_inf_matlab(2:end)./error_inf_matlab(1:end-1))/log(2);
 error_inf_matlab = error_inf_matlab(end:-1:1);
 matlab_order = matlab_order(end:-1:1);
 
+
+u_fmg = cell(n_level-1,1);
+nc = 2;
+error_inf_fmg = zeros(n_level-1,1);
+for i = 1:1:n_level-1
+    u_fmg{i} = fmg(Mc, Lc, Ec, V, F, TMf2c, TMc2f, a_band, [], n1, n2, nc, i, w);
+    circplot{i} = Eplot{i}*u_fmg{i};
+    error = circplot{i} - uexact;
+    error_inf_fmg(i) = max(abs( error )) / norm(uexact,inf);
+end
+fmg_order = log(error_inf_fmg(2:end)./error_inf_fmg(1:end-1))/log(2);
+error_inf_fmg = error_inf_fmg(end:-1:1);
+fmg_order = fmg_order(end:-1:1);
+
 MAX = 100;
 err_inf = zeros(n_level-1,MAX);
 res = zeros(n_level-1, MAX);
 u_multigrid = cell(n_level-1,1);
-R = {};
 for start = 1:1:n_level-1
     V{start} = zeros(size(F{start}));
     %V{start} = ones(size(F{start}));
@@ -246,10 +259,11 @@ for start = 1:1:n_level-1
         V{i} = zeros(size(F{i}));
     end
     [umg, err_inf(start,:), res(start,:)] = ...
-        gmg(Mc, Lc, Ec, V, F, TMf2c, TMc2f, a_band, R, n1, n2, start, w, uexact, Eplot, MAX);
+        gmg(Mc, Lc, Ec, V, F, TMf2c, TMc2f, a_band, [], n1, n2, start, w, uexact, Eplot, MAX);
     %[umg err_inf(start,:) res(start,:)] = ...
     %    gmg_debug(Mc, Lc, Ec, V, F, TMf2c, TMc2f, a_band, R, n1, n2, start, w, uexact, u_matlab, Eplot, ind, uexact_pt, MAX);
     u_multigrid{start} = umg;
+     
 end
 
 err_inf = err_inf(end:-1:1,:);
@@ -377,21 +391,21 @@ ylabel('\fontsize{15} y')
 
 
 %% some tests:
-for i = 1:n_level
-Lc{i} = Lc{i} + shift*speye(size(Ec{i}));
-Mc{i} = Mc{i} + shift*speye(size(Ec{i}));
-end
-
-for i = n_level:-1:1;
-i
-A = Ec{i} * (speye(size(Ec{i})) + 0.25*a_dx{i}^2*Lc{i});
-for cnt = 1:10000
-a = 2*(rand(length(A),1)-0.5);
-%b = Ec{i}*a;
-b = a;
-%if norm(A*b,inf) > norm(b,inf)
-if norm(A*b,inf) > norm(b,inf)    
-disp('bad')
-end
-end
-end
+% for i = 1:n_level
+% Lc{i} = Lc{i} + shift*speye(size(Ec{i}));
+% Mc{i} = Mc{i} + shift*speye(size(Ec{i}));
+% end
+% 
+% for i = n_level:-1:1;
+% i
+% A = Ec{i} * (speye(size(Ec{i})) + 0.25*a_dx{i}^2*Lc{i});
+% for cnt = 1:10000
+% a = 2*(rand(length(A),1)-0.5);
+% %b = Ec{i}*a;
+% b = a;
+% %if norm(A*b,inf) > norm(b,inf)
+% if norm(A*b,inf) > norm(b,inf)    
+% disp('bad')
+% end
+% end
+% end

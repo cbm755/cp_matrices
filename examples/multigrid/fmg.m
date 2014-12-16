@@ -1,4 +1,4 @@
-function [v] = fmg(M, L, E, V, F, TMf2c, TMc2f, BAND, BOUNDARY, n1, n2, nc, w)
+function [v] = fmg(M, L, E, V, F, TMf2c, TMc2f, BAND, BOUNDARY, n1, n2, nc, coarsest_level, w)
 
 n_level = length(BAND);
 for i = 1:1:n_level-1
@@ -7,7 +7,7 @@ end
 
 V{n_level} = M{n_level} \ F{n_level};
 
-for start = n_level-1:-1:1
+for start = n_level-1:-1:coarsest_level
    V{start} = TMc2f{start}*V{start+1};
    for cnt = 1:1:nc
        for i = start+1:1:n_level
@@ -18,6 +18,6 @@ for start = n_level-1:-1:1
    res = norm( F{start} - M{start}*V{start}, inf );
 end
 
-v = V{1};
+v = V{coarsest_level};
 
 end

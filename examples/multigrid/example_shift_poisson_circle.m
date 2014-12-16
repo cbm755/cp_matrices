@@ -66,8 +66,8 @@ for i = 1:1:n_level
    Ec{i} = interp2_matrix(a_x1d{i}, a_y1d{i}, a_xcp{i}, a_ycp{i}, p);
    %Ec{i} = interp2_matrix_cubicBspline(a_x1d{i}, a_y1d{i}, a_xcp{i}, a_ycp{i}, p);
    Ec{i} = Ec{i}(:, a_band{i});
-   %Lc{i} = laplacian_2d_matrix(a_x1d{i}, a_y1d{i}, order, a_band{i}, a_band{i});
-   Lc{i} = laplacian_wider_stencil_2d_matrix(a_x1d{i}, a_y1d{i}, order, alpha, 1-alpha, a_band{i}, a_band{i});
+   Lc{i} = laplacian_2d_matrix(a_x1d{i}, a_y1d{i}, order, a_band{i}, a_band{i});
+   %Lc{i} = laplacian_wider_stencil_2d_matrix(a_x1d{i}, a_y1d{i}, order, alpha, 1-alpha, a_band{i}, a_band{i});
    E1 = interp2_matrix(a_x1d{i}, a_y1d{i}, a_xcp{i}, a_ycp{i}, 1,a_band{i});
    
    

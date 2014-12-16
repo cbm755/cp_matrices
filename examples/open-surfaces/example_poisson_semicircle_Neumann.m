@@ -1,12 +1,24 @@
 %% test geometric multigrid method to solve poisson equation on a semicircle
+%% Exact solutions and right hand side
+shift = 1;
+% k = 10;
+% uexactfn = @(th) exp( cos(k*th) );
+% rhsfn = @(th,r)  k^2*exp( cos(k*th) ).*( sin(k*th).^2 - cos(k*th) )./r.^2 - shift*uexactfn(th);
+% g_Neumann = @(th,r) -k*uexactfn(th).*sin(k*th) ./ r;
 
-%% Using cp_matrices
+k = 5;
+uexactfn = @(th) sin(k*th);
+rhsfn = @(th,r) -k^2*sin(k*th)./r.^2 - shift*uexactfn(th);
+g_Neumann = @(th,r) k*cos(k*th)./r;
 
-% Include the cp_matrices folder (edit as appropriate)
-addpath('../../cp_matrices');
+% uexactfn = @(th) cos(10*th) - 1;
+% rhsfn = @(th,r) -100*cos(10*th)./r.^2 - shift*uexactfn(th);
+% g_Neumann = @(th,r) -10*sin(10*th)./r;
 
-% add functions for finding the closest points
-addpath('../../surfaces');
+% uexactfn = @(th) cos(th) - 1;
+% rhsfn = @(th,r) -cos(th)./r.^2 - shift*uexactfn(th);
+% g_Neumann = @(th,r) -sin(th)./r;
+
 
 x0 = -3;
 x1 = 3;
@@ -33,129 +45,144 @@ order = 2;  % Laplacian order: bw will need to increase if changed
 
 bw = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((order/2+(p+1)/2)^2));
 
-n1 = 2;
-n2 = 2;
+n1 = 3;
+n2 = 3;
 
 p_f2c = 1;
 p_c2f = 1;
 
 w = 1;
+
 radius = sqrt(3);
-cpf1 = @(x,y) cpSemicircle(x,y,radius);  paramf = @paramSemicircle;  
-%cpf = @(x,y) cpbar_2d(x,y,cpf1);
-normal1 = [1,0];
-normal2 = [1,0];
-cpf = @(x,y) cptilde_openCurveIn2d(x,y,cpf1,normal1,normal2);
+cpf = @(x,y) cpSemicircle(x,y,radius);  paramf = @paramSemicircle;  
 
 % If the curve or surface has 'real' boundary:
 has_boundary = true;
 
 disp('building cp grids ... ')
 [a_band, a_xcp, a_ycp, a_distg, a_bdyg, a_dx, a_x1d, a_y1d, a_xg, a_yg] = ...
-    build_mg_cpgrid(x1d_coarsest, y1d_coarsest, dx_coarsest, dx, bw, cpf, has_boundary, 0,0);
+    build_mg_cpgrid(x1d_coarsest, y1d_coarsest, dx_coarsest, dx, bw, cpf, has_boundary);
 
-disp('building cp matrices ... ')
-[Mc, Lc, Ec] = build_mg_cpmatrix(a_band, a_xcp, a_ycp, a_x1d, a_y1d, p, order);
+n_level = length(a_band);
+
+disp('building Laplacian matrices ... ')
+Lc = cell(n_level,1);
+Mc = cell(n_level,1);
+Ec = cell(n_level,1);
+for i = 1:1:n_level
+   Lc{i} = laplacian_2d_matrix(a_x1d{i}, a_y1d{i}, order, a_band{i}, a_band{i});
+   E1 = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp{i},a_ycp{i},1,a_band{i});
+   E3 = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp{i},a_ycp{i},3,a_band{i});
+   Mc{i} = E1*Lc{i} - 2*dim/a_dx{i}^2*(speye(size(Lc{i})) - E3);
+   Ec{i} = E3;
+   
+   Lc{i} = Lc{i} - shift*speye(size(Lc{i}));
+   Mc{i} = Mc{i} - shift*speye(size(Lc{i}));
+end
 
 disp('building transform matrices to do restriction and prolongation later ... ')
 [TMf2c, TMc2f] = helper_set_TM(a_x1d, a_y1d, a_xcp, a_ycp, a_band, a_bdyg, p_f2c, p_c2f);
 
+disp('buidling matrices to deal with boundary conditions ... ')
+E_out_out = cell(n_level,1);
+E_out_in = cell(n_level,1); 
+a_Ebar = cell(n_level,1);
+a_Edouble = cell(n_level,1);
+a_Etriple = cell(n_level,1);
+a_dist = cell(n_level,1);
+for i = 1:1:n_level
+    x1d = a_x1d{i}; y1d = a_y1d{i}; band = a_band{i}; dx = a_dx{i};
+    I = speye(size(Lc{i}));
+    bdy = logical(a_bdyg{i});
+    xcp_bdy = a_xcp{i}(bdy);
+    ycp_bdy = a_ycp{i}(bdy);
+    E = interp2_matrix(x1d,y1d,xcp_bdy,ycp_bdy,p,band);    
+    % Following expressions of nx and ny are accidently true for the semicircle case. 
+    nx = ones(size(xcp_bdy));
+    ny = zeros(size(xcp_bdy));
+    [xg,yg,a_dist{i}] = get_proj_on_conormal_2d(a_xg{i}(bdy),a_yg{i}(bdy),xcp_bdy,ycp_bdy,nx,ny);
+    xg_bar = 2*xg - a_xg{i}(bdy);
+    yg_bar = 2*yg - a_yg{i}(bdy);
+%     xg_bar = 2*xcp_bdy - a_xg{i}(bdy);
+%     yg_bar = 2*ycp_bdy - a_yg{i}(bdy);
+    [cpx_bar,cpy_bar] = cpf(xg_bar,yg_bar);
+    Ebar = interp2_matrix(x1d,y1d,cpx_bar,cpy_bar,p,band);
+    xg_double = 2*xg_bar - a_xcp{i}(bdy);
+    yg_double = 2*yg_bar - a_ycp{i}(bdy); 
+    [cpx_double, cpy_double] = cpf(xg_double,yg_double);
+    Edouble = interp2_matrix(x1d,y1d,cpx_double,cpy_double,p,band);
+    xg_triple = 2*xg_double - xg_bar;
+    yg_triple = 2*yg_double - yg_bar;
+    [cpx_triple, cpy_triple] = cpf(xg_triple,yg_triple);
+    Etriple = interp2_matrix(x1d,y1d,cpx_triple,cpy_triple,p,band);
+    
+    % quadratic interp, 2nd order
+     M_bdy = (-Ebar/2 + I(bdy,:)/2)/dx^2;
 
-n_level = length(a_band);
-Eplot = cell(n_level-1,1);
+    % cubic interp, 3rd order
+    % M_bdy = (Edouble/6 - Ebar + E/2 + I(bdy,:)/3) / dx^2;
 
-% plotting grid on circle, using theta as a parameterization
+    % quartic interp, 4th order
+    % M_bdy = (-Etriple/12 + Edouble/2 - 1.5*Ebar + 5*E/6 + I(bdy,:)/4) /dx^2;
+    
+    E_out_out{i} = M_bdy(:,bdy);
+    E_out_in{i} = M_bdy(:,~bdy);
+    Mc{i}(bdy,:) = M_bdy; 
+    a_Ebar{i} = Ebar;
+    a_Edouble{i} = Edouble;
+    a_Etriple{i} = Etriple;
+
+end 
+
+disp('setting up rhs and allocate spaces for solns')
+F = cell(n_level,1);
+V = cell(n_level,1);
+for i = 1:1:n_level
+    [th, r] = cart2pol(a_xcp{i},a_ycp{i});
+    F{i} = rhsfn(th,r);
+    bdyg = logical(a_bdyg{i});
+    %F{i}(bdyg) = g_Neumann(th(bdyg), r(bdyg)) .* a_distg{i}(bdyg)  / a_dx{i}^2;
+    F{i}(bdyg) = g_Neumann(th(bdyg), r(bdyg)) .* a_dist{i}  / a_dx{i}^2;
+    F{i}(a_bdyg{i}==2) = -F{i}(a_bdyg{i}==2);
+    V{i} = zeros(size(F{i}));
+end
+
+
+disp('set up sample points and interp matrices to evaluate the errors')
+% plotting grid on a semi-circle, using theta as a parameterization
 thetas = linspace(0, pi, 1000)';
 r = radius*ones( size(thetas) );
+uexact = uexactfn(thetas);
 % plotting grid in Cartesian coords
 [xp, yp] = pol2cart(thetas, r);
 xp = xp(:); yp = yp(:);
-    
-dx_tmp = dx;
 
+Eplot = cell(n_level-1,1);
 for i = 1:1:n_level-1
-    x = (x0:dx_tmp:x1)';
-    y = (y0:dx_tmp:y1)';
-    
-    Eplot{i} = interp2_matrix( x, y, xp, yp, p, a_band{i} );
-    dx_tmp = 2*dx_tmp;
-end
-% for testing Dirichlet Boundary Conditions
-% shift = 0;
-% rhsfn = @(th,r) -2*ones(size(th))/radius^2;
-% uexactfn = @(th) th.*(pi-th); 
-
-% k = 6;
-% rhsfn = @(th,r)  k^2*exp( cos(k*th) ).*( sin(k*th).^2 - cos(k*th) )/radius^2;
-% uexactfn = @(th) exp( cos(k*th) ) - exp(1);
-
-% rhsfn = @(th,r) 4*exp( cos(2*th) ).*( sin(2*th).^2 - cos(2*th) );
-% uexactfn = @(th) exp( cos(2*th) ) - exp(1);
-% rhsfn = @(th,r) -sin(th);
-% uexactfn = @(th) sin(th);
-% rhsfn = @(th,r) -121*sin(11*th);
-% uexactfn = @(th) sin(11*th);
-
-% for testing Neumann Boundary Conditions
-shift = 1;
- uexactfn = @(th) cos(10*th) - 1;
- rhsfn = @(th,r) -100*cos(10*th) - shift*uexactfn(th);
- 
-% uexactfn = @(th) cos(th) - 1;
-% rhsfn = @(th,r) -cos(th) - shift*uexactfn(th);
- 
-% rhsfn = @(th,r) -4*cos(2*th);
-% uexactfn = @(th) cos(2*th) - 5;
-
-
-uexact = uexactfn(thetas);
-
-disp('building right hand side and allocate space for solution ... ')
-[V, F] = helper_set_rhs(a_xcp, a_ycp, rhsfn, 1);
-% for i = 1:1:n_level-1
-%     V{i} = Ec{i}*V{i};
-%     bdyg = logical(a_bdyg{i});
-%     F{i}(bdyg,:) = -F{i}(bdyg,:);
-% end
-disp('done')
-
-tol = 1e-10;
-pt = [1 0];
-%pt = [0.8 0.6];
-%pt = [0.6 0.8];
-%pt = [0 -1];
-
-ind = cell(n_level,1);
-for i = 1:1:n_level
-    ind{i} = ( abs(a_xg{i}-pt(1))<tol & abs(a_yg{i}-pt(2))<tol );
+    Eplot{i} = interp2_matrix( a_x1d{i}, a_y1d{i}, xp, yp, p, a_band{i} );
 end
 
-[theta r] = cart2pol(pt(1),pt(2));
-uexact_pt = uexactfn(theta);
-
-
-disp('setting up boundary conditions ... ')
-%[Mc, Lc, Ec, F] = app_bnd(Mc, Lc, Ec, F, a_xcp, a_ycp, a_bdyg, pt, 'dirichlet');
-[Mc, Lc, Ec, F] = app_bnd(Mc, Lc, Ec, F, a_xg, a_yg, a_bdyg, pt,  'neumann');
-for i = 1:1:n_level
-    Mc{i} = Mc{i} - shift*speye(size(Mc{i}));
-    Lc{i} = Lc{i} - shift*speye(size(Lc{i}));
-end
-
-disp('done')
-
-semicircplot = cell(n_level-1,1);
-error_inf_matlab = cell(n_level-1,1);
+disp('pre set-up done, start to solve ...')
+error_inf_matlab = zeros(n_level-1,1);
+res_matlab = zeros(n_level,1);
 u_matlab = cell(n_level-1,1);
 for i = 1:1:n_level-1
-unew = Mc{i} \ F{i};
-semicircplot{i} = Eplot{i}*unew;
-error_inf_matlab{i} = max(abs( uexactfn(thetas) - semicircplot{i} )) / norm(uexactfn(thetas),inf);
-u_matlab{i} = unew;
+    tic;
+    
+    unew = Mc{i} \ F{i};
+        
+    t_matlab = toc
+    
+    th = cart2pol(a_xcp{i},a_ycp{i});
+
+    error_inf_matlab(i) = norm(Eplot{i}*unew-uexact,inf) / norm(uexact,inf);
+ 
+    u_matlab{i} = unew;
+
 end
+matlab_order = log(error_inf_matlab(2:end)./error_inf_matlab(1:end-1))/log(2);
 
 
-w = 1;
 MAX = 50;
 err_inf = zeros(n_level-1,MAX);
 res = zeros(n_level-1, MAX);
@@ -167,12 +194,14 @@ u_mg_debug = cell(n_level-1,1);
 R = cell(n_level,1);
 
 for start = 1:1:n_level-1
-    [umg err_inf(start,:) res(start,:)] = ...
-        gmg(Mc, Lc, Ec, V, F, TMf2c, TMc2f, a_band, R, n1, n2, start, w, uexact, Eplot, MAX);
-    %[umg_cell err_inf(start,:) res1(start,:) res2(start,:) err_matlab(start,:) cnt] = ...
-    %    gmg_debug(Mc, Lc, Ec, V, F, TMf2c, TMc2f, a_band, R, n1, n2, start, w, uexact, u_matlab, Eplot, ind, uexact_pt, MAX);
-    %u_multigrid{start} = umg_cell{cnt};
-    %u_mg_debug{start} = umg_cell;
+    V{start} = zeros(size(F{start}));
+    %V{start} = ones(size(F{start}));
+    %V{start} = rand(size(F{start})) - 0.5;
+    for i = start+1:1:n_level
+        V{i} = zeros(size(F{i}));
+    end
+    [umg, err_inf(start,:), res(start,:)] = ...
+        gmg(Mc, Lc, Ec, E_out_out, E_out_in, V, F, TMf2c, TMc2f, a_band, a_bdyg, n1, n2, start, w, Eplot, uexact, MAX);
 end
 
 res1 = res;
@@ -180,9 +209,7 @@ res1 = res;
 % plot error of matlab and error of different number of vcycles
 figure(1)
 
-err_inf_matlab = cell2mat(error_inf_matlab);
-
-rep_err_inf_matlab = repmat(err_inf_matlab,1,2);
+rep_err_inf_matlab = repmat(error_inf_matlab,1,2);
 xx = [0 7];
 semilogy(xx,rep_err_inf_matlab(1,:),'b',xx,rep_err_inf_matlab(2,:),'r',xx,rep_err_inf_matlab(3,:),'c', ...
          xx,rep_err_inf_matlab(4,:),'k',xx,rep_err_inf_matlab(5,:),'g',xx,rep_err_inf_matlab(6,:),'m')

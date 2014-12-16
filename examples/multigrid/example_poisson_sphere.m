@@ -298,12 +298,12 @@ sphplot = Eplot{i}*umg{i};
 %sphplot = Eplot{1}*F{1};
 %sphplot = uexact;
 
-error_inf_matlab = [0.098803124412236;
-   0.022296792714046;
-   0.005656587868815;
-   0.001389990501488;
-   0.000349262823944
-   nan];
+% error_inf_matlab = [0.098803124412236;
+%    0.022296792714046;
+%    0.005656587868815;
+%    0.001389990501488;
+%    0.000349262823944
+%    nan];
 
 h=figure(1);
 sphplot = reshape(sphplot, size(xp));
@@ -376,32 +376,32 @@ xlim([0 10])
 
 
 %% some tests:
-for i = 1:n_level
-    Lc{i} = Lc{i} + shift*speye(size(Ec{i}));
-    Mc{i} = Mc{i} + shift*speye(size(Ec{i}));
-end
-
-i = n_level;
-I = speye(size(Ec{i}));
-
-A = Ec{i} * (I + 1/6*a_dx{i}^2*Lc{i});
-%A = I + 1/6*a_dx{i}^2*Mc{i};
-a_vec = [];
-for cnt = 1:10000
-a = 2*(rand(length(A),1)-0.5);
-b = Ec{i}*a;
-%b = a;
-%if norm(A*b,inf) > norm(b,inf)
-if norm(A*b) > norm(b)
-disp('bad')
-a_vec = [a_vec, a];
-end
-end
-
-
-B = A;
-for cnt = 1:100
-    B = B*A;
-    norm(B,inf)
-end
-
+% for i = 1:n_level
+%     Lc{i} = Lc{i} + shift*speye(size(Ec{i}));
+%     Mc{i} = Mc{i} + shift*speye(size(Ec{i}));
+% end
+% 
+% i = n_level;
+% I = speye(size(Ec{i}));
+% 
+% A = Ec{i} * (I + 1/6*a_dx{i}^2*Lc{i});
+% %A = I + 1/6*a_dx{i}^2*Mc{i};
+% a_vec = [];
+% for cnt = 1:10000
+% a = 2*(rand(length(A),1)-0.5);
+% b = Ec{i}*a;
+% %b = a;
+% %if norm(A*b,inf) > norm(b,inf)
+% if norm(A*b) > norm(b)
+% disp('bad')
+% a_vec = [a_vec, a];
+% end
+% end
+% 
+% 
+% B = A;
+% for cnt = 1:100
+%     B = B*A;
+%     norm(B,inf)
+% end
+% 
