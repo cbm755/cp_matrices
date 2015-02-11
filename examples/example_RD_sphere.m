@@ -88,7 +88,7 @@ colorbar
 
 %% Method-of-lines approach
 % See [vonGlehn/Macdonald/Maerz 2013]
-%lambda = 8*max(nuu,nuv)/(dx^2);
+%lambda = 6*max(nuu,nuv)/(dx^2);
 %Au = nuu*(E*L) - lambda*(I-E);
 %Av = nuv*(E*L) - lambda*(I-E);
 
