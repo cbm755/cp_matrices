@@ -8,8 +8,8 @@ v = zeros(size(V{start}));
 
 % if the (relative) difference of v after two successive vcylces is less
 % than 'tol', then stop doing vcycles
-tolV = 1e-10;    
-tolRes = 1e-7;
+tolV = 1e-8;    
+tolRes = 1e-6;
 
 % cnt and res are used for debugging and seeing effectiveness of multigrid
 % method
@@ -21,7 +21,7 @@ res = zeros(1,MAX);
 error_inf(1) = 1;
 res(1) = 1;
 
-not_bdy = ~BDYG{start};
+not_bdy = ~logical(BDYG{start});
 
 while cnt < MAX
    v1 = helper_vcycle(M, L, E, E_out_out, E_out_in, V, F, TMf2c, TMc2f, BAND, BDYG, n1, n2, start, w);

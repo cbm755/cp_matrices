@@ -1,5 +1,5 @@
 function [a_band, a_xcp, a_ycp, a_distg, a_bdyg, a_dx, a_x1d, a_y1d, a_xg, a_yg, a_param] = ...
-    build_mg_cpgrid(x1d_coarsest, y1d_coarsest, dx_coarsest, dx, bw, cpf, has_boundary, use_ndgrid, need_param)
+    build_mg_grid(x1d_coarsest, y1d_coarsest, dx_coarsest, dx, bw, cpf, has_boundary, use_ndgrid, need_param)
 
 % setting up cp grids, invoking function 'refine_grid'
 
@@ -83,10 +83,10 @@ for i = n_level-1:-1:1
 end
 else
 for i = n_level-1:-1:1
-    [a_band{i}, a_xg{i}, a_yg{i}, a_xcp{i}, a_ycp{i}, a_distg{i}, a_bdyg{i}, a_dx{i}, a_x1d{i}, a_y1d{i}, a_param{i}] = ...
-        refine_grid(1, cpf, a_dx{i+1}, a_x1d{i+1}, a_y1d{i+1}, bw, a_band{i+1}, a_distg{i+1}, a_bdyg{i+1}, use_ndgrid);
+    [a_band{i}, a_xg{i}, a_yg{i}, a_xcp{i}, a_ycp{i}, a_distg{i}, a_bdyg{i}, a_dx{i}, a_x1d{i}, a_y1d{i}] = ...
+        refine_grid(1, cpf, a_dx{i+1}, a_x1d{i+1}, a_y1d{i+1}, bw, a_band{i+1}, a_distg{i+1}, a_bdyg{i+1});
+    %bw = bw*2;
 end
 end
-
 
 end
