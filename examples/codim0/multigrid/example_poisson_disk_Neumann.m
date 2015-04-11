@@ -1,18 +1,24 @@
 %% test geometric multigrid method to solve -\Delta u  = f in a disk, Neumann B.C.s
 epsilon = 1;
-q = 6; k = 2;
-uexactfn = @(x,y) x.^q + y.^q + sin(k*pi*x) + sin(k*pi*y) + cos(k*pi*x) + cos(k*pi*y);
-rhsfn = @(x,y) q*(q-1)*(x.^(q-2) + y.^(q-2)) - k^2*pi^2*(uexactfn(x,y)-x.^q-y.^q) - epsilon*uexactfn(x,y);
-uxfn = @(x,y) q*x.^(q-1) + k*pi*cos(k*pi*x) - k*pi*sin(k*pi*x);
-uyfn = @(x,y) q*y.^(q-1) + k*pi*cos(k*pi*y) - k*pi*sin(k*pi*y);
-nxfn = @(x,y) x;
-nyfn = @(x,y) y;
-g_Neumann = @(x,y) uxfn(x,y).*nxfn(x,y) + uyfn(x,y).*nyfn(x,y);
+% q = 6; k = 2;
+% uexactfn = @(x,y) x.^q + y.^q + sin(k*pi*x) + sin(k*pi*y) + cos(k*pi*x) + cos(k*pi*y);
+% rhsfn = @(x,y) q*(q-1)*(x.^(q-2) + y.^(q-2)) - k^2*pi^2*(uexactfn(x,y)-x.^q-y.^q) - epsilon*uexactfn(x,y);
+% uxfn = @(x,y) q*x.^(q-1) + k*pi*cos(k*pi*x) - k*pi*sin(k*pi*x);
+% uyfn = @(x,y) q*y.^(q-1) + k*pi*cos(k*pi*y) - k*pi*sin(k*pi*y);
+% nxfn = @(x,y) x;
+% nyfn = @(x,y) y;
+% g_Neumann = @(x,y) uxfn(x,y).*nxfn(x,y) + uyfn(x,y).*nyfn(x,y);
+k = 2; q = 5;
+uexactfn = @(theta,r) r.^q.*sin(k*theta);
+% \Delta f = 1/r d/dr(r df/dr) + 1/r^2 d^2 f/d\theta^2
+rhsfn = @(theta,r) (q^2-k^2)*r.^(q-2).*sin(k*theta) - epsilon*uexactfn(theta,r);
+R = sqrt(2);
+g_Neumann = @(theta) q*R^(q-1)*sin(k*theta);
 
-x0 = -2;
-x1 = 2;
-y0 = -2;
-y1 = 2;
+x0 = -4;
+x1 = 4;
+y0 = -4;
+y1 = 4;
 
 %%
 % 2D example on a circle
@@ -32,15 +38,15 @@ order = 2;  % Laplacian order: bw will need to increase if changed
 
 bw = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((order/2+(p+1)/2)^2));
 
-n1 = 4;
-n2 = 4;
+n1 = 3;
+n2 = 3;
 
 p_f2c = 1;
 p_c2f = 1;
 
-w = 3/4;
+w = 0.8;
 
-cpf = @cpCircleInterior;
+cpf = @(x,y) cpCircleInterior(x,y,R);
 
 %[a_x1d, a_y1d, a_xcp, a_ycp, a_band, Mc, Lc, Ec, V, F, A, a_bdyg] = ...
 %    helper_set_variables(x0, x1, y0, y1, dx, dx_coarsest, dim, p, order, rhsfn, cpf, has_boundary);
@@ -65,39 +71,39 @@ end
 disp('building transform matrices to do restriction and prolongation later ... ')
 [TMf2c, TMc2f] = helper_set_TM(a_x1d, a_y1d, a_xg, a_yg, a_band, a_bdyg, p_f2c, p_c2f);
 
-disp('build the matrices that evaluate v at cps of boundary function on the surface')
-Ecp_Omega_S = cell(n_level,1);
-for i = 1:1:n_level
-    Ecp_Omega_S{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp_S{i},a_ycp_S{i},p,a_band{i});
-end
- 
-disp('build the matrices that evaluate v at cp(bdy) on course grid using values on fine grid')
-Ecp_f2c_Omega = cell(n_level-1,1);
-for i = 1:1:n_level-1
-    Ecp_f2c_Omega{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp{i+1}(a_bdyg{i+1}),a_ycp{i+1}(a_bdyg{i+1}),p_f2c,a_band{i});
-end
-
-disp('build the matrices that evaluate cp for course grid of S using values on fine grid of S')
-Ecp_f2c_S = cell(n_level-1,1);
-for i = 1:1:n_level-1
-    Ecp_f2c_S{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp_S{i+1},a_ycp_S{i+1},p_f2c,a_band_S{i});
-end
-
-disp('build the matrices that evaluate boundary function at cp(bdy) for course grid of $\Omega$ using values on fine grid of S')
-Ecp_f2c_Omega_S = cell(n_level-1,1);
-for i = 1:1:n_level-1
-    Ecp_f2c_Omega_S{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp{i+1}(a_bdyg{i+1}),a_ycp{i+1}(a_bdyg{i+1}),p_f2c,a_band_S{i});
-end
+% disp('build the matrices that evaluate v at cps of boundary function on the surface')
+% Ecp_Omega_S = cell(n_level,1);
+% for i = 1:1:n_level
+%     Ecp_Omega_S{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp_S{i},a_ycp_S{i},p,a_band{i});
+% end
+%  
+% disp('build the matrices that evaluate v at cp(bdy) on course grid using values on fine grid')
+% Ecp_f2c_Omega = cell(n_level-1,1);
+% for i = 1:1:n_level-1
+%     Ecp_f2c_Omega{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp{i+1}(a_bdyg{i+1}),a_ycp{i+1}(a_bdyg{i+1}),p_f2c,a_band{i});
+% end
+% 
+% disp('build the matrices that evaluate cp for course grid of S using values on fine grid of S')
+% Ecp_f2c_S = cell(n_level-1,1);
+% for i = 1:1:n_level-1
+%     Ecp_f2c_S{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp_S{i+1},a_ycp_S{i+1},p_f2c,a_band_S{i});
+% end
+% 
+% disp('build the matrices that evaluate boundary function at cp(bdy) for course grid of $\Omega$ using values on fine grid of S')
+% Ecp_f2c_Omega_S = cell(n_level-1,1);
+% for i = 1:1:n_level-1
+%     Ecp_f2c_Omega_S{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp{i+1}(a_bdyg{i+1}),a_ycp{i+1}(a_bdyg{i+1}),p_f2c,a_band_S{i});
+% end
 
 disp('setting up rhs and allocate spaces for solns')
 F = cell(n_level,1);
 V = cell(n_level,1);
-FonS = cell(n_level,1);
 for i = 1:1:n_level
-    F{i} = rhsfn(a_xg{i},a_yg{i});
-    F{i}(a_bdyg{i}) = g_Neumann(a_xcp{i}(a_bdyg{i}),a_ycp{i}(a_bdyg{i})) .* a_distg{i}(a_bdyg{i}) / a_dx{i}^2;
+    [th_x,r_x] = cart2pol(a_xg{i},a_yg{i});
+    F{i} = rhsfn(th_x,r_x);
+    [th_cp,r_cp] = cart2pol(a_xcp{i}(a_bdyg{i}),a_ycp{i}(a_bdyg{i}));
+    F{i}(a_bdyg{i}) = g_Neumann(th_cp) .* a_distg{i}(a_bdyg{i}) / a_dx{i}^2;
     V{i} = zeros(size(F{i}));
-    FonS{i} = g_Neumann(a_xcp_S{i}, a_ycp_S{i});
 end
 
 disp('buidling matrices to deal with boundary conditions ... ')
@@ -114,7 +120,7 @@ for i = 1:1:n_level
     E = interp2_matrix(x1d,y1d,a_xcp{i}(bdy),a_ycp{i}(bdy),p,band);
     cpx_bar = 2*a_xcp{i}(bdy) - a_xg{i}(bdy);
     cpy_bar = 2*a_ycp{i}(bdy) - a_yg{i}(bdy);
-    Ebar = interp2_matrix(x1d,y1d,cpx_bar,cpy_bar,p,band);
+    Ebar = interp2_matrix(x1d,y1d,cpx_bar,cpy_bar,2,band);
     cpx_double = 2*cpx_bar - a_xcp{i}(bdy);
     cpy_double = 2*cpy_bar - a_ycp{i}(bdy); 
     Edouble = interp2_matrix(x1d,y1d,cpx_double,cpy_double,p,band);
@@ -152,7 +158,8 @@ for i = 1:1:n_level-1
         
     t_matlab = toc
     
-    uexact{i} = uexactfn(a_xg{i},a_yg{i});
+    [th,r] = cart2pol(a_xg{i},a_yg{i});
+    uexact{i} = uexactfn(th,r);
     error = unew - uexact{i};
 
     error_inf_matlab(i) = max(abs( error(~a_bdyg{i}) )) / norm(uexact{i}(~a_bdyg{i}),inf);
@@ -179,10 +186,10 @@ for start = 1:1:n_level-1
     for i = start+1:1:n_level
         V{i} = zeros(size(F{i}));
     end
-%     [umg, err_inf(start,:), res(start,:)] = ...
-%         gmg(L, E_out_out, E_out_in, V, F, TMf2c, TMc2f, a_band, a_bdyg, n1, n2, start, w, uexact, MAX);
     [umg, err_inf(start,:), res(start,:)] = ...
-        gmg_test(L, a_Ebar, a_Edouble, a_Etriple, E_out_out, E_out_in, Ecp_Omega_S, Ecp_f2c_Omega, Ecp_f2c_S, Ecp_f2c_Omega_S, V, F, FonS, TMf2c, TMc2f, a_band, a_bdyg, n1, n2, start, w, uexact, MAX);
+        gmg(L, E_out_out, E_out_in, V, F, TMf2c, TMc2f, a_band, a_bdyg, n1, n2, start, w, uexact, MAX);
+%     [umg, err_inf(start,:), res(start,:)] = ...
+%         gmg_test(L, a_Ebar, a_Edouble, a_Etriple, E_out_out, E_out_in, Ecp_Omega_S, Ecp_f2c_Omega, Ecp_f2c_S, Ecp_f2c_Omega_S, V, F, FonS, TMf2c, TMc2f, a_band, a_bdyg, n1, n2, start, w, uexact, MAX);
     u_multigrid{start} = umg;
 end
 
@@ -216,7 +223,7 @@ end
 % legend('N=20','N=10')
 fs = 12;
 set(gca,'Fontsize',fs)
-title('\fontsize{15} relative residuals in the \infty-norm')
+%title('\fontsize{15} relative residuals in the \infty-norm')
 xlabel('\fontsize{15} number of v-cycles')
 ylabel('\fontsize{15} ||f^h-A^hu^h||_{\infty}/||f^h||_{\infty}')
 %title('\fontsize{15} residual |Eplot*(f-A*u)|')

@@ -1,40 +1,49 @@
-%% test geometric multigrid method to solve -\Delta u  = f in a disk, Dirichlet B.C.s
-epsilon = 0;
-%q = 6; k = 2;
-%uexactfn = @(x,y) x.^q + y.^q + sin(k*pi*x) + sin(k*pi*y) + cos(k*pi*x) + cos(k*pi*y);
-%rhsfn = @(x,y) q*(q-1)*(x.^(q-2) + y.^(q-2)) - k^2*pi^2*(uexactfn(x,y)-x.^q-y.^q) - epsilon*uexactfn(x,y);
-%g_Dirichlet = @(x,y) uexactfn(x,y);
+%% test geometric multigrid method to solve -\Delta u = f in a ball, Robin B.C.s
+% uexactfn = @(x,y,z) exp(sin(x.*y.*z));
+% rhsfn = @(x,y,z) uexactfn(x,y,z) .* ( (y.*z).^2+(z.*x).^2+(x.*y).^2 ) .* (cos(x.*y.*z).^2 - sin(x.*y.*z));
+% dxfn = @(x,y,z) exp(sin(x.*y.*z)) .* cos(x.*y.*z) .* y.*z;
+% dyfn = @(x,y,z) exp(sin(x.*y.*z)) .* cos(x.*y.*z) .* z.*x;
+% dzfn = @(x,y,z) exp(sin(x.*y.*z)) .* cos(x.*y.*z) .* x.*y;
 
-k = 2; q = 5;
-uexactfn = @(theta,r) r.^q.*sin(k*theta);
-% \Delta_S f = 1/r d/dr(r df/dr) + 1/r^2 d^2 f/d\theta^2
-rhsfn = @(theta,r) (q^2-k^2)*r.^(q-2).*sin(k*theta) - epsilon*uexactfn(theta,r);
-R = sqrt(2);
-g_Dirichlet = @(theta) uexactfn(theta,R);
+k = 4;
+uexactfn = @(x,y,z) sin(x).*sin(y).*sin(z) + sin(k*x).*sin(k*y).*sin(k*z);
+rhsfn = @(x,y,z) -3*sin(x).*sin(y).*sin(z) - 3*k^2*sin(k*x).*sin(k*y).*sin(k*z);
+dxfn = @(x,y,z) cos(x).*sin(y).*sin(z) + k*cos(k*x).*sin(k*y).*sin(k*z);
+dyfn = @(x,y,z) sin(x).*cos(y).*sin(z) + k*sin(k*x).*cos(k*y).*sin(k*z);
+dzfn = @(x,y,z) sin(x).*sin(y).*cos(z) + k*sin(k*x).*sin(k*y).*cos(k*z);
+
+nxfn = @(x,y,z) x./sqrt(x.^2+y.^2+z.^2);
+nyfn = @(x,y,z) y./sqrt(x.^2+y.^2+z.^2);
+nzfn = @(x,y,z) z./sqrt(x.^2+y.^2+z.^2);
+gammafn = @(x,y,z) 2*ones(size(x)) + x.*y.*z;
+h_robin = @(x,y,z) uexactfn(x,y,z) + gammafn(x,y,z) .* ( dxfn(x,y,z).*nxfn(x,y,z) + dyfn(x,y,z).*nyfn(x,y,z) + dzfn(x,y,z).*nzfn(x,y,z) );
+
 
 x0 = -4;
 x1 = 4;
 y0 = -4;
 y1 = 4;
+z0 = -4;
+z1 = 4;
 
 %%
 % 2D example on a circle
 % Construct a grid in the embedding space
 
-%dx = 0.025;
-dx = 0.00625; % grid size
-dx_coarsest = 0.2;   % coarsest grid size
+dx = 0.1/8;
+dx_coarsest = 0.4;   % coarsest grid size
 x1d_coarsest = (x0:dx_coarsest:x1)';
 y1d_coarsest = (y0:dx_coarsest:y1)';
+z1d_coarsest = (z0:dx_coarsest:z1)';
 
 dy = dx;
+dz = dx;
 
-dim = 2;  % dimension
-p = 3;    % interpolation order
+dim = 3;  % dimension
+p = 2;    % interpolation order
 order = 2;  % Laplacian order: bw will need to increase if changed
 
 bw = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((order/2+(p+1)/2)^2));
-%bw = bw*2;
 
 n1 = 3;
 n2 = 3;
@@ -44,68 +53,30 @@ p_c2f = 1;
 
 w = 0.8;
 
-cpf = @(x,y) cpCircleInterior(x,y,R);
-%cpf = @cpSquareInterior;
-
-%[a_x1d, a_y1d, a_xcp, a_ycp, a_band, Mc, Lc, Ec, V, F, A, a_bdyg] = ...
-%    helper_set_variables(x0, x1, y0, y1, dx, dx_coarsest, dim, p, order, rhsfn, cpf, has_boundary);
+cpf = @cpSphereInterior;
 
 disp('building grids covering the domain... ')
-[a_band, a_xcp, a_ycp, a_distg, a_bdyg, a_dx, a_x1d, a_y1d, a_xg, a_yg] = ...
-    build_mg_grid(x1d_coarsest, y1d_coarsest, dx_coarsest, dx, bw, cpf, true);
-
-disp('building grids surrounding the surface... ')
-[a_band_S, a_xcp_S, a_ycp_S, a_distg_S, a_dx_S, ~, ~, a_xg_S, a_yg_S] = ...
-    build_mg_grid(x1d_coarsest, y1d_coarsest, dx_coarsest, dx, bw, @cpCircle, false);
+[a_band, a_xcp, a_ycp, a_zcp, a_distg, a_bdyg, a_dx, a_x1d, a_y1d, a_z1d, a_xg, a_yg, a_zg] = ...
+    build_mg_grid_3d(x1d_coarsest, y1d_coarsest, z1d_coarsest, dx_coarsest, dx, bw, cpf, true);
 
 n_level = length(a_band);
 
 disp('building Laplacian matrices ... ')
 L = cell(n_level,1);
 for i = 1:1:n_level
-   L{i} = laplacian_2d_matrix(a_x1d{i}, a_y1d{i}, order, a_band{i}, a_band{i});
+   L{i} = laplacian_3d_matrix(a_x1d{i}, a_y1d{i}, a_z1d{i}, order, a_band{i}, a_band{i});
 end
 
 disp('building transform matrices to do restriction and prolongation later ... ')
-[TMf2c, TMc2f] = helper_set_TM(a_x1d, a_y1d, a_xg, a_yg, a_band, a_bdyg, p_f2c, p_c2f);
-
-% disp('build the matrices that evaluate v at cps of boundary function on the surface')
-% Ecp_Omega_S = cell(n_level,1);
-% for i = 1:1:n_level
-%     Ecp_Omega_S{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp_S{i},a_ycp_S{i},p,a_band{i});
-% end
-%  
-% disp('build the matrices that evaluate v at cp(bdy) on course grid using values on fine grid')
-% Ecp_f2c_Omega = cell(n_level-1,1);
-% for i = 1:1:n_level-1
-%     Ecp_f2c_Omega{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp{i+1}(a_bdyg{i+1}),a_ycp{i+1}(a_bdyg{i+1}),p_f2c,a_band{i});
-% end
-% 
-% disp('build the matrices that evaluate cp for course grid of S using values on fine grid of S')
-% Ecp_f2c_S = cell(n_level-1,1);
-% for i = 1:1:n_level-1
-%     Ecp_f2c_S{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp_S{i+1},a_ycp_S{i+1},p_f2c,a_band_S{i});
-% end
-% 
-% disp('build the matrices that evaluate boundary function at cp(bdy) for course grid of $\Omega$ using values on fine grid of S')
-% Ecp_f2c_Omega_S = cell(n_level-1,1);
-% for i = 1:1:n_level-1
-%     Ecp_f2c_Omega_S{i} = interp2_matrix(a_x1d{i},a_y1d{i},a_xcp{i+1}(a_bdyg{i+1}),a_ycp{i+1}(a_bdyg{i+1}),p_f2c,a_band_S{i});
-% end
+[TMf2c, TMc2f] = helper_set_TM_3d(a_x1d, a_y1d, a_z1d, a_xg, a_yg, a_zg, a_band, a_bdyg, p_f2c, p_c2f);
 
 disp('setting up rhs and allocate spaces for solns')
 F = cell(n_level,1);
 V = cell(n_level,1);
-%FonS = cell(n_level,1);
 for i = 1:1:n_level
-    [th_x,r_x] = cart2pol(a_xg{i},a_yg{i});
-    F{i} = rhsfn(th_x,r_x);
-    %F{i} = rhsfn(a_xg{i},a_yg{i});
-    [th_cp,r_cp] = cart2pol(a_xcp{i}(a_bdyg{i}),a_ycp{i}(a_bdyg{i}));
-    F{i}(a_bdyg{i}) = g_Dirichlet(th_cp);
-    %F{i}(a_bdyg{i}) = g_Dirichlet(a_xcp{i}(a_bdyg{i}),a_ycp{i}(a_bdyg{i}));
+    F{i} = rhsfn(a_xg{i},a_yg{i},a_zg{i});
+    F{i}(a_bdyg{i}) = h_robin(a_xcp{i}(a_bdyg{i}),a_ycp{i}(a_bdyg{i}),a_zcp{i}(a_bdyg{i})).* a_distg{i}(a_bdyg{i})/a_dx{i}^2;
     V{i} = zeros(size(F{i}));
-    %FonS{i} = g_Dirichlet(a_xcp_S{i}, a_ycp_S{i});
 end
 
 disp('buidling matrices to deal with boundary conditions ... ')
@@ -115,27 +86,31 @@ a_Ebar = cell(n_level,1);
 a_Edouble = cell(n_level,1);
 a_Etriple = cell(n_level,1);
 for i = 1:1:n_level
-    x1d = a_x1d{i}; y1d = a_y1d{i}; band = a_band{i};
+    x1d = a_x1d{i}; y1d = a_y1d{i}; z1d = a_z1d{i}; band = a_band{i};
     I = speye(size(L{i}));
     bdy = a_bdyg{i};
     cpx_bar = 2*a_xcp{i}(bdy) - a_xg{i}(bdy);
     cpy_bar = 2*a_ycp{i}(bdy) - a_yg{i}(bdy);
-    Ebar = interp2_matrix(x1d,y1d,cpx_bar,cpy_bar,2,band);
-    cpx_double = 2*cpx_bar - a_xcp{i}(bdy);
-    cpy_double = 2*cpy_bar - a_ycp{i}(bdy); 
-    Edouble = interp2_matrix(x1d,y1d,cpx_double,cpy_double,p,band);
-    cpx_triple = 2*cpx_double - cpx_bar;
-    cpy_triple = 2*cpy_double - cpy_bar;
-    Etriple = interp2_matrix(x1d,y1d,cpx_triple,cpy_triple,p,band);
-    L_bdy = (I(bdy,:) + Ebar)/2;
-    %L_bdy = (I(bdy,:) + 3*Ebar - Edouble) / 3;
-    %L_bdy = (I(bdy,:) + 6*Ebar - 4*Edouble + Etriple) / 4;
+    cpz_bar = 2*a_zcp{i}(bdy) - a_zg{i}(bdy);
+    Ebar = interp3_matrix(x1d,y1d,z1d,cpx_bar,cpy_bar,cpz_bar,2,band);
+    
+%     cpx_double = 2*cpx_bar - a_xcp{i}(bdy);
+%     cpy_double = 2*cpy_bar - a_ycp{i}(bdy);
+%     cpz_double = 2*cpz_bar - a_zcp{i}(bdy); 
+%     Edouble = interp3_matrix(x1d,y1d,z1d,cpx_double,cpy_double,cpz_double,p,band);
+%     E = interp3_matrix(x1d,y1d,z1d,a_xcp{i}(bdy),a_ycp{i}(bdy),a_zcp{i}(bdy),p,band);
+    
+    diagDist = spdiags(a_distg{i}(a_bdyg{i}),0,nnz(bdy),nnz(bdy));
+    GAMMA = spdiags(gammafn(a_xcp{i}(bdy),a_ycp{i}(bdy),a_zcp{i}(bdy)),0,nnz(bdy),nnz(bdy));
+    % quadratic interp, 2nd order
+    L_bdy = ( diagDist*(I(bdy,:)/2+Ebar/2) + GAMMA*(-Ebar/2 + I(bdy,:)/2) )/a_dx{i}^2;
+    
     E_out_out{i} = L_bdy(:,bdy);
     E_out_in{i} = L_bdy(:,~bdy);
     L{i}(bdy,:) = L_bdy; 
     a_Ebar{i} = Ebar;
-    a_Edouble{i} = Edouble;
-    a_Etriple{i} = Etriple;
+%    a_Edouble{i} = Edouble;
+%    a_Etriple{i} = Etriple;
 end 
 
 disp('pre set-up done, start to solve ...')
@@ -144,23 +119,22 @@ res_matlab = zeros(n_level,1);
 u_matlab = cell(n_level-1,1);
 uexact = cell(n_level-1,1);
 for i = 1:1:n_level-1
-    tic;
+    uexact{i} = uexactfn(a_xg{i},a_yg{i},a_zg{i});
     
-    unew = L{i} \ F{i};
-        
-    t_matlab = toc
-    
-    [th,r] = cart2pol(a_xg{i},a_yg{i});
-    uexact{i} = uexactfn(th,r);
-    %uexact{i} = uexactfn(a_xg{i},a_yg{i});
-    error = unew - uexact{i};
-
-    error_inf_matlab(i) = max(abs( error(~a_bdyg{i}) )) / norm(uexact{i}(~a_bdyg{i}),inf);
-    
-    residual = F{i} - L{i}*unew;
-    res_matlab(i) = norm(residual(~a_bdyg{i}),inf) / norm(F{i}(~a_bdyg{i}));
-    
-    u_matlab{i} = unew;
+%     tic;
+%     
+%     unew = L{i} \ F{i};
+%         
+%     t_matlab = toc
+%     
+%     error = unew - uexact{i};
+% 
+%     error_inf_matlab(i) = max(abs( error(~a_bdyg{i}) )) / norm(uexact{i}(~a_bdyg{i}),inf);
+%     
+%     residual = F{i} - L{i}*unew;
+%     res_matlab(i) = norm(residual(~a_bdyg{i}),inf) / norm(F{i}(~a_bdyg{i}));
+%     
+%     u_matlab{i} = unew;
 
 end
 matlab_order = log(error_inf_matlab(2:end)./error_inf_matlab(1:end-1))/log(2);
@@ -180,10 +154,8 @@ for start = 1:1:n_level-1
         V{i} = zeros(size(F{i}));
     end
     [umg, err_inf(start,:), res(start,:)] = ...
-        gmg(L, E_out_out, E_out_in, V, F, TMf2c, TMc2f, a_band, a_bdyg, n1, n2, start, w, uexact, MAX);
-%     [umg, err_inf(start,:), res(start,:)] = ...
-%         gmg_test(L, a_Ebar, a_Edouble, a_Etriple, E_out_out, E_out_in, Ecp_Omega_S, Ecp_f2c_Omega, Ecp_f2c_S, Ecp_f2c_Omega_S, V, F, FonS, TMf2c, TMc2f, a_band, a_bdyg, n1, n2, start, w, uexact, MAX);
-    u_multigrid{start} = umg;
+         gmg(L, E_out_out, E_out_in, V, F, TMf2c, TMc2f, a_band, a_bdyg, n1, n2, start, w, uexact, MAX);
+   u_multigrid{start} = umg;
 end
 
 err_inf = err_inf(end:-1:1,:);
@@ -203,14 +175,18 @@ if n_level == 8
     semilogy(n,res(1,:),'o--',n,res(2,:),'r*--',n,res(3,:),'g+--', ...
              n,res(4,:),'k-s',n,res(5,:),'c^-',n,res(6,:),'m-d', ...
              n,res(7,:),'b.-');
-    legend('N=10','N=20','N=40','N=80','N=160','N=320','N=640')
+    legend('N=5', 'N=10','N=20','N=40','N=80','N=160','N=320')
 elseif n_level == 6
     semilogy(n,res(1,:),'o--',n,res(2,:),'r*--',n,res(3,:),'g+--', ...
              n,res(4,:),'k-s',n,res(5,:),'c^-');
-    legend('N=10','N=20','N=40','N=80','N=160')
+    legend('N=5', 'N=10','N=20','N=40','N=80')
+elseif n_level == 5
+    semilogy(n,res(1,:),'o--',n,res(2,:),'r*--',n,res(3,:),'g+--', ...
+        n,res(4,:),'k-s');
+    legend('N=5', 'N=10','N=20','N=40') 
 elseif n_level == 4
     semilogy(n,res(1,:),'o--',n,res(2,:),'r*--',n,res(3,:),'g+--');
-    legend('N=10','N=20','N=40')    
+    legend('N=5', 'N=10','N=20')    
 end
 % semilogy(n,res(1,:),'.-',n,res(2,:),'r*-');
 % legend('N=20','N=10')
@@ -219,12 +195,14 @@ set(gca,'Fontsize',fs)
 %title('\fontsize{15} relative residuals in the \infty-norm')
 xlabel('\fontsize{15} number of v-cycles')
 ylabel('\fontsize{15} ||f^h-A^hu^h||_{\infty}/||f^h||_{\infty}')
+xlim([0,10])
 %title('\fontsize{15} residual |Eplot*(f-A*u)|')
 %xlabel('\fontsize{15} number of v-cycles')
 %ylabel('\fontsize{15} |residual|_{\infty}')
 %title(['sin(\theta) with p=', num2str(p), ',  res = E*(f-L*v)'])
 %title(['sin(\theta)+sin(',num2str(m),'\theta) with p=', num2str(p), ',  res = E*(f-L*v)'])
 
+% plot error of matlab and error of different number of vcycles
 % plot error of matlab and error of different number of vcycles
 figure(2)
 
@@ -234,14 +212,18 @@ if n_level == 8
     semilogy(n,err_inf(1,:),'o--',n,err_inf(2,:),'r*--',n,err_inf(3,:),'g+--', ...
          n,err_inf(4,:),'k-s',n,err_inf(5,:),'c^-',n,err_inf(6,:),'m-d', ...
             n,err_inf(7,:),'bx-');
-    legend('N=10','N=20','N=40','N=80','N=160','N=320','N=640')
+    legend('N=5', 'N=10','N=20','N=40','N=80','N=160','N=320')
 elseif n_level == 6
     semilogy(n,err_inf(1,:),'o--',n,err_inf(2,:),'r*--',n,err_inf(3,:),'g+--', ...
          n,err_inf(4,:),'k-s',n,err_inf(5,:),'c^-');
-    legend('N=10','N=20','N=40','N=80','N=160')
+    legend('N=5', 'N=10','N=20','N=40','N=80')
+elseif n_level == 5
+    semilogy(n,err_inf(1,:),'o--',n,err_inf(2,:),'r*--',n,err_inf(3,:),'g+--', ...
+         n,err_inf(4,:),'k-s');
+    legend('N=5', 'N=10','N=20','N=40')
 elseif n_level == 4
     semilogy(n,err_inf(1,:),'o--',n,err_inf(2,:),'r*--',n,err_inf(3,:),'g+--');
-    legend('N=10','N=20','N=40')
+    legend('N=5', 'N=10','N=20')
 end
 hold on
 %err_inf_matlab = cell2mat(error_inf_matlab);
@@ -265,4 +247,4 @@ fs = 12;
 set(gca,'Fontsize',fs)
 xlabel('\fontsize{15} number of v-cycles')
 ylabel('\fontsize{15} ||u^h-u||_{\infty}/||u||_{\infty}')
-%xlim([0,10])
+xlim([0,10])

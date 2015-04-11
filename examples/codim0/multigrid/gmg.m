@@ -29,9 +29,9 @@ while cnt < MAX
    error_circ_inf_mg(cnt+1) = norm(error(not_bdy),inf) / norm(uexact{start}(not_bdy),inf);
    res(cnt+1) = norm((F{start}(not_bdy) - L{start}(not_bdy,:)*v1),inf) / norm(F{start}(not_bdy),inf);
    r = res(cnt+1)
-   if r < tolRes
-       break;
-   end
+%    if r < tolRes
+%        break;
+%    end
    if norm((v(not_bdy)-v1(not_bdy)),inf)/norm(v(not_bdy),inf) < tolV
       break;
    end

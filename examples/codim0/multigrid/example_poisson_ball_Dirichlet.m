@@ -1,6 +1,9 @@
 %% test geometric multigrid method to solve -\Delta u  = f in a ball, Dirichlet B.C.s
-uexactfn = @(x,y,z) exp(sin(x.*y.*z));
-rhsfn = @(x,y,z) uexactfn(x,y,z) .* ( (y.*z).^2+(z.*x).^2+(x.*y).^2 ) .* (cos(x.*y.*z).^2 - sin(x.*y.*z)); 
+% uexactfn = @(x,y,z) exp(sin(x.*y.*z));
+% rhsfn = @(x,y,z) uexactfn(x,y,z) .* ( (y.*z).^2+(z.*x).^2+(x.*y).^2 ) .* (cos(x.*y.*z).^2 - sin(x.*y.*z)); 
+k = 4;
+uexactfn = @(x,y,z) sin(x).*sin(y).*sin(z) + sin(k*x).*sin(k*y).*sin(k*z);
+rhsfn = @(x,y,z) -3*sin(x).*sin(y).*sin(z) - 3*k^2*sin(k*x).*sin(k*y).*sin(k*z);
 g_Dirichlet = @(x,y,z) uexactfn(x,y,z);
 
 
@@ -12,10 +15,8 @@ z0 = -4;
 z1 = 4;
 
 %%
-% 2D example on a circle
-% Construct a grid in the embedding space
 
-dx = 0.1/2;
+dx = 0.1/8;
 dx_coarsest = 0.4;   % coarsest grid size
 x1d_coarsest = (x0:dx_coarsest:x1)';
 y1d_coarsest = (y0:dx_coarsest:y1)';
@@ -25,7 +26,7 @@ dy = dx;
 dz = dx;
 
 dim = 3;  % dimension
-p = 3;    % interpolation order
+p = 2;    % interpolation order
 order = 2;  % Laplacian order: bw will need to increase if changed
 
 bw = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((order/2+(p+1)/2)^2));
@@ -36,7 +37,7 @@ n2 = 3;
 p_f2c = 1;
 p_c2f = 1;
 
-w = 3/4;
+w = 0.8;
 
 cpf = @cpSphereInterior;
 
@@ -78,16 +79,16 @@ for i = 1:1:n_level
     cpy_bar = 2*a_ycp{i}(bdy) - a_yg{i}(bdy);
     cpz_bar = 2*a_zcp{i}(bdy) - a_zg{i}(bdy);
     Ebar = interp3_matrix(x1d,y1d,z1d,cpx_bar,cpy_bar,cpz_bar,p,band);
-    cpx_double = 2*cpx_bar - a_xcp{i}(bdy);
-    cpy_double = 2*cpy_bar - a_ycp{i}(bdy);
-    cpz_double = 2*cpz_bar - a_zcp{i}(bdy); 
-    Edouble = interp3_matrix(x1d,y1d,z1d,cpx_double,cpy_double,cpz_double,p,band);
+%     cpx_double = 2*cpx_bar - a_xcp{i}(bdy);
+%     cpy_double = 2*cpy_bar - a_ycp{i}(bdy);
+%     cpz_double = 2*cpz_bar - a_zcp{i}(bdy); 
+%     Edouble = interp3_matrix(x1d,y1d,z1d,cpx_double,cpy_double,cpz_double,p,band);
 %     cpx_triple = 2*cpx_double - cpx_bar;
 %     cpy_triple = 2*cpy_double - cpy_bar;
 %     cpz_triple = 2*cpz_double - cpz_bar;
 %     Etriple = interp3_matrix(x1d,y1d,z1d,cpx_triple,cpy_triple,cpz_triple,p,band);
-    %L_bdy = (I(bdy,:) + Ebar)/2;
-    L_bdy = (I(bdy,:) + 3*Ebar - Edouble) / 3;
+    L_bdy = (I(bdy,:) + Ebar)/2;
+    %L_bdy = (I(bdy,:) + 3*Ebar - Edouble) / 3;
     %L_bdy = (I(bdy,:) + 6*Ebar - 4*Edouble + Etriple) / 4;
     E_out_out{i} = L_bdy(:,bdy);
     E_out_in{i} = L_bdy(:,~bdy);
@@ -159,20 +160,24 @@ if n_level == 8
     semilogy(n,res(1,:),'o--',n,res(2,:),'r*--',n,res(3,:),'g+--', ...
              n,res(4,:),'k-s',n,res(5,:),'c^-',n,res(6,:),'m-d', ...
              n,res(7,:),'b.-');
-    legend('N=10','N=20','N=40','N=80','N=160','N=320','N=640')
+    legend('N=5', 'N=10','N=20','N=40','N=80','N=160','N=320')
 elseif n_level == 6
     semilogy(n,res(1,:),'o--',n,res(2,:),'r*--',n,res(3,:),'g+--', ...
              n,res(4,:),'k-s',n,res(5,:),'c^-');
-    legend('N=10','N=20','N=40','N=80','N=160')
+    legend('N=5', 'N=10','N=20','N=40','N=80')
+elseif n_level == 5
+    semilogy(n,res(1,:),'o--',n,res(2,:),'r*--',n,res(3,:),'g+--', ...
+        n,res(4,:),'k-s');
+    legend('N=5', 'N=10','N=20','N=40') 
 elseif n_level == 4
     semilogy(n,res(1,:),'o--',n,res(2,:),'r*--',n,res(3,:),'g+--');
-    legend('N=10','N=20','N=40')    
+    legend('N=5', 'N=10','N=20')    
 end
 % semilogy(n,res(1,:),'.-',n,res(2,:),'r*-');
 % legend('N=20','N=10')
 fs = 12;
 set(gca,'Fontsize',fs)
-title('\fontsize{15} relative residuals in the \infty-norm')
+%title('\fontsize{15} relative residuals in the \infty-norm')
 xlabel('\fontsize{15} number of v-cycles')
 ylabel('\fontsize{15} ||f^h-A^hu^h||_{\infty}/||f^h||_{\infty}')
 %title('\fontsize{15} residual |Eplot*(f-A*u)|')
@@ -180,7 +185,8 @@ ylabel('\fontsize{15} ||f^h-A^hu^h||_{\infty}/||f^h||_{\infty}')
 %ylabel('\fontsize{15} |residual|_{\infty}')
 %title(['sin(\theta) with p=', num2str(p), ',  res = E*(f-L*v)'])
 %title(['sin(\theta)+sin(',num2str(m),'\theta) with p=', num2str(p), ',  res = E*(f-L*v)'])
-
+xlim([0,10])
+% plot error of matlab and error of different number of vcycles
 % plot error of matlab and error of different number of vcycles
 figure(2)
 
@@ -190,14 +196,18 @@ if n_level == 8
     semilogy(n,err_inf(1,:),'o--',n,err_inf(2,:),'r*--',n,err_inf(3,:),'g+--', ...
          n,err_inf(4,:),'k-s',n,err_inf(5,:),'c^-',n,err_inf(6,:),'m-d', ...
             n,err_inf(7,:),'bx-');
-    legend('N=10','N=20','N=40','N=80','N=160','N=320','N=640')
+    legend('N=5', 'N=10','N=20','N=40','N=80','N=160','N=320')
 elseif n_level == 6
     semilogy(n,err_inf(1,:),'o--',n,err_inf(2,:),'r*--',n,err_inf(3,:),'g+--', ...
          n,err_inf(4,:),'k-s',n,err_inf(5,:),'c^-');
-    legend('N=10','N=20','N=40','N=80','N=160')
+    legend('N=5', 'N=10','N=20','N=40','N=80')
+elseif n_level == 5
+    semilogy(n,err_inf(1,:),'o--',n,err_inf(2,:),'r*--',n,err_inf(3,:),'g+--', ...
+         n,err_inf(4,:),'k-s');
+    legend('N=5', 'N=10','N=20','N=40')
 elseif n_level == 4
     semilogy(n,err_inf(1,:),'o--',n,err_inf(2,:),'r*--',n,err_inf(3,:),'g+--');
-    legend('N=10','N=20','N=40')
+    legend('N=5', 'N=10','N=20')
 end
 hold on
 %err_inf_matlab = cell2mat(error_inf_matlab);
@@ -221,4 +231,4 @@ fs = 12;
 set(gca,'Fontsize',fs)
 xlabel('\fontsize{15} number of v-cycles')
 ylabel('\fontsize{15} ||u^h-u||_{\infty}/||u||_{\infty}')
-%xlim([0,10])
+xlim([0,10])

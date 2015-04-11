@@ -1,21 +1,14 @@
-%% test geometric multigrid method to solve -\Delta u  = f in a disk, Dirichlet B.C.s
+%% test geometric multigrid method to solve -\Delta u  = f in a bean-shaped domain, Dirichlet B.C.s
 epsilon = 0;
-%q = 6; k = 2;
-%uexactfn = @(x,y) x.^q + y.^q + sin(k*pi*x) + sin(k*pi*y) + cos(k*pi*x) + cos(k*pi*y);
-%rhsfn = @(x,y) q*(q-1)*(x.^(q-2) + y.^(q-2)) - k^2*pi^2*(uexactfn(x,y)-x.^q-y.^q) - epsilon*uexactfn(x,y);
-%g_Dirichlet = @(x,y) uexactfn(x,y);
+q = 6; k = 2;
+uexactfn = @(x,y) x.^q.*y.^q + x.^q + y.^q + sin(k*pi*x) + sin(k*pi*y) + cos(k*pi*x) + cos(k*pi*y);
+rhsfn = @(x,y) q*(q-1)*x.^(q-2).*y.^(q-2).*(x.^2+y.^2) + q*(q-1)*(x.^(q-2) + y.^(q-2)) - k^2*pi^2*(uexactfn(x,y)-x.^q-y.^q-x.^q.*y.^q) - epsilon*uexactfn(x,y);
+g_Dirichlet = @(x,y) uexactfn(x,y);
 
-k = 2; q = 5;
-uexactfn = @(theta,r) r.^q.*sin(k*theta);
-% \Delta_S f = 1/r d/dr(r df/dr) + 1/r^2 d^2 f/d\theta^2
-rhsfn = @(theta,r) (q^2-k^2)*r.^(q-2).*sin(k*theta) - epsilon*uexactfn(theta,r);
-R = sqrt(2);
-g_Dirichlet = @(theta) uexactfn(theta,R);
-
-x0 = -4;
-x1 = 4;
-y0 = -4;
-y1 = 4;
+x0 = -2;
+x1 = 2;
+y0 = -2;
+y1 = 2;
 
 %%
 % 2D example on a circle
@@ -30,7 +23,7 @@ y1d_coarsest = (y0:dx_coarsest:y1)';
 dy = dx;
 
 dim = 2;  % dimension
-p = 3;    % interpolation order
+p = 2;    % interpolation order
 order = 2;  % Laplacian order: bw will need to increase if changed
 
 bw = 1.0002*sqrt((dim-1)*((p+1)/2)^2 + ((order/2+(p+1)/2)^2));
@@ -44,8 +37,7 @@ p_c2f = 1;
 
 w = 0.8;
 
-cpf = @(x,y) cpCircleInterior(x,y,R);
-%cpf = @cpSquareInterior;
+cpf = @(x,y) cpBeanInterior(x,y);
 
 %[a_x1d, a_y1d, a_xcp, a_ycp, a_band, Mc, Lc, Ec, V, F, A, a_bdyg] = ...
 %    helper_set_variables(x0, x1, y0, y1, dx, dx_coarsest, dim, p, order, rhsfn, cpf, has_boundary);
@@ -53,10 +45,6 @@ cpf = @(x,y) cpCircleInterior(x,y,R);
 disp('building grids covering the domain... ')
 [a_band, a_xcp, a_ycp, a_distg, a_bdyg, a_dx, a_x1d, a_y1d, a_xg, a_yg] = ...
     build_mg_grid(x1d_coarsest, y1d_coarsest, dx_coarsest, dx, bw, cpf, true);
-
-disp('building grids surrounding the surface... ')
-[a_band_S, a_xcp_S, a_ycp_S, a_distg_S, a_dx_S, ~, ~, a_xg_S, a_yg_S] = ...
-    build_mg_grid(x1d_coarsest, y1d_coarsest, dx_coarsest, dx, bw, @cpCircle, false);
 
 n_level = length(a_band);
 
@@ -98,12 +86,8 @@ F = cell(n_level,1);
 V = cell(n_level,1);
 %FonS = cell(n_level,1);
 for i = 1:1:n_level
-    [th_x,r_x] = cart2pol(a_xg{i},a_yg{i});
-    F{i} = rhsfn(th_x,r_x);
-    %F{i} = rhsfn(a_xg{i},a_yg{i});
-    [th_cp,r_cp] = cart2pol(a_xcp{i}(a_bdyg{i}),a_ycp{i}(a_bdyg{i}));
-    F{i}(a_bdyg{i}) = g_Dirichlet(th_cp);
-    %F{i}(a_bdyg{i}) = g_Dirichlet(a_xcp{i}(a_bdyg{i}),a_ycp{i}(a_bdyg{i}));
+    F{i} = rhsfn(a_xg{i},a_yg{i});
+    F{i}(a_bdyg{i}) = g_Dirichlet(a_xcp{i}(a_bdyg{i}),a_ycp{i}(a_bdyg{i}));
     V{i} = zeros(size(F{i}));
     %FonS{i} = g_Dirichlet(a_xcp_S{i}, a_ycp_S{i});
 end
@@ -120,7 +104,7 @@ for i = 1:1:n_level
     bdy = a_bdyg{i};
     cpx_bar = 2*a_xcp{i}(bdy) - a_xg{i}(bdy);
     cpy_bar = 2*a_ycp{i}(bdy) - a_yg{i}(bdy);
-    Ebar = interp2_matrix(x1d,y1d,cpx_bar,cpy_bar,2,band);
+    Ebar = interp2_matrix(x1d,y1d,cpx_bar,cpy_bar,p,band);
     cpx_double = 2*cpx_bar - a_xcp{i}(bdy);
     cpy_double = 2*cpy_bar - a_ycp{i}(bdy); 
     Edouble = interp2_matrix(x1d,y1d,cpx_double,cpy_double,p,band);
@@ -150,9 +134,7 @@ for i = 1:1:n_level-1
         
     t_matlab = toc
     
-    [th,r] = cart2pol(a_xg{i},a_yg{i});
-    uexact{i} = uexactfn(th,r);
-    %uexact{i} = uexactfn(a_xg{i},a_yg{i});
+    uexact{i} = uexactfn(a_xg{i},a_yg{i});
     error = unew - uexact{i};
 
     error_inf_matlab(i) = max(abs( error(~a_bdyg{i}) )) / norm(uexact{i}(~a_bdyg{i}),inf);

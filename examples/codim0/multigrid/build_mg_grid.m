@@ -27,7 +27,9 @@ a_xg = cell(n_level,1);
 a_yg = cell(n_level,1);
 a_param = cell(n_level,1);
 
-[xx yy] = meshgrid(x1d_coarsest, y1d_coarsest);
+[xx, yy] = meshgrid(x1d_coarsest, y1d_coarsest);
+xx = xx(:);
+yy = yy(:);
 if need_param
     if has_boundary
         [cpx, cpy, dist, bdy, param] = cpf(xx,yy);
@@ -76,7 +78,7 @@ a_param{i} = paramg;
 
 if need_param == true
 for i = n_level-1:-1:1
-    [a_band{i}, a_xg{i}, a_yg{i}, a_xcp{i}, a_ycp{i}, a_distg{i}, a_bdyg{i}, a_dx{i}, a_x1d{i}, a_y1d{i}] = ...
+    [a_band{i}, a_xg{i}, a_yg{i}, a_xcp{i}, a_ycp{i}, a_distg{i}, a_bdyg{i}, a_dx{i}, a_x1d{i}, a_y1d{i}, a_param{i}] = ...
         refine_grid(1, cpf, a_dx{i+1}, a_x1d{i+1}, a_y1d{i+1}, bw, a_band{i+1}, a_distg{i+1}, a_bdyg{i+1}, use_ndgrid, need_param);
 end
 else
