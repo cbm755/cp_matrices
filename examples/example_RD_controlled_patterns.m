@@ -244,8 +244,8 @@ dt = Tf / numtimesteps
 lambda = 4*nuu/(dx^2); % similar to (scaled) lapsharp
 %lambda = 1/dt;
 
-Au = nuu*E*L - lambda*(I-E);
-Av = nuv*E*L - lambda*(I-E);
+Au = nuu*(E*L) - lambda*(I-E);
+Av = nuv*(E*L) - lambda*(I-E);
 
 %%
 

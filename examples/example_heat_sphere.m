@@ -93,7 +93,7 @@ xp1 = xp(:); yp1 = yp(:); zp1 = zp(:);
 % Eplot is a matrix which interpolations data onto the plotting grid
 Eplot = interp3_matrix(x1d, y1d, z1d, xp1, yp1, zp1, p, band);
 
-figure(2); set(gcf,'Position', [410 700 800 800]);
+figure(1); clf;
 
 
 %% Time-stepping for the heat equation
@@ -115,12 +115,12 @@ for kt = 1:numtimesteps
 
     % plot value on sphere
     if (mod(kt,100) == 0) || (kt < 10) || (kt == numtimesteps)
-      figure(2);
+      %figure(1);
       sphplot = Eplot*u;
-      
+
 	  err = norm(exp(-2*t)*cos(phi_plot + pi/2)-sphplot,inf) / norm(exp(-2*t)*cos(phi_plot + pi/2),inf);
       [t dt dx err]
-      
+
       sphplot = reshape(sphplot, size(xp));
       surf(xp, yp, zp, sphplot);
       title( ['soln at time ' num2str(t) ', kt= ' num2str(kt)] );
@@ -129,7 +129,7 @@ for kt = 1:numtimesteps
       axis equal; shading interp;
 %      if ~exist OCTAVE_VERSION camlight left;
       colorbar;
-      pause(0.001);
+      drawnow(); pause(0);
 %      end
     end
 end
