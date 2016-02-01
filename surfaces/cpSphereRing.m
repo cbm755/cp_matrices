@@ -68,3 +68,56 @@ function [cpx,cpy,cpz,dist,bdy] = cpSphereRing(x,y,z,zlim,R,cen)
   cpx = cpx + cen(1);
   cpy = cpy + cen(2);
   cpz = cpz + cen(3);
+
+end
+
+
+%!test
+%! [cpx, cpy, cpz, dist, bdy] = cpSphereRing(0, 0, 10, [1.4 inf], 2);
+%! assert(cpx, 0, 2*eps);
+%! assert(cpy, 0, 2*eps);
+%! assert(cpz, 2, 2*eps);
+%! assert(dist, 8, 2*eps);
+%! assert(bdy, false);
+
+%!test
+%! [cpx, cpy, cpz, dist, bdy] = cpSphereRing(1, 0, -10, [1.4 inf], 2);
+%! R = sqrt(2^2 - 1.4^2);
+%! assert(cpx, R, 5*eps);
+%! assert(cpy, 0, 2*eps);
+%! assert(cpz, 1.4, 2*eps);
+%! assert(bdy, true);
+
+%!test
+%! [cpx, cpy, cpz, dist, bdy] = cpSphereRing(0, -1, -10, [1.4 inf], 2);
+%! R = sqrt(2^2 - 1.4^2);
+%! assert(cpx, 0, 2*eps);
+%! assert(cpy, -R, 2*eps);
+%! assert(cpz, 1.4, 2*eps);
+%! assert(bdy, true);
+
+%!test
+%! % random points are in the ring
+%! x = 10*rand(10, 10, 10) - 5;
+%! y = 10*rand(10, 10, 10) - 5;
+%! z = 10*rand(10, 10, 10) - 5;
+%! [cpx, cpy, cpz, dist, bdy] = cpSphereRing(x, y, z, [1.4 1.5], 2, [1.1; 1.2; 1.3]);
+%! assert(cpz >= 1.4 & cpz <= 1.5);
+%! R1 = 4 - (1.5-1.3)^2;
+%! R2 = 4 - (1.5-1.4)^2;
+%! rad = (cpx-1.1).^2 + (cpy-1.2).^2;
+%! assert(rad >= R1 - 10*eps)
+%! assert(rad <= R2 + 10*eps)
+
+%!test
+%! % reduces to circle: random points
+%! x = 10*rand(10, 10, 10) - 5;
+%! y = 10*rand(10, 10, 10) - 5;
+%! z = 10*rand(10, 10, 10) - 5;
+%! [cpx, cpy, cpz, dist, bdy] = cpSphereRing(x, y, z, [1.5 1.5], 2, [1.1; 1.2; 1.3]);
+%! R = sqrt(4 - (1.5-1.3)^2);
+%! [CP, dist1] = cpCircleInHighDim({x y z}, R, [1.1; 1.2; 1.5]);
+%! assert(dist, dist1, 10*eps);
+%! assert(cpx, CP{1}, 10*eps);
+%! assert(cpy, CP{2}, 10*eps);
+%! assert(cpz, CP{3}, 10*eps);
