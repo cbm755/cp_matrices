@@ -1,0 +1,40 @@
+sudo: required
+dist: trusty
+
+# travis-ci does not have first-class support for octave
+language: generic
+
+matrix:
+  include:
+    - env: OCT_PPA=no DOCTEST=no
+      addons:
+        apt:
+          packages:
+            - octave
+            - liboctave-dev
+    - env: OCT_PPA=yes DOCTEST=yes
+
+# need octave devel pkgs for doctest (has compiled code as of January 2016)
+install:
+  - if [ "x$OCT_PPA" = "xyes" ]; then
+        sudo apt-add-repository -y ppa:octave/stable;
+    fi
+  - sudo apt-get update -qq -y;
+  - sudo apt-get install -qq -y octave liboctave-dev;
+  - if [ "x$DOCTEST" = "xyes" ]; then
+        octave -W --no-gui --eval "pkg install -forge doctest";
+    fi
+
+# all commands here must have exit code 0 for the build to be called "passing"
+# debugging: octave -W --no-gui --eval "syms x; A = [x sin(x) x^3]; A; exit(0)"
+script:
+  - octave -W --no-gui --eval "ver; pwd; exit(0)"
+  - stty cols 80 rows 40
+  - tput cols; stty size
+  - pushd surfaces
+  - # octave -W --no-gui --eval "[__run_test_suite__ ({'.'},{})"
+  - octave -W --no-gui --eval "runtests ."
+  - if [ "x$DOCTEST" = "xyes" ]; then
+        octave -W --no-gui --eval "pkg load doctest; r = doctest('.'); exit(~r)";
+    fi
+  - popd
