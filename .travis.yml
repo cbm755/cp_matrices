@@ -14,7 +14,7 @@ matrix:
             - liboctave-dev
     - env: OCT_PPA=yes DOCTEST=yes
 
-# need octave devel pkgs for doctest (has compiled code as of January 2016)
+# need octave devel pkgs for doctest: Octave 4.2 not need this
 install:
   - if [ "x$OCT_PPA" = "xyes" ]; then
         sudo apt-add-repository -y ppa:octave/stable;
