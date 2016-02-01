@@ -26,32 +26,22 @@ function [cpx,cpy,cpz,dist,bdy] = cpSphereRing(x,y,z,zlim,R,cen)
 
   [cpx, cpy, cpz] = cpSphere(x, y, z, R);
 
-  %zlo = R*sin(phis(1));
-  %zhi = R*sin(phis(2));
-  %radlo = R*cos(phis(1));
-  %radhi = R*cos(phis(2));
-
   % should not include the bdy itself (hence <=)
   bdy1 = (cpz < zlim(1));
   bdy2 = (cpz > zlim(2));
 
-  philo = asin(max(-1, zlim(1)/R));
-  phihi = asin(min(1, zlim(2)/R));
-  philim = [philo  phihi];
-  radlim = [cos(philim(1))  cos(philim(2))];
+  % Next we find the CPs to two circles, each centered at (0,0, zlim(i))
+  % with appropriate radius.
+  radlim = sqrt(R^2 - zlim.^2);
 
-  [th, tilde, tilde] = cart2pol(x, y, z);
-  cpth = th;
-  cpr = radlim(1)*ones(size(th));
-  cpzp = zlim(1)*ones(size(th));
-  [cpx1, cpy1, cpz1] = pol2cart(cpth, cpr, cpzp);
+  [CP, dist1] = cpCircleInHighDim({x, y, z}, radlim(1), [0; 0; zlim(1)]);
+  [cpx1, cpy1, cpz1] = deal(CP{:});
 
-  [th, tilde, tilde] = cart2pol(x, y, z);
-  cpth = th;
-  cpr = radlim(2)*ones(size(th));
-  cpzp = zlim(2)*ones(size(th));
-  [cpx2, cpy2, cpz2] = pol2cart(cpth, cpr, cpzp);
+  [CP, dist2] = cpCircleInHighDim({x, y, z}, radlim(2), [0; 0; zlim(2)]);
+  [cpx2, cpy2, cpz2] = deal(CP{:});
 
+  % for those points whos closest point was outside the zlim range, we replace
+  % them with the closest points on one of the two circles.
   cpx(bdy1) = cpx1(bdy1);
   cpy(bdy1) = cpy1(bdy1);
   cpz(bdy1) = cpz1(bdy1);
