@@ -22,6 +22,7 @@ function [cpx,cpy,cpz,dist,bdy] = cpSphereRing(x,y,z,zlim,R,cen)
   x = x - cen(1);
   y = y - cen(2);
   z = z - cen(3);
+  zlim = zlim - cen(3);
 
   [cpx, cpy, cpz] = cpSphere(x, y, z, R);
 

@@ -3,7 +3,7 @@ function [x,y,z] = paramSphereRing(n, zlim, R, cen)
 %   [x,y,z] = paramSphereRing(N) returns a mesh for fishbowl of unit
 %   radius.  SURF(x,y,z) can be used to make a plot.
 %
-%   [x,y,z] = paramHemisphere(N, ZLIM, R, CEN) returns part of a
+%   [x,y,z] = paramSphereRing(N, ZLIM, R, CEN) returns part of a
 %   spherical mesh where sphere has radius R and is centered at the
 %   3-vector CEN.  The section of the sphere extends from ZLIM(1) to
 %   ZLIM(2).  ZLIM defaults to [-2*R 0.5], the fishbowl.  Note its
@@ -20,6 +20,9 @@ function [x,y,z] = paramSphereRing(n, zlim, R, cen)
     % default is a fishbowl
     zlim = [-2*R  0.5];
   end
+
+  % shift to origin as zlim is in the actual coordinates
+  zlim = zlim - cen(3);
 
   philo = asin(max(-1,zlim(1)/R));
   phihi = asin(min(1,zlim(2)/R));
