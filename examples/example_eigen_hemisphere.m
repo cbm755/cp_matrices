@@ -53,13 +53,21 @@ bdyg = bdy(band);
 disp('building laplacian and interp matrices');
 L = laplacian_3d_matrix(x1d,y1d,z1d, order, band,band);
 E = interp3_matrix(x1d,y1d,z1d, cpxg, cpyg, cpzg, p, band);
+E1 = interp3_matrix(x1d,y1d,z1d, cpxg, cpyg, cpzg, 1, band);
+
 
 % Dirichlet BCs: mirror for ghost points outside of surface edges.
 % Comment this out for Neumann BCs.
 E(bdyg,:) = -E(bdyg,:);
+E1(bdyg,:) = -E1(bdyg,:);
 
-% iCPM matrix
-M = lapsharp(L,E);
+%% iCPM matrix from [Macdonald/Ruuth2009], [Macdonald/Brandman/Ruuth2011]
+%M = lapsharp(L,E);
+
+%% This is somewhat superceded by the MOL approach [von Glehn/Marz/Macdonald].
+% TODO: a narrower band should work
+I = speye(size(L));
+M = E1*L - 2*dim/dx^2*(I - E);
 
 
 %% plotting grid
