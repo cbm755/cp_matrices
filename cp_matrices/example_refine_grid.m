@@ -4,6 +4,9 @@
 % big meshgrids (the only fully nD embedding space grid will be at the
 % coarest level---which can be made almost negliable).
 %
+% Note: this does require that you can call a closest point function
+% (rather than just having a samples of one).
+%
 % TODO: doesn't deal with open surfaces as well as it should: bdy
 % not computed.
 
@@ -25,6 +28,7 @@ x1d = ((-2-1*dx):dx:(2+1*dx))';
 [xx yy] = meshgrid(x1d, y1d);
 %cpf = @cpEllipse;  paramf = @paramEllipse;
 %cpf = @cpCircle;  paramf = @paramCircle;
+%cpf = @cpBeanCurve;  paramf = @paramBeanCurve;
 cpf1 = @cpSemicircle;  paramf = @paramSemicircle;  cpf = @(x,y) cpbar_2d(x,y,cpf1);
 [cpx, cpy, dist] = cpf(xx,yy);
 
@@ -40,40 +44,50 @@ band = find(abs(dist) <= bw*dx);
 cpxg = cpx(band); cpyg = cpy(band);
 xg = xx(band); yg = yy(band);
 distg = dist(band);
+%cpxg = cpx(:); cpyg = cpy(:);
+%xg = xx(:); yg = yy(:);
+%distg = dist(:);
 
-gc = [];
-gc.dim = 2;
-gc.dx = dx;
-gc.x1d = x1d;
-gc.y1d = y1d;
-gc.cpfun = cpf;
-gc.band = band;
-gc.x = xg;
-gc.y = yg;
-gc.cpx = cpxg;
-gc.cpy = cpyg;
-gc.dist = distg;
+%% "pack" the grid into a struct
+g = [];
+g.dim = 2;
+g.dx = dx;
+g.x1d = x1d;
+g.y1d = y1d;
+g.cpfun = cpf;
+g.band = band;
+g.x = xg;
+g.y = yg;
+g.cpx = cpxg;
+g.cpy = cpyg;
+g.dist = distg;
 
 %% Refine the grid
+g2 = refine_cpgrid_bw(g, bw);
+g3 = refine_cpgrid_bw(g2, bw);
+g4 = refine_cpgrid_bw(g3, bw);
+g5 = refine_cpgrid_bw(g4, bw);
 
-NLevels = 5;
-g = {};
-g{1} = gc;
-for i=2:NLevels
-  g{i} = refine_cpgrid_bw(g{i-1}, bw);
-end
+gg = {g g2 g3 g4 g5};
 
+%% or we could use a loop
+%NLevels = 5;
+%gg = {};
+%gg{1} = g;
+%for i=2:NLevels
+%  gg{i} = refine_cpgrid_bw(gg{i-1}, bw);
+%end
 
 %% make some plots
 bnds = [-2 2 -1 2];
 
 [xp, yp] = paramf(512);
-for k=1:NLevels
+for k=1:length(gg)
   figure(k); clf;
-  u = sin(g{k}.x);
-  plot2d_compdomain(u, g{k}.x, g{k}.y, g{k}.dx, g{k}.dx, k);
+  u = sin(gg{k}.x);
+  plot2d_compdomain(u, gg{k}.x, gg{k}.y, gg{k}.dx, gg{k}.dx, k);
   axis(bnds);
   plot(xp, yp, 'k-', 'linewidth', 2);
-  title(['grid level ' num2str(k) ', dx = ' num2str(g{k}.dx)]);
+  title(['grid level ' num2str(k) ', dx = ' num2str(gg{k}.dx)]);
   xlabel('x'); ylabel('y');
 end
