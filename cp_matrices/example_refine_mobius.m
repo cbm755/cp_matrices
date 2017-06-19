@@ -22,8 +22,8 @@ z1d_c = ((-0.5-6*dx):dx:(0.5+6*dx))';
 
 
 % cpbar for boundary conditions
-cpf = @(x,y,z) cpbar_3d(x, y, z, cpf1);
-%cpf = cpf1;
+%cpf = @(x,y,z) cpbar_3d(x, y, z, cpf1);
+cpf = cpf1;
 
 
 disp('starting initial coarse');
@@ -41,8 +41,8 @@ bw = rm_bandwidth(dim, p);
 % actually banding the coarse grid is optional, you can pass the
 % entire grid to refine_grid() and the result will be banded according
 % to "bw".  So either of these is ok:
-%band_c = find(abs(dist_c) <= bw*dx);
-band_c = ( 1:length(xxc(:)) )';
+band_c = find(abs(dist_c) <= bw*dx);
+%band_c = ( 1:length(xxc(:)) )';
 
 
 % store closest points in the band (can discard others)
@@ -62,32 +62,40 @@ gc.cpx = cpx_c;  gc.cpy = cpz_c;  gc.cpz = cpz_c;
 gc.dist = dist_c;
 gc.bdy = bdy_c;
 
-
+%% disgard the meshgrid
 clear xxc yyc zzc
 
 time_ini = toc
 
 
-%figure(2); clf;
-%porcupine_plot3d_param(x_c,y_c,z_c, cpx_c,cpy_c,cpz_c, bdy_c, paramf, 2)
-%view(3)
-%camlight left
+figure(2); clf;
+porcupine_plot3d_param(x_c,y_c,z_c, cpx_c,cpy_c,cpz_c, bdy_c, paramf, 2)
+view(3)
+camlight left
+title(sprintf('closest points for dx = %g', dx));
 
-
-dx_c = dx;   % store the coarse dx
 
 %% refine it twice
 disp('starting refinement');
 time_refine_total = cputime();
-%[band,x,y,z,cpx,cpy,cpz,dist,bdy,dx,x1d,y1d,z1d] = refine_grid(2,
-%cpf, dx_c, x1d_c, y1d_c, z1d_c, bw, band_c, dist_c, bdy_c);
-g = refine_cpgrid_bw(gc,bw);
-g = refine_cpgrid_bw(g,bw);
-%dx2 = dx/2^1;
+g = refine_cpgrid_bw(gc, bw);
+g = refine_cpgrid_bw(g, bw);
+
 time_refine_total = cputime() - time_refine_total
 
-%figure(3); clf;
-%porcupine_plot3d_param(x,y,z, cpx,cpy,cpz, bdy, paramf, 3)
-%view(3)
-%camlight left
+%% unpack the grid
+x = g.x;
+y = g.y;
+z = g.z;
+cpx = g.cpx;
+cpy = g.cpy;
+cpz = g.cpz;
+bdy = g.bdy;
+dx = g.dx;
 
+%% plotting
+figure(3); clf;
+porcupine_plot3d_param(x,y,z, cpx,cpy,cpz, bdy, paramf, 3)
+view(3)
+camlight left
+title(sprintf('closest points for dx = %g', dx));
