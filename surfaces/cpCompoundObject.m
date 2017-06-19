@@ -1,10 +1,10 @@
 function [cpx, cpy, dist] = cpCompoundObject(x,y, cpfs)
 %CPCOMPOUNDOBJECT  Closest Point function for a combination of objects
 %   [cpx,cpy,dist] = cpCompoundObject(x, y, cp_fcn_handles)
-%      where 'cp_fcn_handles' is a cell area of function handles to
+%      where 'cp_fcn_handles' is a cell array of function handles to
 %      cp functions, each of which takes exactly two arguments (x,y).
 %
-%   TODO: currently works for closest objects.  Open objects will
+%   TODO: currently works for closed objects.  Open objects will
 %   not have their boundaries identified correctly.
 %
 %   TODO: this could probably be written in a dimensional

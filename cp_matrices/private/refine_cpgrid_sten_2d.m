@@ -50,7 +50,7 @@ function gg = refine_cpgrid_sten_2d(g, p)
   %% Iteration
   % if we're working with minimal bands with no safety margin, its
   % possible the above could miss a few grid points.  We repeat the
-  % above as an itartion and look for a fixed point (usually one
+  % above as an iteration and look for a fixed point (usually one
   % step).
   iter = 1;
   while(1)

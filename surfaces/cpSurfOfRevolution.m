@@ -3,13 +3,13 @@ function [cpx, cpy, cpz, dist, varargout] = cpSurfOfRevolution(x, y, z, cpf, whi
 %   [cpx cpy cpz dist] = cpSurfOfRevolution(x, y, z, @cpEllipse)
 %      Takes a curve in 2D (here an ellipse) and spins it around the
 %      x-axis to create an ellipsoid.  In general, pass a function
-%      handle as the third argument.
+%      handle as the fourth argument.
 %
 %   [cpx cpy cpz dist] = cpSurfOfRevolution(x, y, z, cpf, 'y')
 %      Rotates around 'y' axis instead.
 %
 %   [cpx cpy cpz dist] = cpSurfOfRevolution(x, y, z, cpf, 'x', P)
-%      Passes the cell area P as the extra arguments of the
+%      Passes the cell array P as the extra arguments of the
 %      function handle cpf.
 %
 %   [cpx cpy cpz dist bdy] = cpSurfOfRevolution(...)
