@@ -30,7 +30,7 @@ function [pass, str] = test_cpVase()
   if makeplots
     figure(1); clf;
     %param = @(N) paramVase(N, lim);
-    %porcupine_plot3d_param(xx,yy,zz, cpx,cpy,cpz, bdy, param, 1);
+    %porcupine_plot3d(xx,yy,zz, cpx,cpy,cpz, bdy, param);
     surf(x,y,z);
     hold on;
     I = bdy == 0;
@@ -42,4 +42,3 @@ function [pass, str] = test_cpVase()
     I = bdy == 2;
     plot3(cpx(I), cpy(I), cpz(I), 'b.');
   end
-  

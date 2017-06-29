@@ -13,13 +13,13 @@ function [cpx, cpy, dist] = cpCompoundObject(x,y, cpfs)
 
   [cpx, cpy, dist, bdy] = cpfs{1}(x, y);
   %figure(2); clf;
-  %porcupine_plot2d(x,y,cpx,cpy,2,bdy);
+  %porcupine_plot2d(x,y,cpx,cpy,bdy,2);
   %figure(3); clf; pcolor(x,y,dist); axis equal
   %pause(.1);
   for i=2:length(cpfs)
     [cpx2, cpy2, dist2, bdy2] = cpfs{i}(x, y);
     %figure(2); clf;
-    %porcupine_plot2d(x,y,cpx2,cpy2,2,bdy2);
+    %porcupine_plot2d(x,y,cpx2,cpy2,bdy2,2);
     %figure(3); clf; pcolor(x,y,dist2); axis equal
     %pause(.1);
     wh = (dist2 < dist);

@@ -43,10 +43,10 @@ function [pass, str] = test_cpRotate2d_arc()
       max(max(abs(bdy1-bdy2)))
 
       figure(1);
-      porcupine_plot2d(x, y, cpx1, cpy1, 1, bdy1)
+      porcupine_plot2d(x, y, cpx1, cpy1, bdy1)
       [xp,yp] = param1(256);  plot(xp,yp,'g-');
       figure(2)
-      porcupine_plot2d(x, y, cpx2, cpy2, 2, bdy2)
+      porcupine_plot2d(x, y, cpx2, cpy2, bdy2)
       [xp,yp] = param2(256);  plot(xp,yp,'g-');
       title(sprintf('cpRotate, \\theta=%g', th));
       pause

@@ -46,10 +46,10 @@ function [pass, str] = test_cpRotate3d_linesegment()
       max(max(max(abs(bdy1-bdy2))))
 
       figure(1);
-      porcupine_plot3d_param(x,y,z, cpx1,cpy1,cpz1, bdy1, param1, 1)
+      porcupine_plot3d(x,y,z, cpx1,cpy1,cpz1, bdy1, param1)
       title([ 'cpRotate, angles=' num2str(th) ]);
       figure(2);
-      porcupine_plot3d_param(x,y,z, cpx2,cpy2,cpz2, bdy2, param2, 2)
+      porcupine_plot3d(x,y,z, cpx2,cpy2,cpz2, bdy2, param2)
       pause
     end
   end

@@ -69,7 +69,7 @@ time_ini = toc
 
 
 figure(2); clf;
-porcupine_plot3d_param(x_c,y_c,z_c, cpx_c,cpy_c,cpz_c, bdy_c, paramf, 2)
+porcupine_plot3d(x_c,y_c,z_c, cpx_c,cpy_c,cpz_c, bdy_c, paramf, 2)
 view(3)
 camlight left
 title(sprintf('closest points for dx = %g', dx));
@@ -95,7 +95,7 @@ dx = g.dx;
 
 %% plotting
 figure(3); clf;
-porcupine_plot3d_param(x,y,z, cpx,cpy,cpz, bdy, paramf, 3)
+porcupine_plot3d(x,y,z, cpx,cpy,cpz, bdy, paramf, 3)
 view(3)
 camlight left
 title(sprintf('closest points for dx = %g', dx));

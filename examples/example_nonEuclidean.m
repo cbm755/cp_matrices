@@ -45,12 +45,12 @@ title('Euclidean distance')
 % point collide:
 
 figure(2); clf;
-porcupine_plot2d(g.x, g.y, g.cpx, g.cpy, 2)
+porcupine_plot2d(g.x, g.y, g.cpx, g.cpy)
 axis tight
 title('non-Euclidean closest points')
 
 figure(3); clf;
-porcupine_plot2d(ge.x, ge.y, ge.cpx, ge.cpy, 3)
+porcupine_plot2d(ge.x, ge.y, ge.cpx, ge.cpy)
 axis tight
 title('Euclidean closest points')
 

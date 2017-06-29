@@ -5,8 +5,8 @@ y = (-1.5:.1:1.5)';
 
 radii = [1.0 .2 .8 .4];
 [cpx, cpy, dist] = cpRoundedSquare(xx, yy, radii);
-figure(1); clf;
-porcupine_plot2d(xx, yy, cpx, cpy, 1);
+figure(1);
+porcupine_plot2d(xx, yy, cpx, cpy);
 axis equal; axis tight;
 [xp,yp] = paramRoundedSquare(200, radii);
 plot(xp, yp, 'r-', 'linewidth', 2);

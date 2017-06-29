@@ -69,7 +69,7 @@ function [pass, str] = test_cpEllipseCurve()
   pass(c) = assertAlmostEqual(dist,dist2);
   %I = abs(dist - dist2) > eps;
   %figure(1); clf;
-  %porcupine_plot2d(x,y,cpx,cpy,1)
+  %porcupine_plot2d(x,y,cpx,cpy)
   %plot(x(I), y(I), 'ro');
 
   % compare to circle
