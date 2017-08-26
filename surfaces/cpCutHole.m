@@ -1,4 +1,4 @@
-function [cpx,cpy,cpz,dist,bdy,SA_final] = cpCutHole(x,y,z,cpf,hole_cen,SA_target,tol,dx,bw,given_cp_data)
+function [cpx,cpy,cpz,dist,bdy] = cpCutHole(x,y,z,cpf,hole_cen,SA_target,tol,dx,bw,given_cp_data)
 %cpCutHole  Cut holes in surfaces described by cpfun
 %
 % x,y,z coordinate matrices of any same dimension
@@ -7,12 +7,24 @@ function [cpx,cpy,cpz,dist,bdy,SA_final] = cpCutHole(x,y,z,cpf,hole_cen,SA_targe
 % the surface given by cpf, it will be projected onto the surface (by
 % calling cpf).
 %
+% SA_target is the surface area we would like the hole to have.  The
+% algorithm tries to estimate a radius of a sphere such that the
+% intersection of the surface and the sphere has this surface srea.
+%
 % Multiple holes are supported: pass each center as a row of "hole_cen"
 % and pass a vector to "SA_target".
+%
+% Caveats:
 %
 % TODO: the grid in x y z must already be banded with bandwidth bw*dx.
 % This is a restriction based on how we estimate the surface area
 % integral.  It should be fixed using Kublic and Tsai or similar.
+%
+% Our algorithm is based on a fixed point iteration between a sphere and
+% the surface.  The two must intersect reasonably close to orthogonal
+% for convergence.
+%
+% If you pass multiple holes, they should not self-intersect.
 
   if (nargin >= 10)
     cpx = given_cp_data{1};
@@ -41,20 +53,20 @@ function [cpx,cpy,cpz,dist,bdy,SA_final] = cpCutHole(x,y,z,cpf,hole_cen,SA_targe
     xh = hole_cen(k, 1)
     yh = hole_cen(k, 2)
     zh = hole_cen(k, 3)
-    % project onto surface
+    % project to ensure hole center is on the surface
     [xh yh zh] = cpf(xh, yh, zh)
 
-    SA_wanted_k = SA_target(k)
-    R_bar = sqrt(SA_wanted_k/pi)
-    RR = linspace(0.75*R_bar, 1.05*R_bar, 100);
+    SA_wanted_k = SA_target(k);
+    R_bar = sqrt(SA_wanted_k/pi);
+    RR = linspace(0.5*R_bar, 1.2*R_bar, 1000);
     for i = 1:length(RR)
       I = ((cpx-xh).^2+(cpy-yh).^2+(cpz-zh).^2 < RR(i)^2);
       assert(nnz(I) > 0, 'empty sphere/surface intersection!')
       SASA(i) = sum(I(:))*(dx)^2/(2*bw);
     end
-    SASA./SA_wanted_k
-    [tilde, i] = min(abs(SASA./SA_wanted_k-1))
-    R_H = RR(i)
+    %SASA./SA_wanted_k
+    [tilde, i] = min(abs(SASA./SA_wanted_k-1));
+    R_H = RR(i);
     assert (i > 1 && i < length(RR), 'should be in the middle')
     assert (tilde < 0.1)
 

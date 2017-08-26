@@ -1,4 +1,4 @@
-function [cpx,cpy,dist,bdy] = cpCutHole2d(x,y,cpf,hole_cen,SA_target,tol,dx,bw,given_cp_data)
+function [cpx,cpy,dist,bdy] = cpCutHole2d(x,y,cpf,hole_cen,arclen_target,tol,dx,bw,given_cp_data)
 %cpCutHole2d  Cut holes in surfaces described by cpfun
 %
 % x,y coordinate matrices of any same dimension
@@ -8,10 +8,11 @@ function [cpx,cpy,dist,bdy] = cpCutHole2d(x,y,cpf,hole_cen,SA_target,tol,dx,bw,g
 % calling cpf).
 %
 % Multiple holes are supported: pass each center as a row of "hole_cen"
-% and pass a vector to "SA_target"
+% and pass a vector to "arclen_target".
+%
+% See cpCutHole for caveats and additional documentation.
 
-  warning('WIP')
-  if (nargin >= 10)
+  if (nargin >= 9)
     cpx = given_cp_data{1};
     cpy = given_cp_data{2};
   else
@@ -35,15 +36,15 @@ function [cpx,cpy,dist,bdy] = cpCutHole2d(x,y,cpf,hole_cen,SA_target,tol,dx,bw,g
     [xh yh] = cpf(xh, yh)
 
     % look for a sphere radius which gives approx the target arclength
-    R_bar = SA_target(k)/2
+    R_bar = arclen_target(k)/2
     RR = linspace(0.7*R_bar,1.02*R_bar, 100);
     for i = 1:length(RR)
       I = ((cpx-xh).^2 + (cpy-yh).^2 < RR(i)^2);
       assert(nnz(I) > 0, 'empty circle/surface intersection!')
       SASA(i) = sum(I(:))*(dx)/(2*bw);
     end
-    SASA./SA_target(k)
-    [tilde,i] = min(abs(SASA./SA_target(k)-1))
+    %SASA./arclen_target(k)
+    [tilde,i] = min(abs(SASA./arclen_target(k)-1))
     R_H = RR(i)
     assert (i > 1 && i < length(RR), 'should be in the middle')
     assert (tilde < 0.1)
