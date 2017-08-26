@@ -9,14 +9,16 @@ tol = 10^-2;
 % paramf = @paramVase;
 
 
-cen=[0,0,0]; % center of vase
 a=1.5; % length along z
 b=1; % length along xy plane
 ab=[a,b];
 
+cpf = @(x,y,z) cpEllipsoid(x, y, z, [a b]);
+paramf = @(N) paramEllipsoid(N, [a b]);
+
+
 max_vec=[];
 sum_vec=[];
-SA_wanted=[0;0; 0.1; 0];
 dx=0.05; % grid size
 %SA_scale=0.05;
 
@@ -34,16 +36,20 @@ for j= 1:length(theta)
 
 % theta=-pi/2;%south pole
 % beta= 0;%changing polar 
- 
+
+  % TODO: these not on surface, can be projected but still
 xh=b*cos(theta(j)).*cos(beta);
  yh=b*cos(theta(j)).*sin(beta);
  zh=a*sin(theta(j));
 
+% SA_wanted=[0;0; 0.1; 0];
+% holes = [0 0 a;
+%         0 0 -a;
+%          xh yh zh;
+%          0 b 0];
+SA_wanted=0.1;
+holes = [xh yh zh];
 
-holes = [0 0 a;
-         0 0 -a;
-         xh yh zh;
-         0 b 0];
 
 %% Construct a grid in the embedding space
 
@@ -73,37 +79,37 @@ bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((order/2+(p+1)/2)^2));
 % (cpx,cpy,cpz)
 % meshgrid is only needed for finding the closest points, not afterwards
 [xx,yy,zz] = meshgrid(x1d, y1d, z1d);
+xx = xx(:);  yy = yy(:);  zz = zz(:);
 
-cpf = @(x,y,z) cpEllipsoid(x, y, z, ab, cen);
-
-[cpx,cpy,cpz,dist,bdy] = cpCutHole(xx, yy, zz, cpf, holes, SA_wanted, tol, dx, bw);
-%[cpx,cpy,cpz,dist] = cpFromTriSlow(hole_cen(1), hole_cen(2), hole_cen(3), Faces, Vertices);
-% make into vectors
-cpxg = cpx(:); cpyg = cpy(:); cpzg = cpz(:);
+[cpx,cpy,cpz,dist] = cpf(xx, yy, zz);
 
 band = find(abs(dist) <= bw*dx);
- 
- 
-% store closest points in the band;
-cpxg = cpxg(band); cpyg = cpyg(band); cpzg = cpzg(band);
-xg = xx(band); yg = yy(band); zg = zz(band);
-bdy = bdy(band);
- 
+cpx = cpx(band); cpy = cpy(band); cpz = cpz(band);
+x = xx(band); y = yy(band); z = zz(band);
+
+
+tic
+[cpx,cpy,cpz,dist,bdy] = cpCutHole(x, y, z, cpf, holes, SA_wanted, tol, dx, bw);
+toc
+%[cpx,cpy,cpz,dist] = cpFromTriSlow(hole_cen(1), hole_cen(2), hole_cen(3), Faces, Vertices);
+% make into vectors
+
 
 %% Extension of closest point
-E = interp3_matrix(x1d, y1d, z1d, cpxg, cpyg, cpzg, p, band,0);
- 
+tic
+E = interp3_matrix(x1d, y1d, z1d, cpx, cpy, cpz, p, band);
+
 % bdy cond;
 E(bdy,:) = -E(bdy,:);
  
 %% solve PDE using xg, yg, zg
 L = laplacian_3d_matrix(x1d,y1d,z1d, order, band, band);
- 
- 
+toc
+
 %% For constant D
 d = 1;
 D = -1/d*ones(length(E),1);
- 
+
  
 %% solution of u
 % boundary condition
@@ -111,15 +117,17 @@ D = -1/d*ones(length(E),1);
 gamma = 2*3/((dx)^2);
 I=speye(size(E));
 M=E*L-gamma*(I-E);
+tic
 u = M \ D;
+toc
 %u = gmres(M,D);
 
 
 %% plot
 
 N=100;
-[xp,yp,zp] = paramVase(N, lim, ab, cen);
-Eplot = interp3_matrix(x1d, y1d,z1d , xp(:), yp(:),zp(:), p, band);
+[xp, yp, zp] = paramf(N);
+Eplot = interp3_matrix(x1d, y1d, z1d, xp(:), yp(:), zp(:), p, band);
 
 up = Eplot*u;
 up=reshape(up,size(xp));
