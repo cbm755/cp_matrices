@@ -147,9 +147,8 @@ hold on;
 plot3(cpx(bdy), cpy(bdy), cpz(bdy), 'r.', 'linewidth', 3)
 
 
-warning('WIP: bug with bdy')
 figure(5); clf
-title('BUG BUG!')
+title('value of bdy')
 trisurf(Faces,xp,yp,zp,Eplot*double(bdy))
 hold on
 plot3(cpx(bdy), cpy(bdy), cpz(bdy), 'r.', 'linewidth', 3)

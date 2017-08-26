@@ -64,7 +64,7 @@ function [cpx,cpy,cpz,dist,bdy,SA_final] = cpCutHole(x,y,z,cpf,hole_cen,SA_targe
     %end
 
     % index of all points whose cp are within the sphere
-    I = ((cpx-xh).^2 + (cpy-yh).^2 < R_H^2);
+    I = ((cpx-xh).^2 + (cpy-yh).^2 + (cpz-zh).^2 < R_H^2);
 
 
     % l for loop, points to project onto boundary of hole on surface
