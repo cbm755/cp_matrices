@@ -84,9 +84,6 @@ function [cpx,cpy,cpz,dist,bdy,SA_final] = cpCutHole(x,y,z,cpf,hole_cen,SA_targe
                         
         % project onto surface
         [xll,yll,zll,dist1] = cpf(xl2, yl2, zl2);
-         xl=xll;
-         yl=yll;
-         zl=zll;
 
         % avoid projecting back and forth infinite times
         dist2=sqrt((xl-xll).^2 + (yl-yll).^2 + (zl-zll).^2);
