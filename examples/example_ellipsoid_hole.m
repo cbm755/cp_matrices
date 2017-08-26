@@ -14,13 +14,9 @@ a=1.5; % length along z
 b=1; % length along xy plane
 ab=[a,b];
 
-rh=[0;0;0.1;0]; % radius of holes
-
-lim=[-pi/2, pi/2]; 
 max_vec=[];
 sum_vec=[];
 SA_wanted=[0;0; 0.1; 0];
-SA_tol=1;
 dx=0.05; % grid size
 %SA_scale=0.05;
 
@@ -44,13 +40,10 @@ xh=b*cos(theta(j)).*cos(beta);
  zh=a*sin(theta(j));
 
 
- holes=[
-     [0,0,a,rh(1)];...
-     [0,0,-a,rh(2)];...
-    [xh,yh,zh,rh(3)];...
-    %[b,0,0,rh(3)];
-    [0,b,0,rh(4)]];
-
+holes = [0 0 a;
+         0 0 -a;
+         xh yh zh;
+         0 b 0];
 
 %% Construct a grid in the embedding space
 
@@ -80,9 +73,10 @@ bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((order/2+(p+1)/2)^2));
 % (cpx,cpy,cpz)
 % meshgrid is only needed for finding the closest points, not afterwards
 [xx,yy,zz] = meshgrid(x1d, y1d, z1d);
-% function cpSphere for finding the closest points on a vase
-%[cpx,cpy,cpz,dist,bdy,~] = cpVase_w_holesSA(xx, yy, zz, cpf,holes,tol,SA_wanted,dx,bw);
-[cpx,cpy,cpz,dist,bdy,~] = cpVase_w_holesSA(xx, yy, zz, lim, ab, cen,holes,tol,SA_wanted,dx,bw);
+
+cpf = @(x,y,z) cpEllipsoid(x, y, z, ab, cen);
+
+[cpx,cpy,cpz,dist,bdy] = cpCutHole(xx, yy, zz, cpf, holes, SA_wanted, tol, dx, bw);
 %[cpx,cpy,cpz,dist] = cpFromTriSlow(hole_cen(1), hole_cen(2), hole_cen(3), Faces, Vertices);
 % make into vectors
 cpxg = cpx(:); cpyg = cpy(:); cpzg = cpz(:);
