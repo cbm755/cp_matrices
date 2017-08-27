@@ -1,6 +1,4 @@
 %% Parameters
-tol = 10^-2;
-
 a = 1.6; % length along x
 b = 0.5; % length along y
 cpf = @(x, y) cpEllipse(x, y, a, b);
@@ -45,7 +43,7 @@ for j= 1:length(theta)
   len_wanted=2;
   hole_cen = [xh yh];
 
-  [cpx,cpy,dist,bdy] = cpCutHole2d(x, y, cpf, hole_cen, len_wanted, tol, dx, bw);
+  [cpx,cpy,dist,bdy] = cpCutHole2d(x, y, cpf, hole_cen, len_wanted, dx, bw);
 
   %% Extension of closest point
   E = interp2_matrix(x1d, y1d, cpx, cpy, p, band);

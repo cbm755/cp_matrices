@@ -13,7 +13,7 @@ hole_cen = [0.1, 3, 0.5];%bunny ear
 
 %% Construct a grid in the embedding space
 if (1==1)
-dx=0.1;
+dx=0.1/2;
 % ply file contains the triangles
 disp('reading plyread');
 %PlyFile = 'bunny.ply';
@@ -78,7 +78,7 @@ bw = 1.0001*sqrt((dim-1)*((p+1)/2)^2 + ((order/2+(p+1)/2)^2));
 
 
 tic
-[cpx, cpy, cpz, dist, bdy] = cpCutHole(x,y,z,cpf, hole_cen, 0.2, 1e-10, dx, bw, {cpx, cpy,cpz});
+[cpx, cpy, cpz, dist, bdy] = cpCutHole(x, y, z, cpf, hole_cen, 0.2, dx, bw, {cpx, cpy,cpz});
 toc
 
 figure(4); clf;

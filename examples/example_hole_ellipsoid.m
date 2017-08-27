@@ -19,7 +19,7 @@ paramf = @(N) paramEllipsoid(N, [a b]);
 
 max_vec=[];
 sum_vec=[];
-dx=0.05; % grid size
+dx=0.1; % grid size
 %SA_scale=0.05;
 
 %[theta ,beta]=meshgrid(linspace(0,2*pi,5),linspace(0,pi,5));
@@ -89,7 +89,7 @@ x = xx(band); y = yy(band); z = zz(band);
 
 
 tic
-[cpx,cpy,cpz,dist,bdy] = cpCutHole(x, y, z, cpf, holes, SA_wanted, tol, dx, bw);
+[cpx,cpy,cpz,dist,bdy] = cpCutHole(x, y, z, cpf, holes, SA_wanted, dx, bw);
 toc
 %[cpx,cpy,cpz,dist] = cpFromTriSlow(hole_cen(1), hole_cen(2), hole_cen(3), Faces, Vertices);
 % make into vectors

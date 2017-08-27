@@ -1,53 +1,50 @@
-function [cpx,cpy,cpz,dist,bdy] = cpCutHole(x,y,z,cpf,hole_cen,SA_target,tol,dx,bw,given_cp_data)
-%cpCutHole  Cut holes in surfaces described by cpfun
+function [cpx,cpy,cpz,dist,bdy] = cpCutHole(x,y,z,cpf,hole_cen,SA_target,dx,bw,cp_data, tol)
+%cpCutHole  Cut holes in a surface of prescribed surface area
 %
-% x,y,z coordinate matrices of any same dimension
+%   Suppose "cpf" is closest point function or a handle to one.
 %
-% hole_cen = [hx hy hz] gives the center of the hole.  If this is not on
-% the surface given by cpf, it will be projected onto the surface (by
-% calling cpf).
+%     [cpx, cpy, cpz, dist, bdy] = cpCutHole(x, y, z, cpf, ...
+%         hole_cen, SA_target, dx, bw, cp_data)
 %
-% SA_target is the surface area we would like the hole to have.  The
-% algorithm tries to estimate a radius of a sphere such that the
-% intersection of the surface and the sphere has this surface srea.
+%   x, y, z: the points for which we compute the closest points.
 %
-% Multiple holes are supported: pass each center as a row of "hole_cen"
-% and pass a vector to "SA_target".
+%   hole_cen = [hx hy hz] gives the center of the hole.  If this is
+%   not on the surface given by cpf, it will be projected onto the
+%   surface (by calling cpf).
 %
-% Caveats:
+%   SA_target is the surface area we would like the hole to have.  The
+%   algorithm tries to estimate a radius of a sphere such that the
+%   intersection of the surface and the sphere has this surface srea.
 %
-% TODO: the grid in x y z must already be banded with bandwidth bw*dx.
-% This is a restriction based on how we estimate the surface area
-% integral.  It should be fixed using Kublic and Tsai or similar.
+%   Multiple holes are supported: pass each center as a row of
+%   "hole_cen" and pass a vector to "SA_target".
 %
-% Our algorithm is based on a fixed point iteration between a sphere and
-% the surface.  The two must intersect reasonably close to orthogonal
-% for convergence.
+%   Caveats:
 %
-% If you pass multiple holes, they should not self-intersect.
+%     * TODO: the grid in x, y, z must already be banded with bandwidth
+%       bw*dx.  This is a restriction based on how we estimate the
+%       surface area integral.  It should be fixed using Kublic and Tsai
+%       or similar.
+%
+%     * See also cpCutHoleRadius.
 
-  if (nargin >= 10)
-    cpx = given_cp_data{1};
-    cpy = given_cp_data{2};
-    cpz = given_cp_data{3};
-  else
-    [cpx, cpy, cpz, tilde] = cpf(x, y, z);
-    %[cpx, cpy, cpz, tilde, tilde] = cpf(x, y, z);
+  if (nargin < 10)
+    tol = 1e-10;
   end
-  %toc
+
+  if (nargin < 9 || isempty(cp_data))
+    % TODO: might redesign this; for now, one has to to pass a band
+    % so might as well pass the cp's as well.
+    [cp_data{1:3}] = cpf(x, y, z);
+  end
+  cpx = cp_data{1};
+  cpy = cp_data{2};
+  cpz = cp_data{3};
   % TODO: if nargout is 5, get bdy from cpf instead
   %nargout(cpf)
-  %tic
   bdy = zeros(size(cpx));
   [num_holes, temp] = size(hole_cen);
   assert (temp == 3)
-
-  % below assumes cpx, cpy, cpz are long vectors
-  savesz = size(cpx);
-  cpx = cpx(:);
-  cpy = cpy(:);
-  cpz = cpz(:);
-  bdy = bdy(:);
 
   for k=1:num_holes
     xh = hole_cen(k, 1)
@@ -66,64 +63,10 @@ function [cpx,cpy,cpz,dist,bdy] = cpCutHole(x,y,z,cpf,hole_cen,SA_target,tol,dx,
     end
     %SASA./SA_wanted_k
     [tilde, i] = min(abs(SASA./SA_wanted_k-1));
-    R_H = RR(i);
+    hole_rad(k) = RR(i);
     assert (i > 1 && i < length(RR), 'should be in the middle')
     assert (tilde < 0.1)
+  end
 
-    %else
-    %    I = ((cpx-xh).^2+(cpy-yh).^2+(cpz-zh).^2 < Rh^2);
-    %    SA_final = 0;
-    %end
-
-    % index of all points whose cp are within the sphere
-    I = ((cpx-xh).^2 + (cpy-yh).^2 + (cpz-zh).^2 < R_H^2);
-
-
-    % l for loop, points to project onto boundary of hole on surface
-    xl = cpx(I);
-    yl = cpy(I);
-    zl = cpz(I);
-    
-    
-    sdist = 1;
-    
-    tol2 = 0.01;
-    
-    while  abs(sdist) > tol | abs(dist1) > tol
-       
-        % project onto sphere "hole"
-        [xl2,yl2,zl2,sdist] = cpSphere(xl,yl,zl,R_H,[xh,yh,zh]);
-                        
-        % project onto surface
-        [xll,yll,zll,dist1] = cpf(xl2, yl2, zl2);
-
-        % avoid projecting back and forth infinite times
-        dist2=sqrt((xl-xll).^2 + (yl-yll).^2 + (zl-zll).^2);
-        dist3=sqrt((xl-xl2).^2 + (yl-yl2).^2 + (zl-zl2).^2);
-        if  dist2  < tol2 & dist3 > R_H/2
-           xll = xll+10^(-5)*rand; % add perturbation
-           yll = yll+10^(-5)*rand;
-           zll = zll+10^(-5)*rand;
-
-        end
-        
-        xl=xll;
-        yl=yll;
-        zl=zll; 
-          
-    end
-       
-    cpx(I) = xl;
-    cpy(I) = yl;
-    cpz(I) = zl;
-    
-    bdy = bdy | I; 
-end
-
-
-  cpx = reshape(cpx, savesz);
-  cpy = reshape(cpy, savesz);
-  cpz = reshape(cpz, savesz);
-  bdy = reshape(bdy, savesz);
-dist = sqrt((cpx-x).^2 + (cpy-y).^2 + (cpz-z).^2);
+  [cpx, cpy, cpz, dist, bdy] = cpCutHoleRadius(x, y, z, cpf, hole_cen, hole_rad, cp_data, tol);
 end
