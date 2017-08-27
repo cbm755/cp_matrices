@@ -77,8 +77,6 @@ function [cpx,cpy,dist,bdy] = cpCutHole2d(x,y,cpf,hole_cen,arclen_target,tol,dx,
 
       % project onto surface
       [xll, yll, dist1] = cpf(xl2, yl2);
-      xl=xll;
-      yl=yll;
 
       % avoid projecting back and forth infinite times
       dist2=sqrt((xl-xll).^2 + (yl-yll).^2);
