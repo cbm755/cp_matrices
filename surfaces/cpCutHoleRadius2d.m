@@ -42,7 +42,8 @@ function [cpx,cpy,dist,bdy] = cpCutHoleRadius2d(x,y,cpf,hole_cen,hole_rad,cp_dat
   if (nargin < 7)
     tol = 1e-10;
   end
-  
+  tol2 = min(1e-3, 100*tol);
+
   if (nargin < 6 || isempty(cp_data))
     [cpx, cpy] = cpf(x, y);
   else
@@ -73,8 +74,6 @@ function [cpx,cpy,dist,bdy] = cpCutHoleRadius2d(x,y,cpf,hole_cen,hole_rad,cp_dat
     yl = cpy(I);
 
     sdist = 1;
-
-    tol2 = 0.01;
 
     while (abs(sdist) > tol | abs(dist1) > tol)
       % project onto sphere "hole"

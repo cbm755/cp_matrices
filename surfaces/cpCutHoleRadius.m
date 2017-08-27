@@ -44,6 +44,7 @@ function [cpx,cpy,cpz,dist,bdy] = cpCutHoleRadius(x,y,z,cpf,hole_cen,hole_rad,cp
   if (nargin < 8)
     tol = 1e-10;
   end
+  tol2 = min(1e-3, 100*tol);
 
   if (nargin < 7 || isempty(cp_data))
     [cpx, cpy, cpz] = cpf(x, y, z);
@@ -79,8 +80,6 @@ function [cpx,cpy,cpz,dist,bdy] = cpCutHoleRadius(x,y,z,cpf,hole_cen,hole_rad,cp
     
     
     sdist = 1;
-    
-    tol2 = 0.01;
     
     while  abs(sdist) > tol | abs(dist1) > tol
        
