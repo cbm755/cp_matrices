@@ -13,8 +13,8 @@ a=1.5; % length along z
 b=1; % length along xy plane
 ab=[a,b];
 
-cpf = @(x,y,z) cpEllipsoid(x, y, z, [a b]);
-paramf = @(N) paramEllipsoid(N, [a b]);
+cpf = @(x,y,z) cpEllipsoid(x, y, z, [a b], [], 'z');
+paramf = @(N) paramEllipsoid(N, [a b], [], 'z');
 
 
 max_vec=[];
@@ -37,10 +37,9 @@ for j= 1:length(theta)
 % theta=-pi/2;%south pole
 % beta= 0;%changing polar 
 
-  % TODO: these not on surface, can be projected but still
 xh=b*cos(theta(j)).*cos(beta);
- yh=b*cos(theta(j)).*sin(beta);
- zh=a*sin(theta(j));
+yh=b*cos(theta(j)).*sin(beta);
+zh=a*sin(theta(j));
 
 % SA_wanted=[0;0; 0.1; 0];
 % holes = [0 0 a;
