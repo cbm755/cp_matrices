@@ -1,6 +1,6 @@
 ply
 format ascii 1.0
-comment Annie Hui's pig from AIM@SHAPE.net, loop subdivided
+comment Annie Hui's pig from AIM@SHAPE.net, loop subdivided twice
 element vertex 9666
 property float x
 property float y
