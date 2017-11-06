@@ -8,6 +8,7 @@ from cp.cpOps import findGridInterpBasePt, buildInterpWeights
 def build_diff_matrix(int_band, dxvec, shape):
     """Builds a Laplacian matrix"""
     # TODO: generalize this!
+    shape = shape.astype(np.int64)
     dim = len(shape)
     if dim == 3:
         # Assume now that band is not a linear index, but a 3D index (ie, int_band)
@@ -64,6 +65,7 @@ def build_diff_matrix(int_band, dxvec, shape):
         return L[:, np.ravel_multi_index(int_band.T, shape)]
 
 def build_interp_matrix(int_band, cp, dx, p, ll, shape):
+    shape = shape.astype(np.int64)
     dim = len(shape)
     offsets = np.mgrid[tuple(
         slice(p+1) for _ in xrange(dim))].reshape((dim, -1))
