@@ -114,7 +114,7 @@ for i = 1:1:n_level
     
     ng = nnz(bdy);
     D = spdiags(a_dist{i},0,ng,ng);
-    theta_bdy = cart2pol(xcp_bdy,ycp_bdy);
+    [theta_bdy,_] = cart2pol(xcp_bdy,ycp_bdy);
     GAMMA = spdiags(gammafn(theta_bdy),0,ng,ng);
     % 2nd order
     M_bdy = D*(I(bdy,:) + Ebar)/2/dx^2 + GAMMA*(-Ebar/2 + I(bdy,:)/2)/dx^2;
