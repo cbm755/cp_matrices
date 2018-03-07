@@ -17,7 +17,7 @@
 %% Build a meshgrid
 % Construct a grid in the embedding space
 
-dx = 0.05;   % grid size
+dx = 0.05/2;   % grid size
 
 % make vectors of x, y, positions of the grid
 x1d = (-2.0:dx:2.0)';
@@ -54,21 +54,6 @@ x = x(band); y = y(band);
 uex = @(th,t) (cos(th-t)).^3;
 u0 = uex(th, 0);
 
-
-%% Velocity vector in embedded space
-% Unlike the instrinsic surface diffusion equation $u_t = \Delta_S u$,
-% the advection equation on a curve needs a velocity field: a least a
-% speed in the tangent direction is required as part of the *model*.
-% We then need that velocity field embedded and extended into the 2D
-% domain.
-%
-% Here we cheat a little and use the parameterization to define the
-% tangent field.
-
-w1 = -sin(th);
-w2 = cos(th);
-
-
 %% Construct interpolation and differentiation matrices
 % This creates a matrix which interpolates data from the grid x1d y1d,
 % onto the points cpx cpy.
@@ -77,7 +62,19 @@ E = interp2_matrix(x1d, y1d, cpx, cpy, p, band);
 
 L = laplacian_2d_matrix(x1d, y1d, 2, band);
 [Dxb,Dxf, Dyb,Dyf] = firstderiv_upw1_2d_matrices(x1d, y1d, band);
+[Dxc,Dyc] = firstderiv_cen2_2d_matrices(x1d, y1d, band);
 
+%% Velocity vector in embedded space
+% Unlike the instrinsic surface diffusion equation $u_t = \Delta_S u$,
+% the advection equation on a curve needs a velocity field: a least a
+% speed in the tangent direction is required as part of the *model*.
+% We then need that velocity field embedded and extended into the 2D
+% domain.
+
+w1 = -y;
+w2 = x;
+w1 = E*w1;
+w2 = E*w2;
 
 %% Construct an interpolation matrix for plotting
 % plotting grid on circle, using theta as a parameterization
@@ -94,7 +91,7 @@ Eplot = interp2_matrix(x1d, y1d, xp, yp, p, band);
 
 %% Time-stepping
 
-Tf = 2;
+Tf = 5;
 dt = 0.25*dx;
 numsteps = ceil(Tf/dt)
 % adjust for integer number of steps
@@ -104,15 +101,19 @@ figure(1); clf;  figure(2); clf;  figure(3); clf;
 
 u = u0;
 for kt = 1:numsteps
-  % more generally, could compute velocities here:
+  %% more generally, could compute velocities here:
   % w1 = ...
   % w2 = ...
   % w1 = E*w1;
   % w2 = E*w2;
 
-  % upwinding discretization of u_t + div_S . (u*vec{w}) = 0
+  %% upwinding discretization of u_t + div_S . (u*vec{w}) = 0
   rhs = -( (w1 < 0) .* (Dxf*(u.*w1)) + (w1 >= 0) .* (Dxb*(u.*w1)) + ...
            (w2 < 0) .* (Dyf*(u.*w2)) + (w2 >= 0) .* (Dyb*(u.*w2)) );
+
+  %% or centered diff: likely unstable here without diffusion
+  %rhs = -( Dxc*(u.*w1) + (Dyc*(u.*w2)) );
+
   % explicit Euler timestepping
   unew = u + dt*rhs;
 
