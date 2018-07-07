@@ -3,6 +3,9 @@ function [cpx, cpy, dist, bdy] = cpDisc(x, y, R, cen)
 %   [cpx, cpy, dist, bdy] = cpDisc(x, y)
 %      A unit disc centered at the origin.
 %
+%   [cpx, cpy, dist, bdy] = cpDisc(x, y, R, cen)
+%      A disc of radius 'R' centered at 'cen'.
+%
 
   % defaults
   if (nargin < 3)

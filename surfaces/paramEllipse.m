@@ -8,6 +8,9 @@ function [x,y,th] = paramEllipse(n, aa, bb, cen)
 %
 %   [x,y,th] = paramEllipse(...) returns the value of the parameter
 %   as well.
+%
+%   TODO: the points are not equispaced in arclength: making this true
+%         or approximately so might be a nice option, see commented code.
 
   % defaults
   if (nargin < 3)
@@ -25,3 +28,20 @@ function [x,y,th] = paramEllipse(n, aa, bb, cen)
   th = ( 0:(2*pi/n):(2*pi) )';
   x = aa*cos(th) + cen(1);
   y = bb*sin(th) + cen(2);
+
+
+  %jac = @(t) sqrt((aa*sin(t)).^2 + (bb*cos(t)).^2);
+  %th0 = linspace(0, 2*pi, 10000);
+
+  %circum = sum(jac(th0));    % circumference estimate
+  %cs = cumsum(jac(th0));
+
+  %th = zeros(1, n + 1);
+  %th(1) = 0;
+  %for i=1:n
+  %  I = find(cs / circum < i / n);
+  %  th(i+1) = th0(I(end));
+  %end
+  %x = aa*cos(th) + cen(1);
+  %y = bb*sin(th) + cen(2);
+end

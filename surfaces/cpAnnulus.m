@@ -1,6 +1,32 @@
 function [cpx, cpy, dist, bdy] = cpAnnulus(x, y, R1, R2, cen)
-%CPDISC  Closest Point function for a annulus
+%cpAnnulus  Closest Point function for an annulus
 %   [cpx, cpy, dist, bdy] = cpAnnulus(x, y, R1, R2)
+%   [cpx, cpy, dist, bdy] = cpAnnulus(x, y, R1, R2, cen)
+%
+%   R1 and R2 are the inner and outer radii.
+%
+%   The return value 'bdy' is 0 in the interior, 1 if the closest
+%   point is on the interior boundary, and 2 if the closest point is
+%   on the exterior boundary.
+%
+%   Examples:
+%     >> [cpx, cpy, dist, bdy] = cpAnnulus(2, 0, 0.8, 1)
+%     cpx = 1
+%     cpy = 0
+%     dist = 1
+%     bdy = 2
+%
+%     >> [cpx, cpy, dist, bdy] = cpAnnulus(0.5, 0, 0.8, 1)
+%     cpx = 0.80000
+%     cpy = 0
+%     dist = 0.30000
+%     bdy = 1
+%
+%     >> [cpx, cpy, dist, bdy] = cpAnnulus(0.6, -0.6, 0.8, 1)
+%     cpx = 0.60000
+%     cpy = -0.60000
+%     dist = 0
+%     bdy = 0
 
 
   % defaults
