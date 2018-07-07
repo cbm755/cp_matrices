@@ -15,7 +15,7 @@ paramf = @(N) paramSphereRing(N, [0 inf], rho, cen);
 loaddata = 1;
 
 if (loaddata == 1)
-  dx = 0.05;      % grid size
+  dx = 0.025;      % grid size
 
   % make vectors of x, y, z positions of the grid
   x1d = (-2:dx:2)';
@@ -28,7 +28,11 @@ if (loaddata == 1)
   % meshgrid is only needed for finding the closest points, not afterwards
   [xx yy zz] = meshgrid(x1d, y1d, z1d);
 
-  [cpx, cpy, cpz, dist, bdy] = cpf(xx,yy,zz);
+  % first-order accurate zero-neumann BC
+  %[cpx, cpy, cpz, dist, bdy] = cpf(xx,yy,zz);
+  % Using "cpbar" [Macdonald, Brandman, Ruuth 2011]:
+  [cpx, cpy, cpz, dist, bdy] = cpbar_3d(xx,yy,zz, cpf);
+
   cpx = cpx(:); cpy = cpy(:); cpz = cpz(:);
 
   %% Banding: do calculation in a narrow band around the surface
@@ -51,6 +55,10 @@ if (loaddata == 1)
   L = laplacian_3d_matrix(x1d,y1d,z1d, 2, band,band);
   E = interp3_matrix(x1d,y1d,z1d, cpx, cpy, cpz, p, band);
   I = speye(size(E));
+
+  % Dirichlet BCs: mirror for ghost points outside of surface edges.
+  % Comment this out for Neumann BCs.
+  E(bdy,:) = -E(bdy,:);
 
   %% plotting grid
   [xp,yp,zp] = paramf(256);
