@@ -11,22 +11,20 @@ rng(1989)
 dx = 0.05 ;
 
 % make vectors of x, y, positions of the grid
-x1d = (-1.8:dx:1.8)' ;
-y1d = x1d ;
-z1d = x1d ;
+% x1d = (-1.8:dx:1.8)' ;
+% y1d = x1d ;
+% z1d = x1d ;
 
-[xx, yy, zz] = meshgrid(x1d, y1d, z1d) ;
+% [xx, yy, zz] = meshgrid(x1d, y1d, z1d) ;
 
-% Find closest points on the surface
-R = 1 ; % radius of center circle
-T = 0.35 ; % thickness
-cpf = @cpMobiusStrip ; 
-[cpbarx, cpbary, cpbarz, dist, bdy] = cpbar_3d(xx, yy, zz, cpf, R, T) ;
-[cpx, cpy, cpz, ~, ~] = cpf(xx, yy, zz) ;
+% % Find closest points on the surface
+% R = 1 ; % radius of center circle
+% T = 0.35 ; % thickness
+% cpf = @cpMobiusStrip ; 
+% [cpbarx, cpbary, cpbarz, dist, bdy] = cpbar_3d(xx, yy, zz, cpf, R, T) ;
+% [cpx, cpy, cpz, ~, ~] = cpf(xx, yy, zz) ;
 
-% dx = 0.025 ;
-% 
-% load(['mobius_dx=', num2str(dx), '.mat']) ;
+load(['mobius_dx=', num2str(dx), '.mat']) ;
 
 
 %% Banding: do calculation in a narrow band around the surface
