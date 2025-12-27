@@ -165,7 +165,7 @@ shading interp
 colorbar
 colormap('jet')
 clim([0,1])
-% writeVideo(writerObj, getframe(gcf)) ; 
+writeVideo(writerObj, getframe(gcf)) ; 
 
 
 t = 0 ;
@@ -188,12 +188,7 @@ while t < Tf
     set(Hplot, 'CData', sphplot);
     title( ['u at time ' num2str(t) ', kt= ' num2str(kt)] );
     drawnow() ;
-    % writeVideo(writerObj, getframe(gcf)) ;     
-  end
-
-  if kt >= 8400 && mod(kt,50) == 0 && kt <= 9000
-      filename = ['results/GS_kt=', num2str(kt), '.mat'] ;
-      save(filename)
+    writeVideo(writerObj, getframe(gcf)) ;     
   end
 
   t = t + dt;
@@ -202,4 +197,4 @@ while t < Tf
 end
 
 
-% close(writerObj)
+close(writerObj)
