@@ -1,29 +1,12 @@
-%% GS on mobius strip
+%% Gray--Scott on mobius strip
+% Forward Euler time-stepping
 
-clear ; close all ; % clc ; 
+clear ; close all ; % clc ;
 
 rng(1989)
 
-
-%% Construct a grid in the embedding space
-
-% grid size
-dx = 0.05 ;
-
-% make vectors of x, y, positions of the grid
-% x1d = (-1.8:dx:1.8)' ;
-% y1d = x1d ;
-% z1d = x1d ;
-
-% [xx, yy, zz] = meshgrid(x1d, y1d, z1d) ;
-
-% % Find closest points on the surface
-% R = 1 ; % radius of center circle
-% T = 0.35 ; % thickness
-% cpf = @cpMobiusStrip ; 
-% [cpbarx, cpbary, cpbarz, dist, bdy] = cpbar_3d(xx, yy, zz, cpf, R, T) ;
-% [cpx, cpy, cpz, ~, ~] = cpf(xx, yy, zz) ;
-
+dx = 0.05;
+% run make_mobius_grid to make this file
 load(['mobius_dx=', num2str(dx), '.mat']) ;
 
 
@@ -121,6 +104,7 @@ for k = 1:length(band)
             n = -n ; 
         end 
 
+	% See Remark 2 of [WongMacdonaldLee2026]
         if norm([cpx_band(k)-cpbarx_band(k); cpy_band(k)-cpbary_band(k); cpz_band(k)-cpbarz_band(k)],2) >= 1e-4
             dvec(k) = 2*(w'*n) ;
         end
@@ -133,8 +117,8 @@ Dmat = spdiags(dvec, 0, numpts, numpts) ;
 
 gamma = 2*dim*max(Du,Dv)/(dx^2);
 Imat = speye(size(Ebarqmat)) ;
-Au = Du*(Ebarqmat*Lmat) - gamma*(Imat - Ebarqmat - Dmat*(-kappa*Eqmat)) ;
-Av = Dv*(Ebarqmat*Lmat) - gamma*(Imat - Ebarqmat - Dmat*(-kappa*Eqmat)) ;
+Au = Du*(Eqmat*Lmat) - gamma*(Imat - Ebarqmat - Dmat*(-kappa*Eqmat)) ;
+Av = Dv*(Eqmat*Lmat) - gamma*(Imat - Ebarqmat - Dmat*(-kappa*Eqmat)) ;
 
 
 %% Record video
@@ -176,8 +160,8 @@ while t < Tf
   uvec0 = uvec ;
   vvec0 = vvec ;
 
-  uvec = uvec0 + dt*( Ebarqmat*f(uvec0,vvec0) + Au*uvec0 ) ;
-  vvec = vvec0 + dt*( Ebarqmat*g(uvec0,vvec0) + Av*vvec0 ) ;
+  uvec = uvec0 + dt*( Eqmat*f(uvec0,vvec0) + Au*uvec0 ) ;
+  vvec = vvec0 + dt*( Eqmat*g(uvec0,vvec0) + Av*vvec0 ) ;
   
 
   if ( (mod(kt,25)==0) || (kt<=10) || (kt==numtimesteps) )
