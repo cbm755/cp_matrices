@@ -104,6 +104,7 @@ for k = 1:length(band)
             n = -n ; 
         end 
 
+	% See Remark 2 of [WongMacdonaldLee2026]
         if norm([cpx_band(k)-cpbarx_band(k); cpy_band(k)-cpbary_band(k); cpz_band(k)-cpbarz_band(k)],2) >= 1e-4
             dvec(k) = 2*(w'*n) ;
         end
