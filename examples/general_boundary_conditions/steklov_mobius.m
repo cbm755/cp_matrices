@@ -142,7 +142,7 @@ for i = 1:length(idxset)
     lambda = Lambda(idx);
     eigenvec = V(:,I(idx));
     
-    uplot = Eplot*Eqmat*real(eigenvec);
+    uplot = Eplot*(Eqmat*real(eigenvec));
     uplot = reshape(uplot, size(xp));
     nexttile
     surf(xp, yp, zp, uplot);    
