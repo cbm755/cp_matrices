@@ -1,30 +1,9 @@
 %% Steklov problem on mobius strip
 
-clear ; close all ; % clc ; 
+clear ; close all ; % clc ;
 
-
-%% Construct a grid in the embedding space
-
-% % grid size
-% dx = 0.05 ;
-% 
-% % make vectors of x, y, positions of the grid
-% % x1d = (-1.8:dx:1.8)' ;
-% % y1d = x1d ;
-% % z1d = x1d ;
-% 
-% 
-% [xx, yy, zz] = meshgrid(x1d, y1d, z1d) ;
-% 
-% % Find closest points on the surface
-% R = 1 ; % radius of center circle
-% T = 0.35 ; % thickness
-% cpf = @cpMobiusStrip ; 
-% [cpbarx, cpbary, cpbarz, dist, bdy] = cpbar_3d(xx, yy, zz, cpf, R, T) ;
-% [cpx, cpy, cpz, ~, ~] = cpf(xx, yy, zz) ;
-
-dx = 0.025 ;
-
+dx = 0.05;
+% run make_mobius_grid to make this file
 load(['mobius_dx=', num2str(dx), '.mat']) ;
 
 
