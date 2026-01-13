@@ -1,4 +1,5 @@
-%% GS on mobius strip
+%% Gray--Scott on mobius strip
+% Forward Euler time-stepping
 
 clear ; close all ; % clc ;
 
@@ -115,8 +116,8 @@ Dmat = spdiags(dvec, 0, numpts, numpts) ;
 
 gamma = 2*dim*max(Du,Dv)/(dx^2);
 Imat = speye(size(Ebarqmat)) ;
-Au = Du*(Ebarqmat*Lmat) - gamma*(Imat - Ebarqmat - Dmat*(-kappa*Eqmat)) ;
-Av = Dv*(Ebarqmat*Lmat) - gamma*(Imat - Ebarqmat - Dmat*(-kappa*Eqmat)) ;
+Au = Du*(Eqmat*Lmat) - gamma*(Imat - Ebarqmat - Dmat*(-kappa*Eqmat)) ;
+Av = Dv*(Eqmat*Lmat) - gamma*(Imat - Ebarqmat - Dmat*(-kappa*Eqmat)) ;
 
 
 %% Record video
@@ -158,8 +159,8 @@ while t < Tf
   uvec0 = uvec ;
   vvec0 = vvec ;
 
-  uvec = uvec0 + dt*( Ebarqmat*f(uvec0,vvec0) + Au*uvec0 ) ;
-  vvec = vvec0 + dt*( Ebarqmat*g(uvec0,vvec0) + Av*vvec0 ) ;
+  uvec = uvec0 + dt*( Eqmat*f(uvec0,vvec0) + Au*uvec0 ) ;
+  vvec = vvec0 + dt*( Eqmat*g(uvec0,vvec0) + Av*vvec0 ) ;
   
 
   if ( (mod(kt,25)==0) || (kt<=10) || (kt==numtimesteps) )
